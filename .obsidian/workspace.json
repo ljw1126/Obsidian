@@ -11,26 +11,13 @@
             "id": "b95a06c9a12c9c67",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "New tab"
-            }
-          }
-        ]
-      },
-      {
-        "id": "e56a9a1f146278f5",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "70d56d15e47d2080",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "diff-view",
+              "state": {
+                "file": ".obsidian/community-plugins.json",
+                "staged": false
+              },
+              "icon": "git-pull-request",
+              "title": "Diff View (community-plugins.json)"
             }
           }
         ]
@@ -105,6 +92,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "README.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -114,7 +102,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for README"
             }
           },
           {
@@ -123,11 +111,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "README.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from README"
             }
           },
           {
@@ -148,17 +137,29 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {},
+              "state": {
+                "file": "README.md"
+              },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of README"
+            }
+          },
+          {
+            "id": "efdc5916877de07d",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
             }
           }
-        ]
+        ],
+        "currentTab": 4
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -167,12 +168,19 @@
       "canvas:Create new canvas": false,
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
-      "command-palette:Open command palette": false
+      "command-palette:Open command palette": false,
+      "obsidian-git:Open Git source control": false
     }
   },
   "active": "b95a06c9a12c9c67",
   "lastOpenFiles": [
     "README.md",
+    "2. Area",
+    "1. Project",
+    "4. Archive",
+    "3. Resource",
+    "2. Area",
+    "1. Project",
     "Welcome.md"
   ]
 }
