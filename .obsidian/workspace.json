@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "8578790e66689a4f",
+        "id": "bc6fa2585fe89d3b",
         "type": "tabs",
         "children": [
           {
-            "id": "16926bdd9da3b089",
+            "id": "290bb6c88c641728",
             "type": "leaf",
             "state": {
               "type": "kanban",
@@ -30,26 +30,6 @@
               },
               "icon": "lucide-trello",
               "title": "kanban dashboard"
-            }
-          }
-        ]
-      },
-      {
-        "id": "49ae0ff6ec999402",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "3d31fb356ea2cbbd",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/26.카드 정렬하기.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "26.카드 정렬하기"
             }
           }
         ]
@@ -228,14 +208,16 @@
       "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "3d31fb356ea2cbbd",
+  "active": "290bb6c88c641728",
   "lastOpenFiles": [
+    "1. Project/이것이 취업을 위한 코딩테스트다/28.고정점 찾기.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/29.공유기 설치.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/27.정렬된 배열에서 특정 수의 개수 구하기.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/23.국영수.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/26.카드 정렬하기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/01. 모험가 길드.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/25.실패율.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/27.정렬된 배열에서 특정 수의 개수 구하기.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/26.카드 정렬하기.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/23.국영수.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/24.안테나.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/정리.md",
     "1. Project/이것이 취업을 위한 코딩테스트다",
