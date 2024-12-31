@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "2c81baf028759084",
+        "id": "820a6774c26a8f3b",
         "type": "tabs",
         "children": [
           {
-            "id": "79892fccb03ea34b",
+            "id": "f6f7228ec5fd245d",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -192,9 +192,10 @@
       "file-cleaner-redux:Clean files": false
     }
   },
-  "active": "79892fccb03ea34b",
+  "active": "28bab7a986b18dda",
   "lastOpenFiles": [
     "무제 파일.md",
+    "무제 파일 1.md",
     "2024-12-30.md",
     "README.md",
     "2. Area",
