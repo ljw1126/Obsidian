@@ -4,32 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "16dbd6bc93dc7c1e",
+        "id": "eace07a04924e59c",
         "type": "tabs",
         "children": [
           {
-            "id": "c903e216eac8cdac",
+            "id": "f8ea486b8a3c18f2",
             "type": "leaf",
             "state": {
-              "type": "kanban",
+              "type": "markdown",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-                "kanbanViewState": {
-                  "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false
-                  ]
-                }
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-trello",
-              "title": "kanban dashboard"
+              "icon": "lucide-file",
+              "title": "45.최종순위"
             }
           }
         ]
@@ -114,7 +103,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -124,7 +113,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "kanban dashboard의 백링크"
+              "title": "45.최종순위의 백링크"
             }
           },
           {
@@ -133,12 +122,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "kanban dashboard의 나가는 링크"
+              "title": "45.최종순위의 나가는 링크"
             }
           },
           {
@@ -160,10 +149,10 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md"
               },
               "icon": "lucide-list",
-              "title": "kanban dashboard 개요"
+              "title": "45.최종순위 개요"
             }
           },
           {
@@ -208,10 +197,11 @@
       "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "c903e216eac8cdac",
+  "active": "f8ea486b8a3c18f2",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/44.행성터널.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/44.행성터널.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/43.어두운길.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/42.탑승구.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/41.여행계획.md",
