@@ -114,7 +114,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "README.md",
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -124,7 +124,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for README"
+              "title": "kanban dashboard의 백링크"
             }
           },
           {
@@ -133,12 +133,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "README.md",
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from README"
+              "title": "kanban dashboard의 나가는 링크"
             }
           },
           {
@@ -160,10 +160,10 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "README.md"
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
               },
               "icon": "lucide-list",
-              "title": "Outline of README"
+              "title": "kanban dashboard 개요"
             }
           },
           {
@@ -208,7 +208,7 @@
       "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "8903adf88ddac1ef",
+  "active": "6219e53989b4e4a3",
   "lastOpenFiles": [
     "1. Project/이것이 취업을 위한 코딩테스트다/38.정확한 순위.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/40.숨바꼭질.md",
