@@ -4,17 +4,32 @@
     "type": "split",
     "children": [
       {
-        "id": "820a6774c26a8f3b",
+        "id": "2b9bb5921e9533d8",
         "type": "tabs",
         "children": [
           {
-            "id": "f6f7228ec5fd245d",
+            "id": "23e47c6de1bdef3e",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "새 탭"
+              "type": "kanban",
+              "state": {
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+                "kanbanViewState": {
+                  "kanban-plugin": "board",
+                  "list-collapse": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
+              },
+              "icon": "lucide-trello",
+              "title": "kanban dashboard"
             }
           }
         ]
@@ -189,15 +204,20 @@
       "templates:템플릿 삽입": false,
       "command-palette:명령어 팔레트 열기": false,
       "obsidian-git:Open Git source control": false,
-      "file-cleaner-redux:Clean files": false
+      "file-cleaner-redux:Clean files": false,
+      "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "28bab7a986b18dda",
+  "active": "23e47c6de1bdef3e",
   "lastOpenFiles": [
+    "1. Project/이것이 취업을 위한 코딩테스트다/01. 모험가 길드.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/정리.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다",
     "무제 파일.md",
+    "README.md",
     "무제 파일 1.md",
     "2024-12-30.md",
-    "README.md",
     "2. Area",
     "1. Project",
     "4. Archive",
