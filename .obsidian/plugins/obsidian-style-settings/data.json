@@ -26,5 +26,6 @@
   "anuppuccin-theme-settings-extended@@catppuccin-theme-dark-extended": "ctp-atom-dark",
   "anuppuccin-theme-settings-extended@@anp-theme-ext-dark": true,
   "anuppuccin-theme-settings-extended@@anp-theme-ext-amoled": true,
-  "anuppuccin-theme-settings-extended@@anp-theme-ext-light": true
+  "anuppuccin-theme-settings-extended@@anp-theme-ext-light": true,
+  "anuppuccin-custom-background@@anp-background-image-toggle": true
 }

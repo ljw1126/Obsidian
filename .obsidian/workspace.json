@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "54e6a458aa1eaa59",
+        "id": "2c81baf028759084",
         "type": "tabs",
         "children": [
           {
-            "id": "c569ae534c050e1a",
+            "id": "79892fccb03ea34b",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -188,10 +188,11 @@
       "daily-notes:오늘의 데일리 노트 열기": false,
       "templates:템플릿 삽입": false,
       "command-palette:명령어 팔레트 열기": false,
-      "obsidian-git:Open Git source control": false
+      "obsidian-git:Open Git source control": false,
+      "file-cleaner-redux:Clean files": false
     }
   },
-  "active": "28bab7a986b18dda",
+  "active": "79892fccb03ea34b",
   "lastOpenFiles": [
     "무제 파일.md",
     "2024-12-30.md",

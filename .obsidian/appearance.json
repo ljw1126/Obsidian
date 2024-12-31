@@ -1,6 +1,7 @@
 {
   "cssTheme": "AnuPpuccin",
   "enabledCssSnippets": [
-    "color-extend"
+    "color-extend",
+    "custom-background"
   ]
 }
