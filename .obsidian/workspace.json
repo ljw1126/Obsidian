@@ -11,25 +11,14 @@
             "id": "290bb6c88c641728",
             "type": "leaf",
             "state": {
-              "type": "kanban",
+              "type": "markdown",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-                "kanbanViewState": {
-                  "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false
-                  ]
-                }
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-trello",
-              "title": "kanban dashboard"
+              "icon": "lucide-file",
+              "title": "30.가사 검색"
             }
           }
         ]
@@ -210,8 +199,8 @@
   },
   "active": "290bb6c88c641728",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/29.공유기 설치.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/28.고정점 찾기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/27.정렬된 배열에서 특정 수의 개수 구하기.md",
