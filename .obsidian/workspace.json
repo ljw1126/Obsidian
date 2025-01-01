@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "eace07a04924e59c",
+        "id": "4bf4b6cc5dca7637",
         "type": "tabs",
         "children": [
           {
-            "id": "f8ea486b8a3c18f2",
+            "id": "d27fdc2595f7ddc1",
             "type": "leaf",
             "state": {
               "type": "kanban",
@@ -208,10 +208,18 @@
       "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "f8ea486b8a3c18f2",
+  "active": "d27fdc2595f7ddc1",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/34.병사 배치하기.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/33.퇴사.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/32.정수 삼각형.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/31.금광.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/36.편집 거리.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/35.못생긴 수.md",
+    "4. Archive/무제 파일.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/44.행성터널.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/43.어두운길.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/42.탑승구.md",
@@ -219,7 +227,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/38.정확한 순위.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/40.숨바꼭질.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/39.화성 탐사.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/29.공유기 설치.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/37.플로이드.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/28.고정점 찾기.md",
@@ -229,18 +236,12 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/01. 모험가 길드.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/25.실패율.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/24.안테나.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/정리.md",
     "1. Project/이것이 취업을 위한 코딩테스트다",
-    "무제 파일.md",
-    "README.md",
-    "무제 파일 1.md",
-    "2024-12-30.md",
     "2. Area",
     "1. Project",
     "4. Archive",
     "3. Resource",
     "2. Area",
-    "1. Project",
-    "Welcome.md"
+    "1. Project"
   ]
 }
