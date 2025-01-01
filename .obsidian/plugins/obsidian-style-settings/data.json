@@ -28,8 +28,9 @@
   "anuppuccin-theme-settings-extended@@anp-theme-ext-amoled": true,
   "anuppuccin-theme-settings-extended@@anp-theme-ext-light": true,
   "anuppuccin-custom-background@@anp-background-image-toggle": true,
-  "anuppuccin-custom-background@@anp-custom-bg-brightness-dark": 0.75,
+  "anuppuccin-custom-background@@anp-custom-bg-brightness-dark": 0.9,
   "anuppuccin-custom-background@@anp-custom-bg-blur-dark": 8,
   "anuppuccin-custom-background@@anp-custom-bg-card-fg-opacity-dark": 0.4,
-  "anuppuccin-theme-settings@@anuppuccin-theme-dark": "ctp-mocha"
+  "anuppuccin-theme-settings@@anuppuccin-theme-dark": "ctp-mocha",
+  "anuppuccin-theme-settings@@anp-table-toggle": true
 }

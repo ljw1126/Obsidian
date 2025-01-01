@@ -1,6 +1,10 @@
 {
   "recentFiles": [
     {
+      "basename": "kanban dashboard",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
+    },
+    {
       "basename": "35.못생긴 수",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/35.못생긴 수.md"
     },
@@ -9,8 +13,24 @@
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/34.병사 배치하기.md"
     },
     {
-      "basename": "kanban dashboard",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
+      "basename": "01. 모험가 길드",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/01. 모험가 길드.md"
+    },
+    {
+      "basename": "36.편집 거리",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/36.편집 거리.md"
+    },
+    {
+      "basename": "40.숨바꼭질",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/40.숨바꼭질.md"
+    },
+    {
+      "basename": "39.화성 탐사",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/39.화성 탐사.md"
+    },
+    {
+      "basename": "README",
+      "path": "README.md"
     },
     {
       "basename": "33.퇴사",
@@ -27,10 +47,6 @@
     {
       "basename": "30.가사 검색",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md"
-    },
-    {
-      "basename": "36.편집 거리",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/36.편집 거리.md"
     },
     {
       "basename": "45.최종순위",
@@ -55,14 +71,6 @@
     {
       "basename": "38.정확한 순위",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/38.정확한 순위.md"
-    },
-    {
-      "basename": "40.숨바꼭질",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/40.숨바꼭질.md"
-    },
-    {
-      "basename": "39.화성 탐사",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/39.화성 탐사.md"
     },
     {
       "basename": "29.공유기 설치",
@@ -93,20 +101,12 @@
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/26.카드 정렬하기.md"
     },
     {
-      "basename": "01. 모험가 길드",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/01. 모험가 길드.md"
-    },
-    {
       "basename": "25.실패율",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/25.실패율.md"
     },
     {
       "basename": "24.안테나",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/24.안테나.md"
-    },
-    {
-      "basename": "README",
-      "path": "README.md"
     }
   ],
   "omittedPaths": [],
