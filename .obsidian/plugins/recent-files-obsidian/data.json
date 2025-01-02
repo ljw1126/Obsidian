@@ -5,6 +5,14 @@
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
     },
     {
+      "basename": "45.최종순위",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md"
+    },
+    {
+      "basename": "21.인구 이동",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/21.인구 이동.md"
+    },
+    {
       "basename": "20.감시 피하기",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/20.감시 피하기.md"
     },
@@ -35,10 +43,6 @@
     {
       "basename": "README",
       "path": "README.md"
-    },
-    {
-      "basename": "21.인구 이동",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/21.인구 이동.md"
     },
     {
       "basename": "18.괄호 변환",
@@ -79,10 +83,6 @@
     {
       "basename": "30.가사 검색",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md"
-    },
-    {
-      "basename": "45.최종순위",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md"
     },
     {
       "basename": "44.행성터널",
