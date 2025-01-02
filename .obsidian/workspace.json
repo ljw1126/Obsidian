@@ -11,14 +11,25 @@
             "id": "84411afef2496805",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "kanban",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/11.뱀.md",
-                "mode": "source",
-                "source": false
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+                "kanbanViewState": {
+                  "kanban-plugin": "board",
+                  "list-collapse": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
               },
-              "icon": "lucide-file",
-              "title": "11.뱀"
+              "icon": "lucide-trello",
+              "title": "kanban dashboard"
             }
           }
         ]
@@ -207,6 +218,7 @@
   },
   "active": "84411afef2496805",
   "lastOpenFiles": [
+    "1. Project/이것이 취업을 위한 코딩테스트다/11.뱀.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/13.치킨배달.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/10.자물쇠와 열쇠.md",
@@ -215,7 +227,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/06.무지의 먹방라이브.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/14.외벽점검.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/12.기둥과 보 설치.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/11.뱀.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/09.문자열 압축.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/04.만들 수 없는 금액.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/03.문자열 뒤집기.md",
