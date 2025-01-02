@@ -4,32 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "e733db0f80c751ea",
+        "id": "281a5ab8d2bca836",
         "type": "tabs",
         "children": [
           {
-            "id": "ee03137fe6d36099",
+            "id": "f27a39c43d5e8340",
             "type": "leaf",
             "state": {
-              "type": "kanban",
+              "type": "markdown",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-                "kanbanViewState": {
-                  "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false
-                  ]
-                }
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/06.무지의 먹방라이브.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-trello",
-              "title": "kanban dashboard"
+              "icon": "lucide-file",
+              "title": "06.무지의 먹방라이브"
             }
           }
         ]
@@ -216,10 +205,23 @@
       "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "ee03137fe6d36099",
+  "active": "f27a39c43d5e8340",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/22.블록 이동하기 (x).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/14.외벽점검.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/13.치킨배달.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/12.기둥과 보 설치.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/11.뱀.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/10.자물쇠와 열쇠.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/09.문자열 압축.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/08.문자열 재정렬.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/07.럭키 스트레이트.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/04.만들 수 없는 금액.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/06.무지의 먹방라이브.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/03.문자열 뒤집기.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/05.볼링공 고르기.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/02.곱하기 혹은 더하기.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/22.블록 이동하기 (x).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/42.탑승구(x).md",
@@ -232,18 +234,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/35.못생긴 수.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/17.경쟁적 전염.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/16.연구소.md",
-    "README.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/15.특정 거리의 도시 찾기.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/34.병사 배치하기.md",
-    "무제 파일.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/01. 모험가 길드.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/40.숨바꼭질.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/39.화성 탐사.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/33.퇴사.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/32.정수 삼각형.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/31.금광.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md",
-    "4. Archive/무제 파일.md",
     "1. Project/이것이 취업을 위한 코딩테스트다",
     "2. Area",
     "1. Project",
