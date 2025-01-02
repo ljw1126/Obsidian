@@ -5,6 +5,10 @@
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
     },
     {
+      "basename": "18.괄호 변환",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/18.괄호 변환.md"
+    },
+    {
       "basename": "45.최종순위",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md"
     },
@@ -43,10 +47,6 @@
     {
       "basename": "README",
       "path": "README.md"
-    },
-    {
-      "basename": "18.괄호 변환",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/18.괄호 변환.md"
     },
     {
       "basename": "15.특정 거리의 도시 찾기",
