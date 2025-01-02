@@ -11,14 +11,25 @@
             "id": "84411afef2496805",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "kanban",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/14.외벽점검 (🔺).md",
-                "mode": "source",
-                "source": false
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+                "kanbanViewState": {
+                  "kanban-plugin": "board",
+                  "list-collapse": [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false
+                  ]
+                }
               },
-              "icon": "lucide-file",
-              "title": "14.외벽점검 (🔺)"
+              "icon": "lucide-trello",
+              "title": "kanban dashboard"
             }
           }
         ]
@@ -207,10 +218,10 @@
   },
   "active": "84411afef2496805",
   "lastOpenFiles": [
+    "1. Project/이것이 취업을 위한 코딩테스트다/14.외벽점검 (🔺).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/42.탑승구(🔺).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/22.블록 이동하기 (🔺).md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/14.외벽점검 (🔺).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/12.기둥과 보 설치.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/11.뱀.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/13.치킨배달.md",
