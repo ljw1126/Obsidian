@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "6f11abef5e539458",
+        "id": "e733db0f80c751ea",
         "type": "tabs",
         "children": [
           {
-            "id": "2f564bce19275da5",
+            "id": "ee03137fe6d36099",
             "type": "leaf",
             "state": {
               "type": "kanban",
@@ -44,6 +44,7 @@
       {
         "id": "df3a60ed30d9c43c",
         "type": "tabs",
+        "dimension": 74.77578475336323,
         "children": [
           {
             "id": "28bab7a986b18dda",
@@ -89,6 +90,7 @@
       {
         "id": "89c437087cead4e7",
         "type": "tabs",
+        "dimension": 25.22421524663677,
         "children": [
           {
             "id": "d51e845b4ba90525",
@@ -214,12 +216,15 @@
       "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "2f564bce19275da5",
+  "active": "ee03137fe6d36099",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/18.괄호 변환.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/22.블록 이동하기 (x).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-    "18.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/42.탑승구(x).md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/18.괄호 변환.md",
+    "18.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/21.인구 이동.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/20.감시 피하기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/19.연산자 끼워 넣기.md",
@@ -227,7 +232,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/35.못생긴 수.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/17.경쟁적 전염.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/16.연구소.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/22.블록 이동하기.md",
     "README.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/15.특정 거리의 도시 찾기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/34.병사 배치하기.md",
@@ -240,8 +244,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/31.금광.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/30.가사 검색.md",
     "4. Archive/무제 파일.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/44.행성터널.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/43.어두운길.md",
     "1. Project/이것이 취업을 위한 코딩테스트다",
     "2. Area",
     "1. Project",
