@@ -4,32 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "281a5ab8d2bca836",
+        "id": "f341fbc3be6d1d1b",
         "type": "tabs",
         "children": [
           {
-            "id": "f27a39c43d5e8340",
+            "id": "84411afef2496805",
             "type": "leaf",
             "state": {
-              "type": "kanban",
+              "type": "markdown",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-                "kanbanViewState": {
-                  "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false
-                  ]
-                }
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/11.뱀.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-trello",
-              "title": "kanban dashboard"
+              "icon": "lucide-file",
+              "title": "11.뱀"
             }
           }
         ]
@@ -90,7 +79,7 @@
       {
         "id": "89c437087cead4e7",
         "type": "tabs",
-        "dimension": 25.22421524663677,
+        "dimension": 25.224215246636774,
         "children": [
           {
             "id": "d51e845b4ba90525",
@@ -216,17 +205,17 @@
       "obsidian-kanban:새 보드 만들기": false
     }
   },
-  "active": "f27a39c43d5e8340",
+  "active": "84411afef2496805",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/08.문자열 재정렬.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/13.치킨배달.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/10.자물쇠와 열쇠.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/08.문자열 재정렬.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/07.럭키 스트레이트.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/06.무지의 먹방라이브.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/14.외벽점검.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/13.치킨배달.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/12.기둥과 보 설치.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/11.뱀.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/10.자물쇠와 열쇠.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/09.문자열 압축.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/04.만들 수 없는 금액.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/03.문자열 뒤집기.md",
