@@ -3,18 +3,18 @@
   "openAIApiKey": "",
   "openAIOrgId": "",
   "huggingfaceApiKey": "",
-  "cohereApiKey": "",
+  "cohereApiKey": "mSxGhZtSUj65lpbB88JIwe7nFq4rH3Ah0fIT9GZQ",
   "anthropicApiKey": "",
   "azureOpenAIApiKey": "",
   "azureOpenAIApiInstanceName": "",
   "azureOpenAIApiDeploymentName": "",
   "azureOpenAIApiVersion": "",
   "azureOpenAIApiEmbeddingDeploymentName": "",
-  "googleApiKey": "",
+  "googleApiKey": "AIzaSyABofcIJVgExM72lvRH-_zHdkIIodMdHms",
   "openRouterAiApiKey": "",
   "defaultChainType": "llm_chain",
   "defaultModelKey": "gemini-1.5-flash|google",
-  "embeddingModelKey": "copilot-plus-small|copilot-plus",
+  "embeddingModelKey": "embed-multilingual-light-v3.0|cohereai",
   "temperature": 0.1,
   "maxTokens": 1000,
   "contextTurns": 15,
@@ -43,63 +43,85 @@
       "provider": "openai",
       "enabled": true,
       "isBuiltIn": true,
-      "core": true
+      "core": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "gpt-4o-mini",
       "provider": "openai",
       "enabled": true,
       "isBuiltIn": true,
-      "core": true
+      "core": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "claude-3-5-sonnet-latest",
       "provider": "anthropic",
       "enabled": true,
       "isBuiltIn": true,
-      "core": true
+      "core": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "gpt-4-turbo",
       "provider": "openai",
       "enabled": true,
-      "isBuiltIn": true
+      "isBuiltIn": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "claude-3-5-haiku-latest",
       "provider": "anthropic",
       "enabled": true,
-      "isBuiltIn": true
+      "isBuiltIn": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "command-r",
       "provider": "cohereai",
       "enabled": true,
-      "isBuiltIn": true
+      "isBuiltIn": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "command-r-plus",
       "provider": "cohereai",
       "enabled": true,
-      "isBuiltIn": true
+      "isBuiltIn": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "gemini-1.5-pro",
       "provider": "google",
       "enabled": true,
-      "isBuiltIn": true
+      "isBuiltIn": true,
+      "baseUrl": "",
+      "apiKey": ""
     },
     {
       "name": "gemini-1.5-flash",
       "provider": "google",
+      "baseUrl": "",
+      "apiKey": "AIzaSyABofcIJVgExM72lvRH-_zHdkIIodMdHms",
       "enabled": true,
-      "isBuiltIn": true
+      "isBuiltIn": true,
+      "enableCors": false,
+      "isEmbeddingModel": false
     },
     {
       "name": "azure-openai",
       "provider": "azure openai",
       "enabled": true,
-      "isBuiltIn": true
+      "isBuiltIn": true,
+      "baseUrl": "",
+      "apiKey": ""
     }
   ],
   "activeEmbeddingModels": [
