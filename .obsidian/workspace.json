@@ -11,25 +11,14 @@
             "id": "84411afef2496805",
             "type": "leaf",
             "state": {
-              "type": "kanban",
+              "type": "markdown",
               "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-                "kanbanViewState": {
-                  "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false
-                  ]
-                }
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/09.문자열 압축.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-trello",
-              "title": "kanban dashboard"
+              "icon": "lucide-file",
+              "title": "09.문자열 압축"
             }
           }
         ]
@@ -218,8 +207,9 @@
   },
   "active": "84411afef2496805",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/09.문자열 압축.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/09.문자열 압축.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/14.외벽점검 (🔺).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/42.탑승구(🔺).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/22.블록 이동하기 (🔺).md",
@@ -234,7 +224,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/03.문자열 뒤집기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/05.볼링공 고르기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/02.곱하기 혹은 더하기.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/18.괄호 변환.md",
     "18.md",
@@ -244,7 +233,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/36.편집 거리.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/35.못생긴 수.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/17.경쟁적 전염.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/16.연구소.md",
     "1. Project/이것이 취업을 위한 코딩테스트다",
     "2. Area",
     "1. Project",
