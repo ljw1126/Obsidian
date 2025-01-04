@@ -1,6 +1,18 @@
 {
   "recentFiles": [
     {
+      "basename": "46.아기상어",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/46.아기상어.md"
+    },
+    {
+      "basename": "47.청소년 상어",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/47.청소년 상어.md"
+    },
+    {
+      "basename": "48.어른 상어",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/48.어른 상어.md"
+    },
+    {
       "basename": "kanban dashboard",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
     },
@@ -187,14 +199,6 @@
     {
       "basename": "26.카드 정렬하기",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/26.카드 정렬하기.md"
-    },
-    {
-      "basename": "25.실패율",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/25.실패율.md"
-    },
-    {
-      "basename": "24.안테나",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/24.안테나.md"
     }
   ],
   "omittedPaths": [],

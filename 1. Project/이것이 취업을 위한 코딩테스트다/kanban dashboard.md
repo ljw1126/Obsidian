@@ -81,10 +81,17 @@ kanban-plugin: board
 - [x] [[45.최종순위]]
 
 
+## Ch19. 2020년 상반기 S사 기출
+
+- [ ] [[46.아기상어]]
+- [ ] [[47.청소년 상어]]
+- [ ] [[48.어른 상어]]
+
+
 
 
 %% kanban:settings
 ```
-{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
+{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
 ```
 %%
