@@ -11,10 +11,14 @@
             "id": "33dfcdf15442c664",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/47.청소년 상어.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "새 탭"
+              "title": "47.청소년 상어"
             }
           }
         ]
@@ -214,9 +218,10 @@
   },
   "active": "33dfcdf15442c664",
   "lastOpenFiles": [
+    "1. Project/이것이 취업을 위한 코딩테스트다/48.어른 상어.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/16.연구소.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/46.아기상어.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/47.청소년 상어.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/48.어른 상어.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/01. 모험가 길드 (🔺).md",
@@ -240,7 +245,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/18.괄호 변환.md",
     "18.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/21.인구 이동.md",
     "1. Project/이것이 취업을 위한 코딩테스트다",
     "2. Area",
     "1. Project",
