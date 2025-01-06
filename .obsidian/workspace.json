@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "README.md",
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/46.아기상어 (🔺).md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "README"
+              "title": "46.아기상어 (🔺)"
             }
           }
         ]
@@ -218,11 +218,12 @@
   },
   "active": "befcac1550e6c559",
   "lastOpenFiles": [
-    "1. Project/이직 준비/공백기에 대해.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/48.어른 상어.md",
-    "1. Project/이직 준비",
     "1. Project/이것이 취업을 위한 코딩테스트다/47.청소년 상어 (🔺).md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/48.어른 상어.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/46.아기상어 (🔺).md",
+    "README.md",
+    "1. Project/이직 준비/공백기에 대해.md",
+    "1. Project/이직 준비",
     "1. Project/이것이 취업을 위한 코딩테스트다/22.블록 이동하기 (🔺).md",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/42.탑승구(🔺).md",
@@ -245,7 +246,6 @@
     "1. Project/이것이 취업을 위한 코딩테스트다/05.볼링공 고르기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/02.곱하기 혹은 더하기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/45.최종순위.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/18.괄호 변환.md",
     "1. Project/이것이 취업을 위한 코딩테스트다",
     "2. Area",
     "1. Project",
