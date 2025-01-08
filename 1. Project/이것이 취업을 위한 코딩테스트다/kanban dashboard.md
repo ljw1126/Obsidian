@@ -4,6 +4,22 @@ kanban-plugin: board
 
 ---
 
+## Ch8. 다이나믹 프로그래밍
+
+- [ ] [[1로 만들기]]
+- [x] [[개미전사]]
+- [ ] [[바닥공사]]
+- [ ] [[효율적인 화폐 구성]]
+
+
+## Ch9. 최단 경로
+
+
+
+## Ch10. 그래프 이론
+
+
+
 ## Ch11. 그리디 문제
 
 - [x] [[01. 모험가 길드 (🔺)]]
@@ -92,6 +108,6 @@ kanban-plugin: board
 
 %% kanban:settings
 ```
-{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
+{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
 ```
 %%
