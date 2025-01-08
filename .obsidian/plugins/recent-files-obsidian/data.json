@@ -1,20 +1,32 @@
 {
   "recentFiles": [
     {
-      "basename": "미래 도시",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/미래 도시.md"
+      "basename": "summary",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/summary.md"
     },
     {
-      "basename": "전보",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/전보.md"
+      "basename": "팀 결성",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/팀 결성.md"
+    },
+    {
+      "basename": "커리큘럼",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/커리큘럼.md"
+    },
+    {
+      "basename": "도시 분할 계획",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/도시 분할 계획.md"
     },
     {
       "basename": "kanban dashboard",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
     },
     {
-      "basename": "summary",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/summary.md"
+      "basename": "전보",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/전보.md"
+    },
+    {
+      "basename": "미래 도시",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/미래 도시.md"
     },
     {
       "basename": "바닥공사 (🔺)",
@@ -187,18 +199,6 @@
     {
       "basename": "39.화성 탐사",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/39.화성 탐사.md"
-    },
-    {
-      "basename": "33.퇴사",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/33.퇴사.md"
-    },
-    {
-      "basename": "32.정수 삼각형",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/32.정수 삼각형.md"
-    },
-    {
-      "basename": "31.금광",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/31.금광.md"
     }
   ],
   "omittedPaths": [],
