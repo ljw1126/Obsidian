@@ -1,6 +1,6 @@
 ---
 
-kanban-plugin: board
+kanban-plugin: table
 
 ---
 
@@ -8,12 +8,13 @@ kanban-plugin: board
 
 - [x] [[위에서 아래로]]
 - [x] [[성적이 낮은 순서로 학생 출력하기]]
-- [ ] [[두 배열의 원소 교체]]
+- [x] [[두 배열의 원소 교체]]
 
 
 ## Ch7. 이진탐색
 
-- [ ] 부품 찾기
+- [x] [[부품 찾기]]
+- [x] [[떡볶이 떡 만들기]]
 
 
 ## Ch8. 다이나믹 프로그래밍
@@ -125,6 +126,6 @@ kanban-plugin: board
 
 %% kanban:settings
 ```
-{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
+{"kanban-plugin":"table","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
 ```
 %%
