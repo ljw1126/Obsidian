@@ -1,12 +1,32 @@
 {
   "recentFiles": [
     {
+      "basename": "summary",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/summary.md"
+    },
+    {
       "basename": "kanban dashboard",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
     },
     {
-      "basename": "summary",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/summary.md"
+      "basename": "스크린샷 2025-01-02 오후 12.02.23",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png"
+    },
+    {
+      "basename": "게임 개발",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch4. 구현/게임 개발.md"
+    },
+    {
+      "basename": "큰 수의 법칙",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/큰 수의 법칙.md"
+    },
+    {
+      "basename": "왕실의 나이트",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch4. 구현/왕실의 나이트.md"
+    },
+    {
+      "basename": "숫자 카드 게임",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/숫자 카드 게임.md"
     },
     {
       "basename": "미로 탈출",
@@ -23,10 +43,6 @@
     {
       "basename": "떡볶이 떡 만들기",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch7. 이진탐색/떡볶이 떡 만들기.md"
-    },
-    {
-      "basename": "스크린샷 2025-01-02 오후 12.02.23",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png"
     },
     {
       "basename": "두 배열의 원소 교체",
@@ -183,22 +199,6 @@
     {
       "basename": "02.곱하기 혹은 더하기",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/02.곱하기 혹은 더하기.md"
-    },
-    {
-      "basename": "45.최종순위",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/45.최종순위.md"
-    },
-    {
-      "basename": "18.괄호 변환",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/18.괄호 변환.md"
-    },
-    {
-      "basename": "21.인구 이동",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/21.인구 이동.md"
-    },
-    {
-      "basename": "20.감시 피하기",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/20.감시 피하기.md"
     }
   ],
   "omittedPaths": [],
