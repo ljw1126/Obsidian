@@ -1,24 +1,40 @@
 {
   "recentFiles": [
     {
-      "basename": "커리큘럼",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/커리큘럼.md"
-    },
-    {
-      "basename": "도시 분할 계획",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/도시 분할 계획.md"
-    },
-    {
-      "basename": "팀 결성",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/팀 결성.md"
+      "basename": "kanban dashboard",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
     },
     {
       "basename": "summary",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/summary.md"
     },
     {
-      "basename": "kanban dashboard",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
+      "basename": "두 배열의 원소 교체",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch6. 정렬/두 배열의 원소 교체.md"
+    },
+    {
+      "basename": "스크린샷 2025-01-02 오후 12.02.23",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png"
+    },
+    {
+      "basename": "팀 결성",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/팀 결성.md"
+    },
+    {
+      "basename": "성적이 낮은 순서로 학생 출력하기",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch6. 정렬/성적이 낮은 순서로 학생 출력하기.md"
+    },
+    {
+      "basename": "위에서 아래로",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch6. 정렬/위에서 아래로.md"
+    },
+    {
+      "basename": "커리큘럼",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/커리큘럼.md"
+    },
+    {
+      "basename": "도시 분할 계획",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/도시 분할 계획.md"
     },
     {
       "basename": "전보",
@@ -109,10 +125,6 @@
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/42.탑승구(🔺).md"
     },
     {
-      "basename": "스크린샷 2025-01-02 오후 12.02.23",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png"
-    },
-    {
       "basename": "03.문자열 뒤집기",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/03.문자열 뒤집기.md"
     },
@@ -187,18 +199,6 @@
     {
       "basename": "15.특정 거리의 도시 찾기",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/15.특정 거리의 도시 찾기.md"
-    },
-    {
-      "basename": "34.병사 배치하기",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/34.병사 배치하기.md"
-    },
-    {
-      "basename": "40.숨바꼭질",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/40.숨바꼭질.md"
-    },
-    {
-      "basename": "39.화성 탐사",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/39.화성 탐사.md"
     }
   ],
   "omittedPaths": [],

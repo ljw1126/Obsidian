@@ -4,6 +4,18 @@ kanban-plugin: board
 
 ---
 
+## Ch6. 정렬
+
+- [x] [[위에서 아래로]]
+- [x] [[성적이 낮은 순서로 학생 출력하기]]
+- [ ] [[두 배열의 원소 교체]]
+
+
+## Ch7. 이진탐색
+
+- [ ] 부품 찾기
+
+
 ## Ch8. 다이나믹 프로그래밍
 
 - [x] [[1로 만들기]]
@@ -20,9 +32,9 @@ kanban-plugin: board
 
 ## Ch10. 그래프 이론
 
-- [ ] [[팀 결성]]
-- [ ] [[도시 분할 계획]]
-- [ ] [[커리큘럼]]
+- [x] [[팀 결성]]
+- [x] [[도시 분할 계획]]
+- [x] [[커리큘럼]]
 
 
 ## Ch11. 그리디 문제
@@ -113,6 +125,6 @@ kanban-plugin: board
 
 %% kanban:settings
 ```
-{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
+{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
 ```
 %%
