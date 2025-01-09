@@ -4,17 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "4771e87774477353",
+        "id": "b21aac8d9e9c7b7e",
         "type": "tabs",
         "children": [
           {
-            "id": "fe99e4f07c39ea69",
+            "id": "54a86564dc49a3cd",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "1. Project/이것이 취업을 위한 코딩테스트다/Ch4. 구현/게임 개발.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "새 탭"
+              "title": "게임 개발"
             }
           }
         ]
@@ -213,17 +217,17 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "fe99e4f07c39ea69",
+  "active": "54a86564dc49a3cd",
   "lastOpenFiles": [
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
-    "1. Project/이것이 취업을 위한 코딩테스트다/Ch4. 구현/게임 개발.md",
-    "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/큰 수의 법칙.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch4. 구현/왕실의 나이트.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/큰 수의 법칙.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/숫자 카드 게임.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/Ch4. 구현/게임 개발.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/summary.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch4. 구현",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드",
-    "1. Project/이것이 취업을 위한 코딩테스트다/summary.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS/미로 탈출.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS/음료수 얼려 먹기.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS",

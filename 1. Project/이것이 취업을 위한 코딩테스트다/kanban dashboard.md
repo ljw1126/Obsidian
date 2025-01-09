@@ -1,6 +1,6 @@
 ---
 
-kanban-plugin: board
+kanban-plugin: table
 
 ---
 
@@ -12,7 +12,7 @@ kanban-plugin: board
 
 ## Ch4. 구현
 
-- [ ] [[왕실의 나이트]]
+- [x] [[왕실의 나이트]]
 - [ ] [[게임 개발]]
 
 
@@ -144,6 +144,6 @@ kanban-plugin: board
 
 %% kanban:settings
 ```
-{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
+{"kanban-plugin":"table","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
 ```
 %%
