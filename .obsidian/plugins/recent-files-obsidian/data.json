@@ -1,12 +1,20 @@
 {
   "recentFiles": [
     {
+      "basename": "kanban dashboard",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
+    },
+    {
       "basename": "summary",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/summary.md"
     },
     {
-      "basename": "kanban dashboard",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
+      "basename": "미로 탈출",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS/미로 탈출.md"
+    },
+    {
+      "basename": "음료수 얼려 먹기",
+      "path": "1. Project/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS/음료수 얼려 먹기.md"
     },
     {
       "basename": "부품 찾기",
@@ -191,14 +199,6 @@
     {
       "basename": "20.감시 피하기",
       "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/20.감시 피하기.md"
-    },
-    {
-      "basename": "19.연산자 끼워 넣기",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/19.연산자 끼워 넣기.md"
-    },
-    {
-      "basename": "36.편집 거리",
-      "path": "1. Project/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/36.편집 거리.md"
     }
   ],
   "omittedPaths": [],

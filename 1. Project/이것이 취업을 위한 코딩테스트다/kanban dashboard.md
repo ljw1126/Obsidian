@@ -1,8 +1,22 @@
 ---
 
-kanban-plugin: table
+kanban-plugin: board
 
 ---
+
+## 
+
+
+
+## Ch4. 구현
+
+
+
+## Ch5. DFS/BFS
+
+- [x] [[음료수 얼려 먹기]]
+- [x] [[미로 탈출]]
+
 
 ## Ch6. 정렬
 
@@ -126,6 +140,6 @@ kanban-plugin: table
 
 %% kanban:settings
 ```
-{"kanban-plugin":"table","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
+{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
 ```
 %%
