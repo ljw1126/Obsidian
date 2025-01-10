@@ -1,19 +1,20 @@
 ---
 
-kanban-plugin: table
+kanban-plugin: board
 
 ---
 
 ## Ch3. 그리드
 
-- [ ] [[큰 수의 법칙]]
-- [ ] [[숫자 카드 게임]]
+- [x] [[큰 수의 법칙]]
+- [x] [[숫자 카드 게임]]
+- [x] [[1이 될 때까지]]
 
 
 ## Ch4. 구현
 
 - [x] [[왕실의 나이트]]
-- [ ] [[게임 개발]]
+- [x] [[게임 개발]]
 
 
 ## Ch5. DFS/BFS
@@ -144,6 +145,6 @@ kanban-plugin: table
 
 %% kanban:settings
 ```
-{"kanban-plugin":"table","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
+{"kanban-plugin":"board","list-collapse":[false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],"show-checkboxes":true,"hide-card-count":false}
 ```
 %%
