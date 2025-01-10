@@ -1,5 +1,5 @@
 ---
-kanban-plugin: board
+kanban-plugin: table
 ---
 
 ## Ch3. 그리드

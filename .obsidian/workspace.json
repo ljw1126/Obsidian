@@ -4,41 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "b21aac8d9e9c7b7e",
+        "id": "9186df5db68aa20b",
         "type": "tabs",
         "children": [
           {
-            "id": "54a86564dc49a3cd",
+            "id": "6c18653eb6d84fd0",
             "type": "leaf",
             "state": {
-              "type": "kanban",
-              "state": {
-                "file": "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
-                "kanbanViewState": {
-                  "kanban-plugin": "board",
-                  "list-collapse": [
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false,
-                    false
-                  ]
-                }
-              },
-              "icon": "lucide-trello",
-              "title": "kanban dashboard"
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "새 탭"
             }
           }
         ]
@@ -237,10 +213,10 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "54a86564dc49a3cd",
+  "active": "6c18653eb6d84fd0",
   "lastOpenFiles": [
-    "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
+    "1. Project/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "1. Project/이것이 취업을 위한 코딩테스트다/summary.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/숫자 카드 게임.md",
     "1. Project/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/큰 수의 법칙.md",
