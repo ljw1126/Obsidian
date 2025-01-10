@@ -18,5 +18,6 @@
   "file-cleaner-redux",
   "obsidian-kanban",
   "code-styler",
-  "copilot"
+  "copilot",
+  "obsidian-plugin-toc"
 ]

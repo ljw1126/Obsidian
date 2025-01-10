@@ -1,6 +1,14 @@
 {
   "recentFiles": [
     {
+      "basename": "summary",
+      "path": "1. Project/Git 마스터 과정/summary.md"
+    },
+    {
+      "basename": "Git Cheat Sheet",
+      "path": "1. Project/Git 마스터 과정/Git Cheat Sheet.md"
+    },
+    {
       "basename": "28.고정점 찾기",
       "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/28.고정점 찾기.md"
     },
@@ -187,18 +195,6 @@
     {
       "basename": "13.치킨배달",
       "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/13.치킨배달.md"
-    },
-    {
-      "basename": "10.자물쇠와 열쇠",
-      "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/10.자물쇠와 열쇠.md"
-    },
-    {
-      "basename": "08.문자열 재정렬",
-      "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/08.문자열 재정렬.md"
-    },
-    {
-      "basename": "06.무지의 먹방라이브",
-      "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/06.무지의 먹방라이브.md"
     }
   ],
   "omittedPaths": [],

@@ -11,13 +11,32 @@
             "id": "584c8df3fd0b4ff9",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "1. Project/Git 마스터 과정/Git Cheat Sheet.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "새 탭"
+              "title": "Git Cheat Sheet"
+            }
+          },
+          {
+            "id": "0bb30ce7b6ffeba8",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "1. Project/Git 마스터 과정/summary.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "summary"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -213,8 +232,14 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "28bab7a986b18dda",
+  "active": "0bb30ce7b6ffeba8",
   "lastOpenFiles": [
+    "1. Project/Git 마스터 과정/Git Cheat Sheet.md",
+    "1. Project/Git 마스터 과정/summary.md",
+    "1. Project/리팩토링의 모든 것(2판)",
+    "f.md",
+    "1. Project/타입스크립트 OOP",
+    "1. Project/Git 마스터 과정",
     "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/28.고정점 찾기.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch4. 구현/왕실의 나이트.md",
@@ -231,7 +256,6 @@
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch7. 이진탐색/부품 찾기.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch7. 이진탐색/떡볶이 떡 만들기.md",
-    "무제 파일.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch7. 이진탐색",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch6. 정렬/두 배열의 원소 교체.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론/팀 결성.md",
@@ -246,12 +270,6 @@
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/바닥공사 (🔺).md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/스크린샷 2025-01-08 오후 3.37.15.png",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/효율적인 화폐 구성.md",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/개미전사.md",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/1로 만들기.md",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/01. 모험가 길드 (🔺).md",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍",
-    "1. Project/이직 준비"
+    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/효율적인 화폐 구성.md"
   ]
 }
