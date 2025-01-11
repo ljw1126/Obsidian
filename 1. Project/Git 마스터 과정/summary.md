@@ -1,3 +1,19 @@
+- [[#Setup|Setup]]
+- [[#기본 명령어|기본 명령어]]
+	- [[#기본 명령어#workflow|workflow]]
+	- [[#기본 명령어#add|add]]
+	- [[#기본 명령어#ignore|ignore]]
+	- [[#기본 명령어#status|status]]
+	- [[#기본 명령어#diff|diff]]
+	- [[#기본 명령어#commit*|commit*]]
+	- [[#기본 명령어#파일 변경시 유용한 팁*|파일 변경시 유용한 팁*]]
+	- [[#기본 명령어#log|log]]
+	- [[#기본 명령어#log 꾸미기*|log 꾸미기*]]
+	- [[#기본 명령어#show|show]]
+	- [[#기본 명령어#diff|diff]]
+	- [[#기본 명령어#Tag*|Tag*]]
+- [[#Reference.|Reference.]]
+
 
 # Git 마스터 과정
 
@@ -104,6 +120,9 @@ git config -h
 
 ---
 ## 기본 명령어
+>[!tip] 터미널을 사용할 경우 oh my zsh에 git plugins을 설치하는 것을 권장 
+>- 다양한 alias와 편의 기능 지원
+
 ### workflow
 local에서 아래 3가지 단계로 나누어진다
 - **working directory**
@@ -218,26 +237,26 @@ git difftool --staged   # staging area 파일 대상 비교
 ```
 
 
-### commit\*
+### commit*
 작업한 파일들을 커밋이라는 하나의 단위로 분할 하려 깃 이력에 저장한다
 ```bash
 git commit -m "메시지"
 git commit -am "메시지" #(add+commit) working, staging 모든 파일을 commit하겠다
 ```
 
-**Tip.**
-1. 작은 단위로 의미있는 작업을 넣어서 commit하는게 좋다 (<u>의미없는 commit 생성은 지양해야 한다</u>)
-2. 동사와 명사 형식으로 커밋 메시지를 작성한다
-3. history(log)에 표시되는 내용만 작업해야지, <u>log에 기재하지 않은 작업을 해서 포함하게 되면 혼동 발생하여 협업에 방해될 수 있다</u>
-4. commit은 너무 커도 문제 있고, 너무 작아도 문제 있다
-5. (추가) remote에 반영하기 전 rebase를 통해 commit 이력 합치기/분리하기로 정리하는 것이 좋다
+
+>[!tip]
+>1. 작은 단위로 의미있는 작업을 넣어서 commit하는게 좋다 (<u>의미없는 commit 생성은 지양해야 한다</u>)
+>2. 동사와 명사 형식으로 커밋 메시지를 작성한다
+>3. history(log)에 표시되는 내용만 작업해야지, <u>log에 기재하지 않은 작업을 해서 포함하게 되면 혼동 발생하여 협업에 방해될 수 있다</u>
+>4. commit은 너무 커도 문제 있고, 너무 작아도 문제 있다
+>5. (추가) remote에 반영하기 전 rebase를 통해 commit 이력 합치기/분리하기로 정리하는 것이 좋다
 
 
-**Tip. commit template 설정**
-// 작성 예정
+>[!tip] git commit message template 설정하여 규격을 맞추어 커밋을 작성하는 것을 권장한다
 
 
-### 파일 변경시 유용한 팁\*
+### 파일 변경시 유용한 팁*
 평소 아래와 같이 파일을 삭제 후 status 확인할 경우 staging area에 포함되지 않아 직접 추가해줘야 했다
 ```bash
 rm c.txt
@@ -258,13 +277,218 @@ git mv cc.txt ccc.txt
 
 ### log
 터미널을 통해 커밋 이력, 버전 정보를 확인할 수 있다
+```bash
+git log --patch 
+git log --p
+git log --p <commit>
+```
+
+**--oneline**
+```bash
+git log --oneline     # 내림차순, 최근 이력부터 나열
+----------------------------------------------------------
+d643a6e (HEAD -> master) Update Welcome page
+b8e485f Add light theme
+bd7bd28 Add About page
+328708d Add Welcome page
+0ad2dbb Add UserRepository module
+9186a41 Add LoginService module
+1563681 Initialise project
+----------------------------------------------------------
 
 
-// terminal plugin
+ git log --oneline --reverse     # 오름차순, 첫 이력부터 나열
+----------------------------------------------------------
+1563681 Initialise project
+9186a41 Add LoginService module
+0ad2dbb Add UserRepository module
+328708d Add Welcome page
+bd7bd28 Add About page
+b8e485f Add light theme
+d643a6e (HEAD -> master) Update Welcome page
+----------------------------------------------------------
+```
 
-// 로그 포맷을 공식 사이트 지원
 
-// 태그 자리수별 의미 중요
+>[!iinfo] HEAD 
+>현재 포인터가 가르키고 있는 커밋을 표시
+>- head ~ 1 : head에서 이전 커밋
+>- head ~ 2 : head에서 두 단계 전 커밋
+
+
+### log 꾸미기*
+
+**공식 문서** 
+https://git-scm.com/docs/pretty-formats
+
+```bash
+git log --pretty=oneline
+
+# 포맷을 지정 가능 ( 공식 메뉴얼 사이트 참고하기 )
+git log --pretty=format:"%h %an"         # 해쉬코드와 작성자    
+git log --pretty=format:"%h %an %ar %s"     # 해쉬코드,작성자, 시간, 타이틀
+
+# fix 브랜치에서 master 브랜치와 함께 로그 보려면  
+git log --oneline --graph --all
+
+---------------------------------------------------------- 
+* d643a6e (master) Update Welcome page
+| * c38c4c4 (HEAD -> fix) Fix light theme
+|/
+* b8e485f Add light theme
+* bd7bd28 Add About page
+* 328708d Add Welcome page
+* 0ad2dbb Add UserRepository module
+* 9186a41 Add LoginService module
+* 1563681 Initialise project
+----------------------------------------------------------  
+```
+
+**global config alias 설정(권장)**
+```bash
+git config --global alias.hist "log --graph --all --pretty=format:'%C(yellow)[%ad]%C(reset) %C(green)[%h]%C(reset) | %C(white)%s %C(bold red){{%an}}%C(reset) %C(blue)%d%C(reset)' --date=short"
+
+git hist  #지정한 약어로 호출하면 [날짜][해시코드]|메시지{{작성자}} 표출됨 
+```
+
+**로그 심화**
+- 옵션 통해 필터링 기능을 지원한다
+- `-S` 옵션으로 깃 메시지에 문자열 검색이 가능한게 눈에 띈다
+```bash
+git log -3                     # 세줄만 출력 
+git log --oneline -3           # 세줄만 출력 
+git log --author="ellie"       # 작성자가 ellie 인거만 검색 
+git log --before="2020-09-08"  # 2020-09-08 날짜 이전 꺼만 검색
+git log --grep="project"       # 커밋중 project 문자 포함된 것만 검색 
+
+git log -S "문자열"         # (유레카) 변경 소스 코드 내용안에서 문자열 검색하고 싶을때 사용
+git log -S "about" -patch(또는 p)     # 자세히 보기 위해 옵션 p 추가
+
+git log 파일이름
+> git log about.txt            # about 파일에 대한 커밋을 볼 수 있음 
+> git log -p about.txt         # 자세히
+> git log -s about.txt         # 간략히 
+
+git log HEAD  (= git log 동일 )
+git log HEAD~1                 # HEAD의 이전 부모부터 보고 싶다면
+git log HEAD~2 
+```
+
+
+### show
+지정한 커밋의 변경 이력을 확인할 수 있다
+```bash
+git show 해시코드              # 해당하는 커밋의 내용을 정확히 확인가능 
+
+---------------------------------------------------------- 
+$ git show 0ad2dbb
+commit 0ad2dbb68fd004185753efdc3a43776e4396f58e
+Author: Ellie <dream.coder.ellie@gmail.com>
+Date:   Wed Oct 28 22:22:11 2020 +0900
+
+	Add UserRepository module
+
+diff --git a/user_repository.txt b/user_repository.txt
+new file mode 100644
+index 0000000..c362156
+--- /dev/null
++++ b/user_repository.txt
+@@ -0,0 +1 @@
++user repository
+---------------------------------------------------------- 
+```
+
+*커밋에서 원하는 파일만 확인하고 싶을 경우*
+```bash
+git show 0ad2dbb:user_repository.txt
+```
+
+
+### diff 
+변경 내용을 확인한다
+
+*두 가지 커밋을 비교할 경우*
+```bash
+$ git diff b8e485f c38c4c4
+
+diff --git a/light_theme.txt b/light_theme.txt
+index 62fd177..89ae3ea 100644
+--- a/light_theme.txt
++++ b/light_theme.txt
+@@ -1 +1,2 @@
+theme
++fix theme
+```
+
+두 가지 커밋에서 원하는 파일만 비교하고 싶을 때
+```bash
+git diff b8e485f c38c4c4 light_theme.txt
+```
+
+
+### Tag*
+- 특정 커밋을 북마크 하고 싶을때 사용
+- 수많은 history 중에 내가 원하는 commit 으로 빠르게 이동할 수 있음
+- 보통은 'release 버전'을 많이 한다 
+	- ex) v1.0.0 , v.2.0.0 
+
+>[!info] semantic versioning
+>v2.0.0 = v.major.minor.fix 
+>- major version : 어떤 특정기능 추가되었을때, 전체적인 업데이트 발생했을때 
+>- minor : 그 커다란 기능 중 조금의 기능이 업데이트되거나 개선되었을때
+>- fix : 기존에 존재하는 기능에서 오류수정했을때
+
+
+**태그 생성**
+```bash
+# 형식 git tag 문자열 해시코드
+git tag v1.0.0 0ad2dbb  
+```
+
+**태그 버전별 상세 메모 추가**
+```bash
+# git tag 태그명 해쉬코드 -am "내용"
+git tag v1.0.1 328708d -am "Relase note 1.0.0 ... "
+
+git show v1.0.1
+----------------------------------------------------------  
+tag v.1.0.1
+Tagger: leejinwoo <zral1004@gmail.com>
+Date:   Sat Dec 26 13:19:34 2020 +0900
+
+Relase note 1.0.0 ...
+
+commit 328708d03533fa78d96d9984e9d97ab76488671c (tag: v.1.0.1)
+// .. 
+```
+
+**태그 명령어**
+```bash
+# 목록 확인
+git tag
+
+# 태그 목록 중 특정 문자열만 포함된거만 검색 
+git tag -l "v.1.0.*"
+
+# 태그 삭제
+git tag -d <tag> 
+
+# 태그로 checkout 
+git checkout <tag>
+
+# 브랜치 생성하면서 태그 생성 (git checkout -b 브렌치명 태그명)
+git checkout -b testing v.2.0.0
+
+# remote 반영 
+git push origin <tag>             //단일 태그
+git push origin --tags           //모든 태그
+
+# remote 태그 삭제
+git push origin --delete <tag>
+
+```
+
+---
 
 
 
