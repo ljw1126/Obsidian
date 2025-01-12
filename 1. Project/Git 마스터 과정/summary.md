@@ -490,7 +490,18 @@ git push origin --delete <tag>
 
 ---
 
+git log a..b
+git hist a..b
 
+merge *.orig 
+
+rebase --onto 옵션 유용함
+
+---
+stash stack
+
+--keep alive
+-u : untracked 
 
 ---
 ## Reference.
