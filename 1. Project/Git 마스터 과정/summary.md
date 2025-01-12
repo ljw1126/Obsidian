@@ -1,19 +1,3 @@
-- [[#Setup|Setup]]
-- [[#기본 명령어|기본 명령어]]
-	- [[#기본 명령어#workflow|workflow]]
-	- [[#기본 명령어#add|add]]
-	- [[#기본 명령어#ignore|ignore]]
-	- [[#기본 명령어#status|status]]
-	- [[#기본 명령어#diff|diff]]
-	- [[#기본 명령어#commit*|commit*]]
-	- [[#기본 명령어#파일 변경시 유용한 팁*|파일 변경시 유용한 팁*]]
-	- [[#기본 명령어#log|log]]
-	- [[#기본 명령어#log 꾸미기*|log 꾸미기*]]
-	- [[#기본 명령어#show|show]]
-	- [[#기본 명령어#diff|diff]]
-	- [[#기본 명령어#Tag*|Tag*]]
-- [[#Reference.|Reference.]]
-
 
 # Git 마스터 과정
 
@@ -489,19 +473,813 @@ git push origin --delete <tag>
 ```
 
 ---
+## Branch
 
-git log a..b
-git hist a..b
+>[!info] 브랜치를 왜 만들어야 할까?
+>- 브랜치를 만들지 않고 작업할 경우 master (main) 브랜치에 작업 이력이 쌓이게 된다
+>- branch를 만들어서 일하게 되면 동시 다발적으로 다수의 개발자가 작업을 해 나갈 수 있기 때문에 병렬적으로 업무를 진행할 수 있는 큰 장점이 있다
+>	- 보통 A기능 완성 > 검증 완료 > 코드 리뷰 순으로 완료되면 master branch merge 수행한다
+>	- A기능 branch를 master에 합치는 경우도 있지만, A기능 branch의 history를 하나로 합쳐서(squash, rebase) master에 merge 하는 것을 더 선호된다 (merge된 branch는 필요없다면 정리한다)  
+>- 브랜치로 병렬작업을 하더라도 master 브랜치를 pointer로 가르키고 있고, 스냅샵(branch생성시)의 경우 변경 안 된 파일은 링크만 가지기 때문에 branch간 전환이 빠르게 된다함 (Git의 장점)
+>
 
-merge *.orig 
 
-rebase --onto 옵션 유용함
+**브랜치 생성**
+```bash 
+$ git branch new-branch  //new-branch 생성
+
+----------------------------------------------------------
+$ git hist        // new-branch라는 새로운 pointer가 동일한 commit을 가르키고 있다
+* [2020-10-28] [3345766] | feature a {{Ellie}}  (HEAD -> master, new-branch, feature-a)
+* [2020-10-28] [d643a6e] | Update Welcome page {{Ellie}}
+| * [2020-10-28] [c38c4c4] | Fix light theme {{Ellie}}  (fix)
+|/
+* [2020-10-28] [b8e485f] | Add light theme {{Ellie}}
+* [2020-10-28] [bd7bd28] | Add About page {{Ellie}}
+* [2020-10-28] [328708d] | Add Welcome page {{Ellie}}
+* [2020-10-28] [0ad2dbb] | Add UserRepository module {{Ellie}}
+* [2020-10-28] [9186a41] | Add LoginService module {{Ellie}}
+* [2020-10-28] [1563681] | Initialise project {{Ellie}}
+----------------------------------------------------------  
+```
+
+**브랜치 확인**
+```bash
+$ git branch             //branch 목록 
+
+$ git branch --all       //remote 서버에 있는 branch 까지 목록으로 보여줌  
+
+$ git branch -v                //간단한 commit 까지 
+
+$ git branch --merged          //현재 branch에 merge가 된 branch를 확인가능 
+
+$ git branch --no-merged       //master branch에 merge안된, master에서 파생된 변경사항의 branch나타냄
+
+```
+
+**브랜치 이동**
+```bash
+$ git switch new-branch        //새로운 branch로 이동 
+
+$ git switch -C new-branch2    //새로운 branch를 만들고 동시에 switch 때림 
+
+$ git chekcout new-branch 
+
+$ git checkout 해시코드        //해시코드가 있는 버전으로 변경가능, branch도 변경가능 
+							 //원하는 버전으로 이동뒤 거기에 있는 branch로 checkout이 되네(HEAD가 가르킴) ?! 
+							 
+$ git checkout -b 브랜치명     // 브랜치 생성과 checkout 동시에 (자주 사용*) 
+```
+
+
+**브랜치 삭제**
+```bash
+$ git branch -d 브랜치명
+
+# remote 서버에 반영 
+$ git push origin --delete 브랜치명
+```
+
+
+**브랜치 이름 변경**
+```bash
+# branch 이름 변경하기 ,  git branch --move 변경전 변경후명
+$ git branch --move fix fix_welcome 
+```
+
+
+**브랜치 remote 서버 반영**
+```bash
+$ git push --set-upstream origin fix-welcome      //remote 반영하기
+```
+
+>[!note] 아래와 같이 두 브랜치를 비교하거나, 추가로 두 브랜치 사이의 특정 파일을 지정하여 확인 가능
+> $ git log master..test         // master와 test branch 사이의 로그만 확인
+> $ git hist master..test 
+> $ git diff master..test
+
+
+### merge 
+>[!info] fast-forward merge
+>- git merge 중에 가장 깔끔하고 간단핳ㄴ 방법
+>- A branch 생성 후 작업하면서 master에 작업한게 없다면, 단순히 A branch로 master branch의 pointer 로 옮김
+>- (단점) history(commit)에 merge 되었다는 이력이 남지 않는다
+>	- merge commit을 history로 남기고 싶은 경우 --no-ff 옵션 추가 (=Three-way merges)
+
+
+**예제. merge**
+```bash 
+$ git hist  
+
+* [2020-10-28] [7619c90] | h {{Ellie}}  (feature-b)
+* [2020-10-28] [769df87] | g {{Ellie}}
+| * [2020-10-28] [aaf6522] | f {{Ellie}}  (feature-a)
+| * [2020-10-28] [59127a9] | e {{Ellie}}
+|/
+* [2020-10-28] [2797019] | d {{Ellie}}  (HEAD -> master)
+* [2020-10-28] [e8515d8] | c {{Ellie}}
+* [2020-10-28] [d0d15b4] | b {{Ellie}}
+* [2020-10-28] [2c9e233] | a {{Ellie}} 
+```
+
+`master` 브랜치에 `feature-a` 병합
+```bash
+$ git checkout master
+$ ls // 파일 확인 
+$ git checkout feature-a
+$ ls // 파일 확인(차이 있음)
+$ git checkout master 
+$ git merge feature-a      //master에 featrue-a 합침  
+
+$ git hist
+* [2020-10-28] [7619c90] | h {{Ellie}}  (feature-b)
+* [2020-10-28] [769df87] | g {{Ellie}}
+| * [2020-10-28] [aaf6522] | f {{Ellie}}  (HEAD -> master, feature-a)
+| * [2020-10-28] [59127a9] | e {{Ellie}}
+|/
+* [2020-10-28] [2797019] | d {{Ellie}}
+* [2020-10-28] [e8515d8] | c {{Ellie}}
+* [2020-10-28] [d0d15b4] | b {{Ellie}}
+* [2020-10-28] [2c9e233] | a {{Ellie}}
+
+$ git branch -d feature-a  // 보통 병합하면 삭제해 줌
+
+```
+
+### merge --no-ff 옵션
+- fast-forward merge를 하면 이력이 안 남는데, 이력을 남길 필요가 있다면 `--no-ff` 옵션 사용
+	- `ff` : fast forward
+
+**예시**
+```bash
+$ git merge --no-ff feature-c    //하게 되면 commit 메시지 남기는 화면으로 넘어감
+```
+
+
+### Three-way merge
+- fast-forward 는 기본적으로 commit 이력을 남기지 않는다
+- fast-forward merge로 하지 않고 이력을 남기고 싶다면  three-way merge 사용
+	- master에 새 이력 발생하여 fast-forward merge 불가한 경우 three-way-merge 사용해야 한다
+
+```bash
+$ git hist  // master에 새 커밋 이력이 발생했기때문에 ff가 불가능함
+*   [2020-12-26] [5118c78] | Merge branch 'feature-c' {{leejinwoo}}  (HEAD -> ma
+ster)
+|\
+| * [2020-12-26] [6b821f9] | test c branch {{leejinwoo}}
+|/
+* [2020-10-28] [aaf6522] | f {{Ellie}}
+* [2020-10-28] [59127a9] | e {{Ellie}}
+| * [2020-10-28] [7619c90] | h {{Ellie}}  (feature-b)
+| * [2020-10-28] [769df87] | g {{Ellie}}
+|/
+* [2020-10-28] [2797019] | d {{Ellie}}
+* [2020-10-28] [e8515d8] | c {{Ellie}}
+* [2020-10-28] [d0d15b4] | b {{Ellie}}
+* [2020-10-28] [2c9e233] | a {{Ellie}}
+
+$  git merge feature-b       //참고로 merge 정책을 no-ff로 글로벌 설정도 가능  
+$  git hist           
+*   [2020-12-26] [42ac23c] | Merge branch 'feature-b' {{leejinwoo}}  (HEAD -> master)
+|\
+| * [2020-10-28] [7619c90] | h {{Ellie}}  (feature-b)
+| * [2020-10-28] [769df87] | g {{Ellie}}
+* |   [2020-12-26] [5118c78] | Merge branch 'feature-c' {{leejinwoo}}
+|\ \
+| * | [2020-12-26] [6b821f9] | test c branch {{leejinwoo}}
+|/ /
+* | [2020-10-28] [aaf6522] | f {{Ellie}}
+* | [2020-10-28] [59127a9] | e {{Ellie}}
+|/
+* [2020-10-28] [2797019] | d {{Ellie}}
+* [2020-10-28] [e8515d8] | c {{Ellie}}
+* [2020-10-28] [d0d15b4] | b {{Ellie}}
+* [2020-10-28] [2c9e233] | a {{Ellie}}
+```
+
+
+### merge conflict*
+- conflict 예제 파일 사용
+- 두 가지 branch에서 동일한 파일 수정 후 merge 하게 될 경우 conflict이 발생한다
+
+`main.txt`에 conflict이 발생했을 때
+```bash
+$ git hist 
+* [2020-10-28] [7bccbf9] | third commit on master {{Ellie}}  (HEAD -> master)
+| * [2020-10-28] [5e26876] | second commit on feature {{Ellie}}  (feature)
+|/
+* [2020-10-28] [c133623] | first commit on master {{Ellie}}  
+   
+$ git checkout 해시코드       // 각각 cat main.txt 확인해보기 , 동일한 파일 수정했다함 
+$ git checkout master
+$ git merge feature
+Auto-merging main.txt
+CONFLICT (content): Merge conflict in main.txt
+Automatic merge failed; fix conflicts and then commit the result.
+
+$ git status 
+$ cat main.txt      //충돌 파일 확인       
+$ open main.txt     //수동으로 파일 열어서 수정후 저장(open은 mac 명령어)  
+
+# conflict 내용부분 수정 후  
+$ git add .
+$ git merge --continue           // ff merge가 아니라 commit 메시지 남기는게 뜸 
+$ git hist
+
+*   [2020-12-26] [59c5390] | Merge branch 'feature' {{leejinwoo}}  (HEAD -> master)
+|\
+| * [2020-10-28] [5e26876] | second commit on feature {{Ellie}}  (feature)
+* | [2020-10-28] [7bccbf9] | third commit on master {{Ellie}}
+|/
+* [2020-10-28] [c133623] | first commit on master {{Ellie}}
+
+$ git show 59c5390    
+```
+
+
+ >[!warning] merge conflict만 해결해야지 , 다른 내용을 추가로 넣는거는 지양해야 한다
+
+
+```bash
+$ git config --global -e  //아래 내용 추가, 저장
+[merge]
+	tool=vscode
+[mergetool "vscode"]
+  cmd=code --wait $MERGED
+
+# conflict 발생했을 경우   
+$ git mergetool
+$ git status               //수정후 보면
+On branch master
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+		modified:   main.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+		main.txt.orig          // conflict 되어 있는 소스가 있음 
+
+$ git config --global mergetool.keepBackup false  
+$ git merge --abort       // merge 취소하기
+$ git clean -dn           // 삭제 대상 파일 확인 
+$ git clean -fd           // 쓸데없는 파일 삭제 *.orig 
+$ git merge --continue    // merge 끝 .. 
+```
+
+>[!info] merge시 생성되는 orig 확장자 파일이 생성되지 않도록 비활성화
+>$ git config --global mergetool.keepBackup false  
+
+
+### P4Merge 오픈소스 도구
+- conflict 해결을 지원하는 오픈소스 도구
+- https://www.perforce.com/downloads/visual-merge-tool 다운로드 후 설치
+
+```text
+[merge]
+	tool=p4merge
+[mergetool "p4merge"]
+	path = "C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Perforce/p4merge"
+```
+참고. 경로는 os마다 틀리니 적절히 수정
+
+
+### Rebase
+- `rebase 예제`를 사용한다
+- ff merge는 이력이 깔끔해지지만, 3 way merge는 추가 커밋 이력이 남아 지저분한 감이 있다
+	- rebase > master branch 에 최신 history 로 A브랜치 포인터 이동하면 ff merge가 됨 (이력 깔끔)
+	- 단, 다른 개발자와 동일한 A branch 사용하고 있다면, 내가 rebase 하는 A branch 의 history는 전혀 다른 commit 되므로, 다른 개발자와 충돌(merge conflict) 발생가능
+
+>[!warning] rebase를 할때 이미 history가 remote 서버에 반영되어 있으면 절대 rebase 하면 안된다
+>로컬에 있는 반영 안 된 commit 이력에 한해서 정리 용도로 rebase를 자유롭게 해도 됨 (오히려 권장)
+
+```bash
+$ git hist //feature-b 브랜치의 포인터를 최신 master branch 포인터로 이동시킴
+* [2020-10-28] [7619c90] | h {{Ellie}}  (feature-b)
+* [2020-10-28] [769df87] | g {{Ellie}}
+| * [2020-10-28] [aaf6522] | f {{Ellie}}  (HEAD -> master, feature-a)
+| * [2020-10-28] [59127a9] | e {{Ellie}}
+|/
+* [2020-10-28] [2797019] | d {{Ellie}}
+* [2020-10-28] [e8515d8] | c {{Ellie}}
+* [2020-10-28] [d0d15b4] | b {{Ellie}}
+* [2020-10-28] [2c9e233] | a {{Ellie}}
+
+$ git checkout feature-b 
+$ git rebase master   //최신 master commit으로 feature-b의 포인터 base를 옮기게 됨 
+$ git hist     // 일직선이 되어 있음 
+* [2020-10-28] [49fdf8f] | h {{Ellie}}  (HEAD -> feature-b)
+* [2020-10-28] [c272a99] | g {{Ellie}}
+* [2020-10-28] [aaf6522] | f {{Ellie}}  (master, feature-a)
+* [2020-10-28] [59127a9] | e {{Ellie}}
+* [2020-10-28] [2797019] | d {{Ellie}}
+* [2020-10-28] [e8515d8] | c {{Ellie}}
+* [2020-10-28] [d0d15b4] | b {{Ellie}}
+* [2020-10-28] [2c9e233] | a {{Ellie}}
+
+$ git checkout master 
+$ git merge feature-b 
+$ git hist   // feature-b 와 feature-a 지우면 아주 깔끔해짐
+* [2020-10-28] [49fdf8f] | h {{Ellie}}  (HEAD -> master, feature-b)
+* [2020-10-28] [c272a99] | g {{Ellie}}
+* [2020-10-28] [aaf6522] | f {{Ellie}}  (feature-a)
+* [2020-10-28] [59127a9] | e {{Ellie}}
+* [2020-10-28] [2797019] | d {{Ellie}}
+* [2020-10-28] [e8515d8] | c {{Ellie}}
+* [2020-10-28] [d0d15b4] | b {{Ellie}}
+* [2020-10-28] [2c9e233] | a {{Ellie}}
+```
+
+
+### rebase --onto*
+
+profile , profile-ui branch가 있는데 profile-ui만 master에 merge 하기로 한다
+```bash
+$ git hist
+* [2020-10-28] [f2b9178] | Add ProfileService Interface {{Ellie}}  (profile)
+| * [2020-10-28] [5a090bf] | Add profile UI {{Ellie}}  (profile-ui)
+|/
+* [2020-10-28] [cd9c9e7] | Add tests for ProfileService {{Ellie}}
+* [2020-10-28] [dc89240] | Add ProfileService {{Ellie}}
+* [2020-10-28] [bbac9d0] | Add LoginService {{Ellie}}  (HEAD -> master)
+
+# master에 업데이트 할거고 profile 에서 파생된 profile-ui를 올려두자
+$ git rebase --onto master profile profile-ui        
+$ git hist
+* [2020-10-28] [12d5e88] | Add profile UI {{Ellie}}  (HEAD -> profile-ui)
+| * [2020-10-28] [f2b9178] | Add ProfileService Interface {{Ellie}}  (profile)
+| * [2020-10-28] [cd9c9e7] | Add tests for ProfileService {{Ellie}}
+| * [2020-10-28] [dc89240] | Add ProfileService {{Ellie}}
+|/
+* [2020-10-28] [bbac9d0] | Add LoginService {{Ellie}}  (master)
+
+# rebase 하니 HEAD가 profile-ui로 가있음, 이제 ff merge 가능해짐 
+$ git checkout master        
+$ git merge profile-ui
+$ git hist
+* [2020-10-28] [12d5e88] | Add profile UI {{Ellie}}  (HEAD -> master, profile-ui
+)
+| * [2020-10-28] [f2b9178] | Add ProfileService Interface {{Ellie}}  (profile)
+| * [2020-10-28] [cd9c9e7] | Add tests for ProfileService {{Ellie}}
+| * [2020-10-28] [dc89240] | Add ProfileService {{Ellie}}
+|/
+* [2020-10-28] [bbac9d0] | Add LoginService {{Ellie}}
+```
+
+
+### cherry-pick
+- 특정 commit만 원하는 branch에 가져올 수 있도록 한다
+
+**예시**
+```bash
+$ git hist
+* [2020-10-28] [12d5e88] | Add profile UI {{Ellie}}  (HEAD -> master, profile-ui)
+| * [2020-10-28] [f2b9178] | Add ProfileService Interface {{Ellie}}  (profile)    //얘만 master 에 가져오고 싶다
+| * [2020-10-28] [cd9c9e7] | Add tests for ProfileService {{Ellie}}
+| * [2020-10-28] [dc89240] | Add ProfileService {{Ellie}}
+|/
+* [2020-10-28] [bbac9d0] | Add LoginService {{Ellie}}
+
+$ git cherry-pick f2b9178
+$ git hist      //master 위에 새로운 commit 생김 !
+* [2020-10-28] [1baca49] | Add ProfileService Interface {{Ellie}}  (HEAD -> master)
+* [2020-10-28] [12d5e88] | Add profile UI {{Ellie}}  (profile-ui)
+| * [2020-10-28] [f2b9178] | Add ProfileService Interface {{Ellie}}  (profile)
+| * [2020-10-28] [cd9c9e7] | Add tests for ProfileService {{Ellie}}
+| * [2020-10-28] [dc89240] | Add ProfileService {{Ellie}}
+|/
+* [2020-10-28] [bbac9d0] | Add LoginService {{Ellie}}
+```
+
+>[!info] 명령어의 동작원리를 이해하고 sourcetree와 같은 오픈소스 도구를 활용하면 도움을 받을 수 있다
+>- 명령어로만 이력 정리하기 어려운 경우 오픈 소스 도구를 활용
 
 ---
-stash stack
+## Stash
+- 작업한 내역을 commit 할 단계는 아닌데 branch 변경해야 되는 경우 사용한다
+	- commit하기 모호하고, 삭제하기도 모호하니 이때 <u>이력을 임시 저장</u>하기 위해 stash 사용
+	- Git에는 Stash Stack 존재한다
+	  
+git-branch 예제 사용
+```bash
+$ git hist
+* [2020-10-28] [3345766] | feature a {{Ellie}}  (HEAD -> master, feature-a)
+* [2020-10-28] [d643a6e] | Update Welcome page {{Ellie}}
+| * [2020-10-28] [c38c4c4] | Fix light theme {{Ellie}}  (fix)
+|/
+* [2020-10-28] [b8e485f] | Add light theme {{Ellie}}
+* [2020-10-28] [bd7bd28] | Add About page {{Ellie}}
+* [2020-10-28] [328708d] | Add Welcome page {{Ellie}}
+* [2020-10-28] [0ad2dbb] | Add UserRepository module {{Ellie}}
+* [2020-10-28] [9186a41] | Add LoginService module {{Ellie}}
+* [2020-10-28] [1563681] | Initialise project {{Ellie}}
+```
 
---keep alive
--u : untracked 
+track 되고 있는 수정파일을 stash 저장하는 경우 
+```bash
+$ echo add >> about.txt  //파일수정하여 작업내역 생성 
+$ git stash push       //타이틀 없이 저장됨 
+
+# git stash push -m "타이틀명"
+$ git stash push -m "first try"  // working dir에 있는 수정 파일(tracked)이 stash 에 저장됨 
+```
+
+staging area에 올라가있는 작업내역을 stash 하고 싶은 경우
+```bash
+$ echo add >> about.txt 
+$ git add . 
+
+# staging area에 파일이 올라가 있는거 확인가능
+$ git status -s          
+
+# --keep-index 옵션 통해 staging area에 올린 작업내역을 유지하면서 올림
+$ git stash push -m "second try" --keep-index      
+```
+
+신규 생성된 untrack 파일도 stash 저장하고 싶은 경우  ( -u 옵션 )
+```bash
+$ echo new > new.txt         //신규 파일 생성
+$ git stash                  //그냥 저장
+$ git status -s              //확인시 untrack 파일은 stash에 저장되지 않는 것을 확인가능
+$ git stash -u               //해당 옵션 통해서 untrack 파일도 stash 저장가능해짐
+```
+
+**stash 목록 확인**
+```bash
+$ git stash list 
+stash@{0}: WIP on master: 3345766 feature a  
+stash@{1}: On master: second try
+stash@{2}: On master: first try
+
+$ git stash show id값           // 수정 내용 간단히 확인 가능
+git stash show stash@{3} -p    // 옵션 추가하여 좀더 자세히
+```
+
+**stash 반영**
+```bash
+$ git stash apply              // 아무것도 없으면 stack 맨위에 있는게 자동 적용됨 
+
+$ git stash apply stash@{1}    // stash 목록은 유지하면서 다시 불러오기
+```
+
+>[!info] apply 와 pop 
+>- 둘 다 stash stack에 저장된 이력을 working directory에 반영함
+>	- apply : stash stack 이력을 유지한 상태에서 반영 
+>	- pop : stash stack 이력을 제거하고 반영
+
+
+**stash 삭제**
+```bash
+$ git stash drop id값          // stash 지정해서 삭제
+
+$ git stash clear             // stash 전체 삭제 
+```
+
+**새로운 branch를 만들면서 stash 적용하고 싶을 때**
+```bash
+$ git stash branch 브랜치이름 
+```
+
+
+---
+## 실수를 만회하는 방법들
+
+git undo 예제 파일 사용
+
+```bash 
+ $ git hist
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [e94152f] | . {{Ellie}}         # 의미없는 커밋
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}       # WIP(working in progress) : 아직 일이 진행중이다(개발용어), wip 뒤에 내용을 적어주는 게 좋은 커밋
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+```
+
+### 커밋 전 변경 내용 취소하기
+
+**checkout**
+```bash
+$ git checkout hash..          # 특정커밋으로 전환
+$ git checkout branchName      # 특정브랜치 전환 >> git switch 
+$ git checkout tagName         # 태그 지정된 history로 전환 ( 특정commit 으로 전환 )
+$ git checkout --file file명    # 파일 초기화 가능 >> git restore
+```
+
+
+**restore**
+```bash
+$ git restore fileName      # 특정 파일 초기화
+
+$ git restore .             # workgin dir 전체 초기화
+```
+
+staging area에 있는 파일을 복구
+```bash
+# 특정 파일만 working area로 복구
+$ git restore --staged fileName         
+
+# staging area에 있는 전체 파일을 working dir로 복구
+$ git restore --staged .                 
+```
+
+
+**reset**
+```bash
+$ git add .                //staging area에 다 올리고
+$ git reset HEAD .         //staging area에 있는 애들이 working dir로 복구됨 ( git restore --staged . 이랑 같음 )   
+$ git reset HEAD .
+  Unstaged changes after reset:
+  M       payment-ui.txt
+
+# 깨끗하게 working dir 수정전처럼 클린 시켜버리기 
+$ git add .
+$ git restore --staged 
+$ git restore .              // staging area에 있는거는 영향을 끼치지 않음 , working dir 에 있는 수정 내역 다 초기화 시킴
+							 // git reset HEAD . 와 같
+```
+
+
+>[!note] --source 옵션은 개인적으로 이해가 되지 않으니, 필요시 찾아보기
+>$ git restore --source= 
+>- hash 코드나 head 포인터 사용해도 됨
+
+```bash 
+$ git hist 
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git show hash코드           // history 내역확인 
+$ git restore --source=HEAD~2 payment-ui.txt      // HEAD에서 2번째 이전으로 해당파일을 restore 하겠다 
+git restore --source=fa7bbd6 payment-ui.txt 
+$ git hist       //변함없음 
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}  
+
+$ git status
+On branch master
+Changes not staged for commit:
+(use "git add/rm <file>..." to update what will be committed)
+(use "git restore <file>..." to discard changes in working directory)
+	  deleted:    payment-ui.txt         //변함 있음
+```
+
+
+### 커밋 메시지 수정
+```bash
+$ git hist
+* [2021-01-02] [8326209] | 수정테스트 {{leejinwoo}}  (HEAD -> master)
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git commit --amend -m "Add new file"
+$ git hist
+* [2021-01-02] [5018435] | Add new file {{leejinwoo}}  (HEAD -> master)
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git show HEAD       // 커밋 메시지, 추가내용 확인가능 
+```
+
+
+**최신HEAD에 수정된 파일 뒤늦게 반영하고 싶은 경우 (아직 remote 서버에 업로드 하지 않았을 때 유용)**
+```bash
+$ echo add > add.txt 
+$ git add . 
+$ git commit --amend             //history(commit내역)은 그대로임 
+$ git show HEAD         // add.txt가 추가된것을 확인가능 !! 
+commit 086e40455cc6724669552213f6da890071d16a46 (HEAD -> master)
+Author: leejinwoo <zral1004@gmail.com>
+Date:   Sat Jan 2 00:28:38 2021 +0900
+
+  Add new file
+  2
+
+diff --git a/add.txt b/add.txt
+new file mode 100644
+index 0000000..9dd7446
+--- /dev/null
++++ b/add.txt
+@@ -0,0 +1,3 @@
++add
++
++I'm ellie
+diff --git a/payment-ui.txt b/payment-ui.txt
+deleted file mode 100644
+index 86fbd66..0000000
+--- a/payment-ui.txt
++++ /dev/null
+@@ -1 +0,0 @@
+-✨ UI Completed ✨
+```
+
+
+### reset
+- git_undo 예제 사용
+
+`--mixed` 옵션 경우
+```bash
+$ git hist
+* [2021-01-02] [086e404] | Add new file 2 {{leejinwoo}}  (HEAD -> master)
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}
+* [2020-11-01] [e94152f] | . {{Ellie}}       // 요기로 리셋하고 싶다함 
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+
+$ git reset HEAD~2 또는 git reset e94152f
+$ git hist  # 초기화한 커밋은 hist에서 사라졌지만 작업내역은 working dir에 남아있음 
+* [2020-11-01] [e94152f] | . {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+```
+
+>[!info] git reset을 하게 되면 기본 옵션으로 --mixed 준 것과 같다
+
+`--soft` 옵션 경우
+```bash
+$ git reset --soft HEAD~1 or   git reset --soft fa7bbd6
+$ git status
+	On branch master
+	Changes to be committed:
+	  (use "git restore --staged <file>..." to unstage)
+			new file:   payment-ui.txt
+			
+$ git hist
+  * [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}  (HEAD -> master)
+  * [2020-11-01] [1d11be8] | WIP {{Ellie}}
+  * [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+  * [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+  * [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+```
+
+
+`--hard` 옵션 경우
+```bash
+$ git reset --hard HEAD        # 로컬에서 작업하던 내용이 초기화됨
+$ git reset --hard 98955fc     # 또는 git reset --hard HEAD~2
+$ git status
+	On branch master
+	nothing to commit, working tree clean
+
+ $ git hist
+   * [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+	(HEAD -> master)
+   * [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+   * [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+```
+
+
+### reflog 
+- reference log
+- log를 참조한다 뜻
+- 바로 이전 HEAD가 가르키던 내용을 다 기억하고 있어 원하는 시점으로 복구 가능 
+
+git_undo 예제 사용
+```bash
+$ git reflog
+98955fc (HEAD -> master) HEAD@{0}: reset: moving to HEAD~2
+fa7bbd6 HEAD@{1}: reset: moving to HEAD~1
+e94152f HEAD@{2}: reset: moving to HEAD~2
+086e404 HEAD@{3}: commit (amend): Add new file
+5018435 HEAD@{4}: commit (amend): Add new file
+8326209 HEAD@{5}: commit: 수정테스트
+0ddd7ab HEAD@{6}: commit: Add payment UI       //여기로 돌아가고 싶으면 hash code 복사하고
+e94152f HEAD@{7}: commit: .
+fa7bbd6 HEAD@{8}: commit: Add payment client
+1d11be8 HEAD@{9}: commit: WIP
+98955fc (HEAD -> master) HEAD@{10}: reset: moving to HEAD^
+0440fb9 HEAD@{11}: commit: WIP
+98955fc (HEAD -> master) HEAD@{12}: commit: Add payment library and Add payment
+service
+707de7d HEAD@{13}: commit: Setup Dependencies
+20ee16f HEAD@{14}: commit (initial): Initialise Project
+
+$ git reset --hard 0ddd7ab
+$ git hist
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git reflog 보면 head 변경된 이력이 남아 있음  # 이하 생략
+```
+
+
+>[!info] IDE 사용할 경우 local history extension 통해 이전 버전으로 언제든지 돌아갈 수 있다
+
+
+### revert
+- git_undo 예제 사용
+
+`fa7bbd6` 커밋을 취소한다
+```bash
+$ git hist
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}} #여기를 취소
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+
+$ git revert fa7bbd6 또는 git revert HEAD~2
+[master 9145be7] Revert "Add payment client"
+1 file changed, 1 insertion(+), 1 deletion(-)
+
+
+$ git hist   //최신 HEAD 보면 revert 처리된걸 확인가능 
+* [2021-01-02] [9145be7] | Revert "Add payment client" {{leejinwoo}}  (HEAD -> m
+aster)
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git show fa7bbd6  // Add payment client
+
+commit fa7bbd67db54237abe5782e9eefa10781d211fbe
+Author: Ellie <dream.coder.ellie@gmail.com>
+Date:   Sun Nov 1 11:14:38 2020 +0900
+
+  Add payment client
+
+diff --git a/payment-client.txt b/payment-client.txt
+index 9c595a6..24e230f 100644
+--- a/payment-client.txt
++++ b/payment-client.txt
+@@ -1 +1 @@
+-temp        // 이전에는 temp가 빼졌음 
++Implement Payment Client
+\ No newline at end of file
+
+$ git show HEAD 또는 git show 9145be7        //revert내역을 보면 
+
+commit 9145be7258192c1f0d8095e31928ca911398cb50 (HEAD -> master)
+Author: leejinwoo <zral1004@gmail.com>
+Date:   Sat Jan 2 00:54:08 2021 +0900
+
+	Revert "Add payment client"
+
+	This reverts commit fa7bbd67db54237abe5782e9eefa10781d211fbe.
+
+diff --git a/payment-client.txt b/payment-client.txt
+index 24e230f..9c595a6 100644
+--- a/payment-client.txt
++++ b/payment-client.txt
+@@ -1 +1 @@
+-Implement Payment Client
+\ No newline at end of file
++temp      //다시 temp가 추가된 것을 호가인가능 
+```
+
+
+master branch에 심각한 문제가 
+
 
 ---
 ## Reference.
