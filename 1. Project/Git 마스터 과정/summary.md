@@ -1209,6 +1209,10 @@ $ git reflog 보면 head 변경된 이력이 남아 있음  # 이하 생략
 
 ### revert
 - git_undo 예제 사용
+- master branch에 심각한 문제를 일으키는 commit을 rollback 하고 싶을 때 주로 revert를 한다
+	- 이미 remote server의 master branch에 commit된 경우 reset, rebase를 사용하기 보다 revert를 사용하는게 맞다!
+- revert는 새로운 commit을 만들어서 이미 추가된 내용을 변경하는 것으로, history를 수정하지 않기 때문에 언제든지 자유롭게 이용할 수 있다
+	- commit이 신규 생성되고 revert된 커밋의 내역이 복구된다
 
 `fa7bbd6` 커밋을 취소한다
 ```bash
@@ -1278,7 +1282,334 @@ index 24e230f..9c595a6 100644
 ```
 
 
-master branch에 심각한 문제가 
+`--no-commit` 옵션
+```bash
+$ git revert --no-commit 1d11be8   # 자동 commit 메시지 남기지 않고 rollback이력을 staging area에 추가해줌 
+
+$ git status  # staging area에 변경 파일이 있음 , 수동 commit 메시지 기록가능
+```
+- 보통은 `--no-commit` 옵션은 사용하지 않는다 함
+	- 보틍은 자동으로 커밋 남겨지도록 하는게 맞음
+	- 그리고 revert commit에서 추가로 내용 더하거나 변경하는 행위는 절대 해서는 안됨
+	- 기존의 다른 commit과 충돌이 나는 경우, 내가 메뉴얼 적으로 수정해줘야 하는 경우 revert가 유용
+
+
+### 이전 커밋 수정하기
+- git undo 예제 사용 
+- <u>remote 서버에 이력이 업로드 된 경우 사용해서는 x</u>
+- 개인 local commit history 변경의 경우 사용 o 
+
+>[!warning] rebase 하는 순간 뒤에 있는 모든 포인터에 대해 history가 업데이트 된다 (ex. commit id 변경)
+
+```bash
+$ git hist
+* [2020-11-01] [0ddd7ab] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [e94152f] | . {{Ellie}}
+* [2020-11-01] [fa7bbd6] | Add payment client {{Ellie}}
+* [2020-11-01] [1d11be8] | WIP {{Ellie}}   // WIP이 가르키는 이전 해쉬코드 부터 시작
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git rebase i 1d11be8     //i:인터렉트 ( 1d11be8 부터 이후 history를 인터렉티브하게 rebase 할거다)
+
+  pick 1d11be8 WIP   >> pick 대신 reword 또는 r 설정 , 저장하면 메시지 수정창뜸 
+  pick fa7bbd6 Add payment client
+  pick e94152f .
+  pick 0ddd7ab Add payment UI
+
+  # Rebase 98955fc..0ddd7ab onto 98955fc (4 commands)
+  #
+  # Commands:
+  # p, pick <commit> = use commit
+  # r, reword <commit> = use commit, but edit the commit message //괜찮지만 메시지 변경하겠다 
+  # e, edit <commit> = use commit, but stop for amending //커밋을 쓸건데 변경사항을 바꾸겠다
+  # s, squash <commit> = use commit, but meld into previous //commit 여러 commit을 하나로 묶어 주는것
+  # f, fixup <commit> = like "squash", but discard this commit's log message //squash와 비슷하나 메시지를 남기지 않음
+  # x, exec <command> = run command (the rest of the line) using shell // (잘안씀) shell 명령어를 쓰고 싶을때
+  # b, break = stop here (continue rebase later with 'git rebase --continue') // 
+  # d, drop <commit> = remove commit //해당 commit 제거시 사용 
+  # l, label <label> = label current HEAD with a name
+  # t, reset <label> = reset HEAD to a label
+  # m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+  # .       create a merge commit using the original merge commit's
+  # .       message (or the oneline, if no original merge commit was
+  # .       specified). Use -c <commit> to reword the commit message.
+  #
+  # These lines can be re-ordered; they are executed from top to bottom.
+  #
+  # If you remove a line here THAT COMMIT WILL BE LOST.
+  #
+  # However, if you remove everything, the rebase will be aborted.
+  #
+
+# WIP 커밋 메시지 변경위해 r 옵션으로 변경후 저장 > commit 메시지 변경, 저장 하면 되
+[detached HEAD b9ff720] Commit message -edited (WIP)
+Author: Ellie <dream.coder.ellie@gmail.com>
+Date: Sun Nov 1 11:14:00 2020 +0900
+1 file changed, 1 insertion(+)
+create mode 100644 payment-client.txt
+Successfully rebased and updated refs/heads/master.
+
+
+# git hist 
+* [2020-11-01] [ca528df] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [2fb9760] | . {{Ellie}}
+* [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+* [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+```
+
+
+### 필요없는 커밋 삭제 
+- git undo 예제 사용 
+
+2fb9760 해당하는 commit을 삭제해본다 
+```bash
+$ git hist 
+* [2020-11-01] [ca528df] | Add payment UI {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [2fb9760] | . {{Ellie}}      # 삭제 대상 
+* [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+* [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git rebase -i HEAD~2 
+# 편집창 뜨면 해당 commit hash 코드 옵션을 pick 아닌 d ( drop : commit 삭제 ) 변경후 저장 
+
+error: could not apply ca528df... Add payment UI
+Resolve all conflicts manually, mark them as resolved with
+"git add/rm <conflicted_files>", then run "git rebase --continue".
+You can instead skip this commit: run "git rebase --skip".
+To abort and get back to the state before "git rebase", run "git rebase --abort"
+.
+Could not apply ca528df... Add payment UI
+
+// 여기서 충돌났다 함 
+// drop한 commit에서 지워진 파일이 이어지는 다음 commit에서 그 파일이 수정됬다는 의미 
+CONFLICT (modify/delete): payment-ui.txt deleted in HEAD and modified in ca528df
+(Add payment UI). Version ca528df (Add payment UI) of payment-ui.txt left in tr
+ee. 
+
+$ git status
+  interactive rebase in progress; onto 6ba70c7
+  Last commands done (2 commands done):
+	drop 2fb9760 .
+	pick ca528df Add payment UI
+  No commands remaining.
+  You are currently rebasing branch 'master' on '6ba70c7'.
+	(fix conflicts and then run "git rebase --continue")
+	(use "git rebase --skip" to skip this patch)
+	(use "git rebase --abort" to check out the original branch)
+
+  Unmerged paths:
+	(use "git restore --staged <file>..." to unstage)
+	(use "git add/rm <file>..." as appropriate to mark resolution)
+		  deleted by us:   payment-ui.txt
+
+  no changes added to commit (use "git add" and/or "git commit -a")
+
+# 그냥 해당파일 쓰라고 하면 
+$ git add .
+$ git status 
+$ git rebase --continue # 메시지 입력하는 창뜸 , 수정하거나 말거나 한 뒤 저장 
+
+$ git hist      //해당 2fb9760 커밋이 사라진 것을 확인가능 !
+* [2020-11-01] [d83fdc9] | Add payment UI(rebase) {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+* [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+```
+
+
+### 코끼리 커밋 분할하기 
+- git undo 그대로 사용
+
+>[!tip] commit 단위에 대한 유용한 상식
+>- 보통 새로추가되는 dependency를 하나의 commit으로 하는것이 바람직하다
+>- 나중에 dependency 제거하거나 해당 버전이 안맞으면 그 부분만 revert 할 수 있기 때문이다.
+>- 그래서 commit 하나에는 한가지만 하는게 좋다
+>	- 한 가지 기능 추가
+>	- 한 가지 라이브러리 추가
+>	- 한 가지 버그 수정
+
+
+`98955fc` 커밋을 두가지로 나눠보기 ( 라이브러리 추가, 서비스 추가로 구분)
+```bash
+$ git hist     
+* [2020-11-01] [d83fdc9] | Add payment UI(rebase) {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+* [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}} # 이 커밋을 두가지로 나눌거임 
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+
+$ git rebase -i 707de7d  # 98955fc 이전의 707de7d 선택해줌 
+pick 98955fc Add payment library and Add payment service >> pcik을 e로 수정
+pick b9ff720 Commit message -edited (WIP)
+pick 6ba70c7 Add payment client
+pick d83fdc9 Add payment UI(rebase)
+
+# Rebase 98955fc..d83fdc9 onto 98955fc (3 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup <commit> = like "squash", but discard this commit's log message
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+# .       create a merge commit using the original merge commit's
+# .       message (or the oneline, if no original merge commit was
+# .       specified). Use -c <commit> to reword the commit message.
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+
+$ git hist // HEAD가 수정 원하는 commit에 멈춰 있음 
+* [2020-11-01] [d83fdc9] | Add payment UI(rebase) {{Ellie}}  (master)
+* [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+* [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+  (HEAD) 
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+# 우선 commit을 다시 나의 working dir 로 가져와야함  
+# reset의 --mixed ( default ) 사용함 ( point )
+$ git reset HEAD~1 //이전 commit으로 돌아가면서 수정파일을 working dir로 가져옴 
+$ git hist
+* [2020-11-01] [d83fdc9] | Add payment UI(rebase) {{Ellie}}  (master)
+* [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+* [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+* [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}  (HEAD)
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+$ git status        // 수정된 파일 package.json, 신규생성된 payment-service.txt 확인됨
+$ git add package.json 
+$ git status 
+$ git commit -m "Add payment lib"
+$ git hist
+* [2021-01-02] [b688176] | Add payment lib {{leejinwoo}}  (HEAD) // 신규 생성됨 
+| * [2020-11-01] [d83fdc9] | Add payment UI(rebase) {{Ellie}}  (master)
+| * [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+| * [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+| * [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+|/
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+# 마찬가지 남은 payment-service.txt를 커밋해주면 됨 
+$ git add .
+$ git commit -m "Add payment-service"
+$ git hist
+* [2021-01-02] [3a74f69] | Add payment-service {{leejinwoo}}  (HEAD) //신규 생성됨 
+* [2021-01-02] [b688176] | Add payment lib {{leejinwoo}}
+| * [2020-11-01] [d83fdc9] | Add payment UI(rebase) {{Ellie}}  (master)
+| * [2020-11-01] [6ba70c7] | Add payment client {{Ellie}}
+| * [2020-11-01] [b9ff720] | Commit message -edited (WIP) {{Ellie}}
+| * [2020-11-01] [98955fc] | Add payment library and Add payment service {{Ellie}}
+|/
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+//맘에 든다면 
+$ git rebase --continue
+$ git hist //결과확인 
+* [2020-11-01] [07d7784] | Add payment UI(rebase) {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [dd3dfe9] | Add payment client {{Ellie}}
+* [2020-11-01] [17fb64e] | Commit message -edited (WIP) {{Ellie}}
+* [2021-01-02] [3a74f69] | Add payment-service {{leejinwoo}}
+* [2021-01-02] [b688176] | Add payment lib {{leejinwoo}}
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}} 
+
+```
+
+
+### 여러 개 커밋 합치기 
+- git undo 예제 사용
+
+```bash
+$ git hist
+* [2020-11-01] [07d7784] | Add payment UI(rebase) {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [dd3dfe9] | Add payment client {{Ellie}}
+
+#  4개를 하나의 커밋으로 만듦 > Add payment service로 만들어 봄  ( 테스트니 )
+* [2020-11-01] [17fb64e] | Commit message -edited (WIP) {{Ellie}}
+* [2021-01-02] [3a74f69] | Add payment-service {{leejinwoo}}
+* [2021-01-02] [b688176] | Add payment lib {{leejinwoo}}
+* [2020-11-01] [707de7d] | Setup Dependencies {{Ellie}}
+
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+
+
+$ git rebase -i 20ee16f
+
+pick 707de7d Setup Dependencies   # 대표적인건 pick으로 두고 합칠걸 s(squash)한다
+s b688176 Add payment lib
+s 3a74f69 Add payment-service
+s 17fb64e Commit message -edited (WIP)
+pick dd3dfe9 Add payment client
+pick 07d7784 Add payment UI(rebase)
+
+# Rebase 20ee16f..07d7784 onto 20ee16f (6 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup <commit> = like "squash", but discard this commit's log message
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+# .       create a merge commit using the original merge commit's
+# .       message (or the oneline, if no original merge commit was
+# .       specified). Use -c <commit> to reword the commit message.
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+
+# commit message edit 창 뜸 
+# Add payment-service 남겨두고 종료 
+$ git hist  # 뒤에 커밋들 해쉬코드가 변경된걸 확인가능 함 !
+* [2020-11-01] [ed2c9ac] | Add payment UI(rebase) {{Ellie}}  (HEAD -> master)
+* [2020-11-01] [fb4d5f3] | Add payment client {{Ellie}}
+* [2020-11-01] [93a121b] | Add payment-service {{Ellie}}
+* [2020-11-01] [20ee16f] | Initialise Project {{Ellie}}
+```
+
+---
 
 
 ---
