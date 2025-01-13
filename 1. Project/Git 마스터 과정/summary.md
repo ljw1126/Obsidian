@@ -1610,6 +1610,271 @@ $ git hist  # 뒤에 커밋들 해쉬코드가 변경된걸 확인가능 함 !
 ```
 
 ---
+## GitHub
+https://github.com/ljw1126
+
+- 로컬에서만 작업시 컴퓨터 문제생기면 최악의 경우 history를 모두 잃게 됨 
+- GitHub와 같은 remote 서버에 올려 안전성과 접근성을 높이고, 팀원간의 협업을 이어갈 수 있음
+- GitHub를 통해 각 개발자들이 history를 가지고 있음으로서 서로 공유가능하고, 문제 발생시 복원가능 , 오프라인에서 작업가능해 지는 장점이 있다
+
+>[!note]
+>- clone : remote > local 로 프로젝트 전체 다운로드
+>- push : local > remote 로 history 업로드
+>- pull : remote > local 로 history 다운로드
+
+
+**깃허브 포로젝트를 내 PC에 가져오기**
+```bash
+# <>Code 탭에서 [Code]버튼 누르면 clone 주소 확인가능 (다운로드도 가능)
+
+# 서버 정보 확인 
+$ git remote 
+$ git remote -v           //origin이 가르키는 정보 상세 확인가능 
+
+# 새로운 remote 정보 추가 
+$ git remote add server 다른링크     //server라는 이름으로 추가함  
+$ git remote -v 
+
+# 설정 정보 조회 
+$ git remote show       //remote 간략 목록 
+$ git remote show origin   //origin 에 대한 상세 정보 출력
+
+```
+
+**로컬 커밋을 서버에  저장하기**
+```bash
+# 사용자 이름과 이메일을 깃허브에 사용하는 것과 동일해야지 git hub 올라갈때 혼동 안됨 
+$ git config --global -e 
+
+$ echo add > add.txt
+$ git add .
+$ git commit -m "Add new file"
+$ git hist         // local이 origin 보다 HEAD가 앞서게 됨 
+$ git push         // git hub 계정 정보를 작성입력하면 push 됨 
+```
+
+**SSH키 등록해서 간편하게 push 하기**
+- 매번 remote 서버에 push 할 때 id, pwd 적기 귀찮음 
+- 이때 ssh키를 등록하면 로그인할 필요없이 이력을 서버에 올리기 가능 
+- 서버에는 public key 생성하고 , local에는 privite key 생성해서 사용함
+```bash
+1. git hub 사용자 프로필 누르면 [Settings] 선택 
+2. 왼쪽 [SSH and GPG keys] 메뉴 선택 
+3. 'generating SSH keys' 가이드 페이지 설명대로 해보기 
+
+$ ssh-keygen -t ed25519 -C "이메일주소"
+Generating public/private ed25519 key pair.
+Enter file in which to save the key (/c/Users/wkrdm/.ssh/id_ed25519):
+Created directory '/c/Users/wkrdm/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /c/Users/wkrdm/.ssh/id_ed25519
+Your public key has been saved in /c/Users/wkrdm/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:sUoU7N6lAADflsVRxSkijGDmN7h+vbLEtymGUdAe2tY zral1004@gmail.com
+The key's randomart image is:
++--[ED25519 256]--+
+|o=o+ o+o.o..     |
+|+oo++o+.. o      |
+| o*o*+....       |
+| .o*.Eo  o.      |
+| .o  ..oSo       |
+|... ....o        |
+| .o+ o.          |
+| .o+. +          |
+|  ..++           |
++----[SHA256]-----+
+
+※ .ssh 폴더에 id_ed25519(private key) , id_ed25519.pub( 공개키 , 깃허브 등록용 ) 파일 생성됨 
+
+4. Adding a new SSH key to your GitHub account 가이드 페이지 내용대로 
+생성한 public key 복사해서 아까 [SSH and GPG keys]에 'New SSH key' 눌러서 추가하면 됨 
+> /c/Users/wkrdm/.ssh/id_ed25519 있는 id_ed25519.pub파일을 editor로 열어서 복붙하면 됨 ( 요 파일에 내용을 git hub 에 복붙 )       
+
+5. 그리고 git push ( 유용함 )
+
+```
+
+
+>[!warning] ssh로 push/pull하고 싶은 경우 remote origin 주소가 http(s) 형식으로 잡혀 있는 경우 안된다
+>- 예) https://github.com/ljw-zral1004/study.git  >> git@github.com:ljw-zral1004/study.git
+>- 이때는 뒤의 주소 형식으로 remote 주소 정보를 변경해줘야 한다
+>- 참고. https://goddaehee.tistory.com/254
+
+
+```bash
+# .ssh 폴더 확인 
+$ ls -al ~/.ssh   //폴더 없는 경우 생성하고 권한을 700 주면 됨 
+
+# ssh-agent 실행여부 확인 
+$ eval "$(ssh-agent -s)"
+Agent pid 806     // 이런 출력이 뜨면 정상동작 중 
+
+# ssh-agent 에 ssh key 등록하기
+$ ssh-add ~/.ssh/id_ed25519  //비밀키 파일을 등록하는 듯 함 
+
+# 생성한 키 확인 방법   // 그냥 에디터로 파일 읽어도 됨 ( id_ed25519.pub )
+$ cat(또는 vi) ~/.ssh/id_rsa.pub
+$ bcopy < ~/.ssh/id_rsa.pub
+
+# git hub 접속해서 , [프로필 아이콘] 클릭 > Settings 클릭 > SSH and GPG keys 클릭 > [New SSH key] 클릭 > id_ed25519.pub에 있는 공개키 등록 
+$ git push/pull 정상동작 확인 
+```
+
+
+>[!warning] git push -f 옵션을 사용하면 remote 서버에 작업한 내용은 지워지고 로컬 history로 대체됨
+>- 정말 강제하는 경우가 아니라면 사용해서는 안된다
+>- git pull , fetch로 local history를 remote에 맞춘 다음 나의 commit들을 rebase 해서 그다음 push 하는 게 맞음 
+>- 간혹 기존의 git history를 rebase를 이용해서 변경하거나 history를 변경했다면 부득이하게 옵션 -f 로 push 해야함
+
+
+**로컬 프로젝트에 깃허브 프로젝트 연결하기**
+```bash
+$ git init   // .git 있는 경우 생략 
+
+$ git remote // 목록 없음 
+
+$ git remote add origin 저장소주소 
+
+$ git remote -v // origin 추가된거 확인됨 
+
+$ git push  
+```
+
+
+### fetch vs pull  차이
+- fetch의 경우 remote의 최신 이력을 받아오지만 head는 여전히 로컬 히스토리를 가르킨다
+- pull의 경우 remote의 최신 이력을 받아 head의 포인터가 최신 이력으로 이동한다
+```text
+아래의 history 상황에서 
+| local |       [remote server]          
+ a <- b           a <- b <-c
+    
+fetch의 경우 remote의 history를 가져오지만 local HEAD는 여전히 b 를 가르키게 됨 
+a <- b <- c
+		 origin/master 
+   master(HAED)      
+
+pull의 경우 remote의 history를 가져오면서 local 내용과 함께 merge를 하게 됨 
+a <- b <- c 
+	  origin/master 
+	  master(HAED)
+```
+
+
+### fetch 심화
+```bash
+# remote 서버(git hub)에 수동으로 신규 커밋 생성 후 
+----------------------------------------------------------
+$ git fetch 
+
+origin/main, origin/HEAD는 최신 commit을 가르키고 있지만 
+local HEAD는 작업중인 이력에 위치하게 됨 
+
+$ git fetch 서버명 
+$ git fetch origin 브랜치명 
+----------------------------------------------------------
+```
+
+
+### pull 심화
+```bash
+# remote 서버에 최신 버전과 local 버전을 똑같이 맞춰줌 ( merge 하면서 최신 commit으로 head 옮겨짐 ) 
+----------------------------------------------------------
+$ git pull      // 로컬과 서버가 동기화(sync) 잘된 걸 확인가능 
+----------------------------------------------------------
+
+# local과 remote 서로 새로운 commit 있는 경우 , 또는 동일한 파일을 수정한 경우 
+----------------------------------------------------------
+$ git pull // merge conflict 발생함 ( 브랜치 사이나 서버와 로컬사이)
+$ git mergetool      // global config 설정한거 
+$ git add .
+$ git merge --continue       // 새로운 커밋 메시지 만들어짐 ( 메시지 안적어도 됨)
+$ git hist                   // merge 이력이 더럽게 생성됨 
+$ git reflog                 // 이전 상태로 돌림 
+$ git reset --hard 해쉬코드 | git reset --hard HEAD~1    // 로컬 commit 시점으로 돌아감 
+//여기서 헷갈릴 수 있는 게 이미 pull 받아서 remote 이력이 있는거고, 로컬 이력이 reset 된거라 history 모양이 다른걸 확인가능             
+
+
+$ git pull --rebase          // 서버에 있는 commit 가져와서 로컬에 만든 커밋 위에 적용할거임 
+$ git mergetool              // conflict 내용수정 후 종료 
+$ git rebase --continue      // commit message 창 뜸 ( 그냥 종료 )
+$ git hist                   // 깔끔하게 정리됨 , rebase 한거만 새로운 commit 만들어지고 서버에서 받은 커밋까지는 코드 그대로 인걸 확인가능
+$ git push                           
+---------------------------------------------------------- 
+```
+
+
+### blame
+- vscode에 git lens extension으로도 확인 가능 (현업에서도 유용)
+- sourcetree 확인시 이력에서 원하는 파일 마우스 오른쪽 클릭 > annotate selected 누르면 확인가능 
+
+```bash
+$ git blame 경로/파일명 
+```
+
+
+### bisect
+- 디버깅만으로 버그를 찾지 못하여, 커밋 단위로 검사를 해야 할 때 유용
+- bisect는 이진 탐색 알고리즘 통해서 commit을 검사함 
+- 수많은 commit 중 잘 동작한 commit 포인트와 이상한 commit 포인트만 잘 설정해두면 이진탐색 알고리즘 이용해서 빠르게 나쁜 commit을 잡아내는 명령어 
+
+```bash
+----------------------------------------------------------
+$ git checkout 원하는커밋이동 
+$ git bisect start   //프로그램 실행함  
+
+# <B> 라는 심볼이 생성되면 
+$ git bisect good     //마크 생성해둠 
+$ git checkout master //최신버전에서 문제가 발생하는지 확인하기 위해 
+$ git bisect bad      // 문제 발생시 마크 bad 생성해둠
+  그러면 bisecting 2진탐색알고리즘 시작함 
+
+$ git hist    //HEAD가 움직여져 잇음, 해당 HEAD 에서 이슈 발생하는지 확인후 
+$ git bisect good  // 마크해주면 다음 commit으로 이동함 
+$ git hist         // HEAD가 또 움직여짐 , 프로그램 돌려서 문제 발생하는지 확인 
+$ git bisect good  // 괜찮다는 mark 찍음 
+$ git hist 
+$ git bisect bad   // 문제발생시 bad mark 찍음 
+
+   그러면 good commit과 bad commit 중간 지점에 원인이 있으니 다시 checkout 됨 
+
+$ git hist 
+$ git bisect good        //
+
+$ git bisect reset       //원래 브랜치로 돌아간다함 ( = 원래 이력포인트로 이동하는 듯)
+----------------------------------------------------------
+```
+
+
+>[!tip] 터미널 UI 인터페이스 툴 tig
+>- https://jonas.github.io/tig/INSTALL.html
+>- tig status 후 h 누르면 단축키 확인가능 
+>- vim 명령어처럼 '/검색어'형식으로 검색 가능
+
+
+>[!tip] 깃 설정 공유
+```bash
+# local 내용 초기화 하고 싶은 경우 보통 reset 활용
+$ git reset --hard HEAD
+
+$ git config --global -e
+
+[alias]  # git 다음 alias 쓰면 됨  
+	 s = status 
+	 # up은 마스터를 최신으로 
+	 up = !git fetch origin master && git rebase origin/master
+	 co = checkout 
+	 ca = !git add -A && git commit -m 
+	 cad = !git add -A && git commit -m "."
+	 c = commit
+	 b = branch 
+	 slist = stash list 
+	 ssave = stash save 
+	 spop = stash pop 
+	 apply = stash apply 
+	 rc = rebase -continue
+```
 
 
 ---
