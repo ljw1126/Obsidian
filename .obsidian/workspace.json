@@ -4,19 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "3d44a1beaa2a8499",
+        "id": "9e0b21b6e181905a",
         "type": "tabs",
         "children": [
           {
-            "id": "2ad0d5474b482db0",
+            "id": "f3a91fad5d40bbd9",
             "type": "leaf",
             "state": {
-              "type": "excalidraw",
+              "type": "markdown",
               "state": {
-                "file": "Excalidraw/Drawing 2025-01-13 16.59.36.excalidraw.md"
+                "file": "1. Project/Git 마스터 과정/summary.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "excalidraw-icon",
-              "title": "Drawing 2025-01-13 16.59.36.excalidraw"
+              "icon": "lucide-file",
+              "title": "summary"
             }
           }
         ]
@@ -93,8 +95,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "61e96dd258911747",
@@ -216,7 +217,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "2ad0d5474b482db0",
+  "active": "f3a91fad5d40bbd9",
   "lastOpenFiles": [
     "Excalidraw/Drawing 2025-01-13 16.59.36.excalidraw.md",
     "Excalidraw",
