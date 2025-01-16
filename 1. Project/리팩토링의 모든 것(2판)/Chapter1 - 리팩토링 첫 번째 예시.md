@@ -161,7 +161,70 @@ public class Statement {
 > "프로그램이 새로운 기능을 추가하기에 편한 구조가 아니라면, 먼저 기능을 추가하기 쉬운 형태로 리팩터링하고 나서 원하는 기능을 추가한다" 
 
 ---
-### 3. 내가 기억하고 싶은 리팩토링
+### 3.  리팩토링을 하면서
+테스트의 중요성
+
+
+다양한 리팩토링 기법을 익히다
+중간 점검 전 단계까지만 하더라도 처음 사용하는 두 가지 기법이 눈에 띄었다
+
+statement(..)에 있던 swtich문을 amountFor(..)로 함수 추출했을 때
+
+1. swtich문 제거 과정
+
+
+2. volumeCredits 변수 제거 과정
+
+```java
+for(Performance performances : invoice.getPerformances()) {  
+	// 포인트를 적립한다  
+	volumeCredits += Math.max(performances.getAudience() - 30, 0);  
+
+	// 희극 관객 5명마다 추가 포인트를 제공한다  
+	if(play.getType().equals(PlayType.COMEDY)) {  
+		volumeCredits += (performances.getAudience() / 5);  
+	}  
+
+	result.append(String.format("%s: $%d %d석\n", play.getName(), thisAmount / 100, performances.getAudience()));  
+	totalAmount += thisAmount;  
+}  
+```
+
+
+반복문 쪼개기는 
+p47 저자 생각
+
+
+### 처음 단계 (p29 ~ 49)
+statement(..)에 있는 기능들을 우선 목적에 맞게 나누는 것으로 시작했다
+- 함수 추출하기
+- 임시 변수를 질의 합수로 바꾸기
+- 변수 인라인하기
+- 반복문 쪼개기
+
+#### 함수 추출 후 매개 변수를 줄인 과정
+**함수 추출하기** 사용하여  switch문을 amountFor(..)로 분리한다
+```java
+private int amountFor(Performance p, Plays plays) {..}
+```
+
+그리고 Performance에서  play를 얻을 수 있기 때문에 **임시 변수를 질의 함수로 바꾸기**를 적용하여 매개변수 plays를 제거한다 (이때 plays는 생성자 주입 방식으로 선언 사용)
+```java hl:1,3
+private int amountFor(Performance performance) {  
+    int result;  
+    switch (playFor(performance).getType()) {
+         // .. 
+    }
+    return result;
+}
+
+private Play playFor(Performance performances) {  
+    return plays.get(performances.getPlayId());  
+}
+```
+
+#### 반복문 쪼개기와 함수 추출 과정
+
 
 
 
@@ -172,8 +235,10 @@ public class Statement {
 >[!note]  p28
 >"리팩터링하기 전에 제대로 된 테스트부터 마련한다. 테스트는 반드시 자가진단하도록 만든다"
 
+
 >[!tip] p34
 >자바스크립트와 같은 동적 타입 언어를 사용할 때는 타입이 드러나게 작성하면 도움된다. 그래서 나는 매개변수 이름에 접두어로 타입 이름을 적는데, 지금처럼 매개변수의 역할이 뚜렷하지 않을 때는 부정 관사(a/an)을 붙인다. 이 방식은 켄트 백에게 배웠는데 ..
+
 
 >[!note] p35
 >"컴퓨터가 이해하는 코드는 바보도 작성할 수 있다. 사람이 이해하도록 작성하는 프로그래머가 진정한 실력자다"
