@@ -11,10 +11,14 @@
             "id": "537ef37b8c3ee37e",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩토링 첫 번째 예시.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "새 탭"
+              "title": "Chapter1 - 리팩토링 첫 번째 예시"
             }
           }
         ]
@@ -91,7 +95,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "61e96dd258911747",
@@ -213,11 +218,12 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "28bab7a986b18dda",
+  "active": "537ef37b8c3ee37e",
   "lastOpenFiles": [
+    "4. Archive/Git 마스터 과정/summary.md",
+    "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩토링 첫 번째 예시.md",
     "4. Archive/Git 마스터 과정/Git Cheat Sheet.md",
     "Excalidraw/Drawing 2025-01-13 16.59.36.excalidraw.md",
-    "4. Archive/Git 마스터 과정/summary.md",
     "Excalidraw",
     "1. Project/Git 마스터 과정/1..md",
     "1. Project/리팩토링의 모든 것(2판)",
@@ -251,7 +257,6 @@
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch10. 그래프 이론",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/전보.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/미래 도시.md",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/바닥공사 (🔺).md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/스크린샷 2025-01-08 오후 3.37.15.png"
   ]
 }
