@@ -164,15 +164,16 @@ public class Statement {
 ---
 ### 3.  리팩토링
 
-#### 첫번째. 함수 추출하기
+#### 3-1. statement() 함수 쪼개기
 `statement(..)`에 있던 <u>swtich문</u>과 <u>누적 계산 변수</u>를 함수 추출하여 리팩토링하는 과정을 실습했다 
 
-swtich문을 함수 추출하여 분리하는 과정에서는 아래 기법이 적용되었다
+**첫번째**로 swtich문을 함수 추출하여 분리하는 과정에서는 아래 기법이 적용되었다
 - 함수 추출하기 : `{java}amountFor(..)`
 - 임시 변수를 질의 합수로 바꾸기 : `{java}playFor(Performance)`
 - 변수 인라인하기 
 
-함수 추출에서 더 나아가 매개변수 Plays 제거하는 과정을 저자는 설명하고 있었다
+매개변수 Plays 제거하기 위해 "임시 변수를 질의 함수 추출하기"와 "인라인"기법이 적용되었고, 그 결과 코드 가독성이 향상되어 보였다
+
 > (p35)"나는 김 함수를 잘게 쪼갤 때마다 play 같은 변수를 최대한 제거한다. 이런 임시 변수들 때문에 로컬 범위에 존재하는 이름이 늘어나서 추줄 작업이 복잡해지기 때문이다"
  
 ```java
@@ -184,7 +185,7 @@ private int amountFor(Performance performance) {..}
 ```
 
 
- "임시 변수를 질의 함수 추출하기"와 "인라인"기법을 적용함으로써 코드 가독성이 향상되어 보였다. 하지만 `{java}plays` 조회하는게 `{java}amountFor(..)`에서 들어나지 않기 때문에 초기화시 `{java}plays` 주입하지 않아 오류 발생하면 코드를 찾아 봐야하므로 명시적인 게 경우에 따라 나을 수도 있을거라는 생각도 들었다 
+ 하지만 `{java}plays` 조회하는게 `{java}amountFor(..)`에서 들어나지 않기 때문에 초기화시 `{java}plays` 주입하지 않아 오류 발생하면 코드를 찾아 봐야하므로 명시적인 게 경우에 따라 나을 수도 있을거라는 생각도 들었다 
 ```java hl:3,11
 private int amountFor(Performance performance) {  
     int result;  
@@ -201,28 +202,53 @@ private Play playFor(Performance performances) {
 ```
 
 
+**두번째**로 totalAmount와 volumeCredits 계산 함수 추출하기를 하였다
+- **반복문 쪼개기** : 변수 값을 누적시키는 부분 분리
+- **문장 슬라이드 하기** : 변수 초기화 문장을 변수 값 누적 코드 바로 앞으로 옮김
+- **함수 추출하기** : 적립 포인트 계산 부분을 별도 함수로 추출
+- **변수 인라인하기** : totalAmount, volumeCredits 변수를 statement(..)에서 제거
 
-
-totalAmount와 volumeCredits 계산 함수 추출
-
+**리팩토링 전**
 ```java
-for(Performance performances : invoice.getPerformances()) {  
-	// 포인트를 적립한다  
-	volumeCredits += Math.max(performances.getAudience() - 30, 0);  
-
-	// 희극 관객 5명마다 추가 포인트를 제공한다  
-	if(play.getType().equals(PlayType.COMEDY)) {  
-		volumeCredits += (performances.getAudience() / 5);  
+public String statement(Invoie invoice, Plays plays) {   
+    int totalAmount = 0;  
+	int volumeCredits = 0;
+	// .. 
+	
+	for(Performance performances : invoice.getPerformances()) {  
+		// 포인트를 적립한다  
+		volumeCredits += Math.max(performances.getAudience() - 30, 0);  
+	
+		// 희극 관객 5명마다 추가 포인트를 제공한다  
+		if(play.getType().equals(PlayType.COMEDY)) {  
+			volumeCredits += (performances.getAudience() / 5);  
+		}  
+	
+		result.append(String.format("%s: $%d %d석\n", play.getName(), thisAmount / 100, performances.getAudience()));  
+		totalAmount += thisAmount;  
 	}  
-
-	result.append(String.format("%s: $%d %d석\n", play.getName(), thisAmount / 100, performances.getAudience()));  
-	totalAmount += thisAmount;  
-}  
+	
+    // .. 
+    return result.toString();
+}
 ```
 
 
+**리팩토링 후**
+```java hl:9-10
+public String statement() throws Exception {  
+    StringBuilder result = new StringBuilder();  
+    result.append(String.format("청구 내역 (고객명: %s)", invoice.getCustomer())).append("\n");  
+  
+    for(Performance performances : invoice.getPerformances()) {  
+        result.append(String.format("%s: $%d %d석\n", playFor(performances).getName(), amountFor(performances) / 100, performances.getAudience()));  
+    }  
+  
+    result.append(String.format("총액: $%d\n", totalAmount() / 100));  
+    result.append(String.format("적립 포인트: %d점\n", totalVolumeCredits()));  
+    return result.toString();  
+}
 
-```java
 private int totalAmount() throws Exception {  
     int result = 0;  
     for(Performance performances : invoice.getPerformances()) {  
@@ -259,9 +285,130 @@ private int volumeCreditsFor(Performance performances) {
 }
 ```
 
+*"굳이? 한번 조회하면 될 걸"*
+ 이전 코드는 루프를 한 번 돌면서 결과값을 누적하는 반면, 리팩터링한 코드에서는 세 번이나 조회한다. 데이터가 얼마 없기 때문에 for문을 몇번 실행하더라도 크게 성능상 크게 영향은 없을 것으로 생각되었지만, 어떤 영향이 있는지는 떠오르지 않았다. 이에 저자는 아래와 같이 말한다
+
+> (p39) "지역 변수를 제거해서 얻는 가장 큰 장점은 추출 작업이 훨씬 쉬워진다는 것이다. 유효 범위를 신경써야 할 대상이 줄어들기 때문이다. 실제로 나는 추출 작업전에는 거의 항상 지역 변수부터 제거한다"
+
+이를 고려해본다면 함수 분리하면서 totalAmount와 totalVolumeCredits를 관리하는 포인트가 메소드로 명확해진게 두드러지게 느껴진다. 또한 `statement(..)`에 임시 변수가 없어지고 인라인으로 함수 호출하는 형태로 리팩터링이 되면서 코드의 가독성도 높아진 효과가 이번에 리팩터링을 느낄 수 있었다
+
+>[!tip] p47
+>"따라서 리팩터링으로 인한 성능 문제에 대한 내 조언은 '특별한 경우가 아니라면 일단 무시하라'는 것이다. 
+>리팩터링 때문에 성능이 떨어진다면, 하던 리팩터링을 마무리하고 나서 성능을 개선하자"
 
 
+#### 3-2.  클래스 분리
+**단계 쪼개기**
+- 필요한 데이터를 먼저 처리 후 `statement(..)` 파라미터로 전달한다
+- statement(..)에서는 전달받은 결과 데이터 기반으로 HTML 렌더링을 생성한다
 
+```java
+private final Invoice invoice;  
+private final Plays plays;  
+  
+public Statement(Invoice invoice, Plays plays) {  
+    this.invoice = invoice;  
+    this.plays = plays;  
+}  
+  
+public String statement() throws Exception {  
+    StatementData data = new StatementData(invoice);  
+    return renderPlainText(data);  
+}
+
+private String renderPlainText(StatementData data) {
+  // 청구서 생성
+}
+
+```
+
+
+**참고. 클래스 다이어그램**
+<img src="https://github.com/ljw1126/user-content/blob/master/refactoring2/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81%201%EC%9E%A5_%ED%81%B4%EB%9E%98%EC%8A%A4%EB%B6%84%EB%A6%AC.png?raw=true">
+
+Statement에는 텍스트와 html을 렌더링 하는 책임만을 가지게 되도
+
+
+**리팩토링 결과**
+```java
+public class Statement {  
+  
+    public String statement(Invoice invoice, Plays plays) throws Exception {  
+        return renderPlainText(StatementData.create(invoice, plays));  
+    }  
+  
+    private String renderPlainText(StatementData data) {  
+        // 랜더링..
+        return result.toString();
+    }  
+  
+    public String htmlStatement(Invoice invoice, Plays plays) throws Exception {  
+        return renderHtml(StatementData.create(invoice, plays));  
+    }  
+  
+    private String renderHtml(StatementData data) {  
+        // ..
+        return result.toString();
+    }  
+}
+```
+
+#### 3-3. 다형성
+
+각 Performance별 amount와 volumeCredits 계산하는 책임을 PerformanceCalculator에 위임하였다.
+```java
+public class PerformanceCalculator {  
+    private final Performance performance;  
+    private final Play play;  
+  
+    public PerformanceCalculator(Performance performance, Play play) {  
+        this.performance = performance;  
+        this.play = play;  
+    }  
+  
+    public int amount() throws Exception {  
+        int result = 0;  
+        switch (play.getType()) {  
+            case TRAGEDY :  
+                result = 40_000;  
+                if(performance.getAudience() > 30) {  
+                    result += 1_000 * (performance.getAudience() - 30);  
+                }  
+                break;  
+            case COMEDY :  
+                result = 30_000;  
+                if(performance.getAudience() > 30) {  
+                    result += 10_000 + 500 * (performance.getAudience() - 20);  
+                }  
+                result += 300 * performance.getAudience();  
+                break;  
+            default :  
+                throw new Exception(String.format("알 수 없는 장르: %s", play.getType()));  
+        }  
+  
+        return result;  
+    }  
+  
+    public int volumeCredits() {  
+        int result = 0;  
+        result += Math.max(performance.getAudience() - 30, 0);  
+  
+        if(play.getType().equals(PlayType.COMEDY)) {  
+            result += (performance.getAudience() / 5);  
+        }  
+  
+        return result;  
+    }  
+  
+    public Play getPlay() {  
+        return play;  
+    }  
+}
+```
+
+
+참고. 클래스 다이어그램
+<img src="https://github.com/ljw1126/user-content/blob/master/refactoring2/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%811%EC%9E%A5_%EB%8B%A4%ED%98%95%EC%84%B1.png?raw=true">
 
 
 
@@ -279,6 +426,12 @@ private int volumeCreditsFor(Performance performances) {
 >[!note] p35
 >"컴퓨터가 이해하는 코드는 바보도 작성할 수 있다. 사람이 이해하도록 작성하는 프로그래머가 진정한 실력자다"
 
+
+>[!note] p 47 statement(..) 함수 쪼개기에서
+>솔직히 나라고 해서 항상 단계를 이 처럼 잘게 나누는 것은 아니지만, 그래도 상황이 복잡해지면 단계를 더 작게 나누는 일을 가장 먼저 한다. 특히 리팩터링 중간에 테스트가 실패하고 원인을 바로 찾지 못하면 가장 최근 커밋으로 돌아가서 테스트에 실패한 리팩터링의 단계를 더 작게 나눠 다시 시도한다. 
+>
+>이렇게 하면 문제를 해결할 수 있다. 
+>커밋을 자주 했기 때문이기도 하고, 코드가 복잡할수록 단계를 작게 나누면 작업 속도가 빨라지기 때문이다
 
 ---
 ### 
