@@ -35,7 +35,7 @@
 ```
 
 
-### 1. 예시 코드 전후 비교
+### 1. 예시 코드
 공연료 청구서를 출력하는 함수는 아래와 같다
 
 **레거시 코드**
@@ -135,9 +135,10 @@ public class Statement {
 ```
 
 ---
-### 2 예시 프로그램을 처음 본 나의 소감 
+### 2. 예시 프로그램을 처음 본 나의 소감 
 
-처음 예시를 봤을 때 목적에 맞게 충실하게 기능 구현이 되어 있는 것으로 보였다. 더군다나 코드 양이 많지 않기 때문에 순차적으로 코드를 읽으면 나름 가독성 있어 보였다
+처음 예시를 봤을 때 목적에 맞게 충실하게 기능 구현이 되어 있는 것으로 보였다 
+더군다나 코드 양이 많지 않기 때문에 순차적으로 코드를 읽으면 나름 가독성 있어 보였다
 
 <img src = "https://raw.githubusercontent.com/ljw1126/user-content/refs/heads/master/meme/%EA%B7%B8%EB%9F%B4%EC%8B%B8%ED%95%9C%EB%8D%B0.webp"/>
 
@@ -161,19 +162,48 @@ public class Statement {
 > "프로그램이 새로운 기능을 추가하기에 편한 구조가 아니라면, 먼저 기능을 추가하기 쉬운 형태로 리팩터링하고 나서 원하는 기능을 추가한다" 
 
 ---
-### 3.  리팩토링을 하면서
-테스트의 중요성
+### 3.  리팩토링
+
+#### 첫번째. 함수 추출하기
+`statement(..)`에 있던 <u>swtich문</u>과 <u>누적 계산 변수</u>를 함수 추출하여 리팩토링하는 과정을 실습했다 
+
+swtich문을 함수 추출하여 분리하는 과정에서는 아래 기법이 적용되었다
+- 함수 추출하기 : `{java}amountFor(..)`
+- 임시 변수를 질의 합수로 바꾸기 : `{java}playFor(Performance)`
+- 변수 인라인하기 
+
+함수 추출에서 더 나아가 매개변수 Plays 제거하는 과정을 저자는 설명하고 있었다
+> (p35)"나는 김 함수를 잘게 쪼갤 때마다 play 같은 변수를 최대한 제거한다. 이런 임시 변수들 때문에 로컬 범위에 존재하는 이름이 늘어나서 추줄 작업이 복잡해지기 때문이다"
+ 
+```java
+// before
+private int amountFor(Performance performance, Plays plays) {..}
+
+// after
+private int amountFor(Performance performance) {..}
+```
 
 
-다양한 리팩토링 기법을 익히다
-중간 점검 전 단계까지만 하더라도 처음 사용하는 두 가지 기법이 눈에 띄었다
+ "임시 변수를 질의 함수 추출하기"와 "인라인"기법을 적용함으로써 코드 가독성이 향상되어 보였다. 하지만 `{java}plays` 조회하는게 `{java}amountFor(..)`에서 들어나지 않기 때문에 초기화시 `{java}plays` 주입하지 않아 오류 발생하면 코드를 찾아 봐야하므로 명시적인 게 경우에 따라 나을 수도 있을거라는 생각도 들었다 
+```java hl:3,11
+private int amountFor(Performance performance) {  
+    int result;  
+    switch (playFor(performance).getType()) {
+        // 생략..
+    }
 
-statement(..)에 있던 swtich문을 amountFor(..)로 함수 추출했을 때
+    return result;
+}
 
-1. swtich문 제거 과정
+private Play playFor(Performance performances) {  
+    return plays.get(performances.getPlayId());  
+}
+```
 
 
-2. volumeCredits 변수 제거 과정
+
+
+totalAmount와 volumeCredits 계산 함수 추출
 
 ```java
 for(Performance performances : invoice.getPerformances()) {  
@@ -191,39 +221,45 @@ for(Performance performances : invoice.getPerformances()) {
 ```
 
 
-반복문 쪼개기는 
-p47 저자 생각
 
-
-### 처음 단계 (p29 ~ 49)
-statement(..)에 있는 기능들을 우선 목적에 맞게 나누는 것으로 시작했다
-- 함수 추출하기
-- 임시 변수를 질의 합수로 바꾸기
-- 변수 인라인하기
-- 반복문 쪼개기
-
-#### 함수 추출 후 매개 변수를 줄인 과정
-**함수 추출하기** 사용하여  switch문을 amountFor(..)로 분리한다
 ```java
-private int amountFor(Performance p, Plays plays) {..}
-```
+private int totalAmount() throws Exception {  
+    int result = 0;  
+    for(Performance performances : invoice.getPerformances()) {  
+        result += amountFor(performances);  
+    }  
+    return result;  
+}  
 
-그리고 Performance에서  play를 얻을 수 있기 때문에 **임시 변수를 질의 함수로 바꾸기**를 적용하여 매개변수 plays를 제거한다 (이때 plays는 생성자 주입 방식으로 선언 사용)
-```java hl:1,3
-private int amountFor(Performance performance) {  
-    int result;  
-    switch (playFor(performance).getType()) {
-         // .. 
-    }
-    return result;
+private int amountFor(Performance perfromance) { 
+  // .. 
 }
 
-private Play playFor(Performance performances) {  
-    return plays.get(performances.getPlayId());  
+private Play playFor(Perfromance performance) {
+  // ..
+}
+  
+private int totalVolumeCredits() {  
+    int result = 0;  
+    for(Performance performances : invoice.getPerformances()) {  
+        result += volumeCreditsFor(performances);  
+    }  
+    return result;  
+}
+
+private int volumeCreditsFor(Performance performances) {  
+    int result = 0;  
+    result += Math.max(performances.getAudience() - 30, 0);  
+  
+    if(playFor(performances).getType().equals(PlayType.COMEDY)) {  
+        result += (performances.getAudience() / 5);  
+    }  
+  
+    return result;  
 }
 ```
 
-#### 반복문 쪼개기와 함수 추출 과정
+
 
 
 
