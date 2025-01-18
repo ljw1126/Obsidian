@@ -90,50 +90,6 @@ public class Statement {
 ```
 
 
-**리팩토링 결과**
-```java
-public class Statement {  
-  
-    public String statement(Invoice invoice, Plays plays) {  
-        return renderPlainText(StatementData.create(invoice, plays));  
-    }  
-  
-    private String renderPlainText(StatementData data) {  
-        StringBuilder result = new StringBuilder();  
-        result.append(String.format("청구 내역 (고객명: %s)", data.getCustomer())).append("\n");  
-  
-        for(EnrichPerformance performances : data.getEnrichPerformances()) {  
-            result.append(String.format("%s: $%d %d석\n", performances.getPlayName(), performances.getAmount() / 100, performances.getAudience()));  
-        }  
-  
-        result.append(String.format("총액: $%d\n", data.getTotalAmount() / 100));  
-        result.append(String.format("적립 포인트: %d점\n", data.getTotalVolumeCredits()));  
-        return result.toString();  
-    }  
-  
-    public String htmlStatement(Invoice invoice, Plays plays) {  
-        return renderHtml(StatementData.create(invoice, plays));  
-    }  
-  
-    private String renderHtml(StatementData data) {  
-        StringBuilder result = new StringBuilder();  
-        result.append(String.format("<h1>청구 내역 (고객명: %s)</h1>\n", data.getCustomer()));  
-  
-        result.append("<table>\n");  
-        result.append("<tr><th>연극</th><th>좌석 수</th><th>금액</th></tr>\n");  
-        for(EnrichPerformance performance : data.getEnrichPerformances()) {  
-            result.append(String.format("<tr><td>%s</td><td>%d석</td>", performance.getPlayName(), performance.getAudience()));  
-            result.append(String.format("<td>$%d</td></tr>\n", performance.getAmount() / 100));  
-        }  
-        result.append("</table>\n");  
-  
-        result.append(String.format("<p>총액: <em>$%d</em></p>\n", data.getTotalAmount() / 100));  
-        result.append(String.format("<p>적립 포인트: <em>%d점</em></p>\n", data.getTotalVolumeCredits()));  
-        return result.toString();  
-    }  
-}
-```
-
 ---
 ### 2. 예시 프로그램을 처음 본 나의 소감 
 
@@ -153,8 +109,8 @@ public class Statement {
 
 **2️⃣ OCP(개방 폐쇄 원칙) 위반**
 - `statement(..)`에서는 두 가지 장르`(비극 : tragedy, 희극 : comedy)`만을 지원하고 있다
-- 만약 장르가 추가된다면  `switch문` 수정은 불가피할 것이고, 그 수가 늘어날수록 가독성 저하, 복잡성 증가로 이어져 유지보수 비용이 늘어날 것으로 보였다
-- <u>따러서  기존 코드의 변경없이 유연하게 확장하고 관리하기 위해서 인터페이스 정의하고 구현하는 방식의 설계가 필요해 보였다 (다형성)</u>
+- 만약 장르가 추가된다면  `switch문` 수정은 불가피할 것이고, 그 수가 늘어날수록 유지보수 비용이 늘어날 것으로 보였다 - 가독성 저하와 복잡성 증가
+- <u>따러서  기존 코드의 변경없이 유연하게 확장하고 관리하기 위해서 인터페이스 정의하고 구현하는 방식의 설계가 필요해 보였다</u>
 	- `장르별 계산 인터페이스`에 의존하게 되면 구현체의 변경이 발생하더라도 `statement(..)`는 영향을 받지 않고 인터페이스에 정의된 계산 메서드만 호출하여 사용하면 된다 
 
 
@@ -162,7 +118,7 @@ public class Statement {
 > "프로그램이 새로운 기능을 추가하기에 편한 구조가 아니라면, 먼저 기능을 추가하기 쉬운 형태로 리팩터링하고 나서 원하는 기능을 추가한다" 
 
 ---
-### 3.  리팩토링
+### 3.  리팩토링 과정
 
 #### 3-1. statement() 함수 쪼개기
 `statement(..)`에 있던 <u>swtich문</u>과 <u>누적 계산 변수</u>를 함수 추출하여 리팩토링하는 과정을 실습했다 
@@ -185,7 +141,7 @@ private int amountFor(Performance performance) {..}
 ```
 
 
- 하지만 `{java}plays` 조회하는게 `{java}amountFor(..)`에서 들어나지 않기 때문에 초기화시 `{java}plays` 주입하지 않아 오류 발생하면 코드를 찾아 봐야하므로 명시적인 게 경우에 따라 나을 수도 있을거라는 생각도 들었다 
+ 하지만 `{java}amountFor(..)`에서 `{java}plays` 조회하는게 들어나지 않기 때문에 초기화시 `{java}plays` 주입하지 않는 경우 오류 발생하면 코드를 찾아봐야 하므로 명시적인게 경우에 따라 나을수도 있겠다는 생각도 들었다 
 ```java hl:3,11
 private int amountFor(Performance performance) {  
     int result;  
@@ -202,11 +158,11 @@ private Play playFor(Performance performances) {
 ```
 
 
-**두번째**로 totalAmount와 volumeCredits 계산 함수 추출하기를 하였다
+**두번째**로 totalAmount와 volumeCredits 계산 함수 추출하였다
 - **반복문 쪼개기** : 변수 값을 누적시키는 부분 분리
 - **문장 슬라이드 하기** : 변수 초기화 문장을 변수 값 누적 코드 바로 앞으로 옮김
 - **함수 추출하기** : 적립 포인트 계산 부분을 별도 함수로 추출
-- **변수 인라인하기** : totalAmount, volumeCredits 변수를 statement(..)에서 제거
+- **함수 인라인하기** : totalAmount, volumeCredits 변수를 statement(..)에서 제거
 
 **리팩토링 전**
 ```java
@@ -285,23 +241,27 @@ private int volumeCreditsFor(Performance performances) {
 }
 ```
 
+
 *"굳이? 한번 조회하면 될 걸"*
- 이전 코드는 루프를 한 번 돌면서 결과값을 누적하는 반면, 리팩터링한 코드에서는 세 번이나 조회한다. 데이터가 얼마 없기 때문에 for문을 몇번 실행하더라도 크게 성능상 크게 영향은 없을 것으로 생각되었지만, 어떤 영향이 있는지는 떠오르지 않았다. 이에 저자는 아래와 같이 말한다
+ 이전 코드는 루프를 한 번 돌면서 결과값을 누적하는 반면, 리팩터링한 코드에서는 세 번이나 조회한다. 데이터가 얼마 없기 때문에 for문을 실행하더라도 성능상 크게 영향은 없을 것으로 생각되었지만, 어떤 부분에서 좋아진건지는 이해가 되지 않았다. 이에 저자는 아래와 같이 말한다
 
 > (p39) "지역 변수를 제거해서 얻는 가장 큰 장점은 추출 작업이 훨씬 쉬워진다는 것이다. 유효 범위를 신경써야 할 대상이 줄어들기 때문이다. 실제로 나는 추출 작업전에는 거의 항상 지역 변수부터 제거한다"
 
-이를 고려해본다면 함수 분리하면서 totalAmount와 totalVolumeCredits를 관리하는 포인트가 메소드로 명확해진게 두드러지게 느껴진다. 또한 `statement(..)`에 임시 변수가 없어지고 인라인으로 함수 호출하는 형태로 리팩터링이 되면서 코드의 가독성도 높아진 효과가 이번에 리팩터링을 느낄 수 있었다
+이를 고려해본다면 함수 분리하면서 totalAmount와 totalVolumeCredits 관리하는 포인트가 메소드로 명확해진게 두드러지게 느껴진다. 또한 `statement(..)`에 임시 변수가 없어지고 인라인으로 함수 호출하는 형태로 리팩터링되면서 코드의 가독성도 높아진 효과를 느낄 수 있었다
+
 
 >[!tip] p47
 >"따라서 리팩터링으로 인한 성능 문제에 대한 내 조언은 '특별한 경우가 아니라면 일단 무시하라'는 것이다. 
 >리팩터링 때문에 성능이 떨어진다면, 하던 리팩터링을 마무리하고 나서 성능을 개선하자"
 
 
+
 #### 3-2.  클래스 분리
 **단계 쪼개기**
-- 필요한 데이터를 먼저 처리 후 `statement(..)` 파라미터로 전달한다
-- statement(..)에서는 전달받은 결과 데이터 기반으로 HTML 렌더링을 생성한다
+- 필요한 데이터를 먼저 처리 후 파라미터로 전달한다
+- 전달받은 결과 데이터 기반으로 HTML 렌더링을 생성한다
 
+`renderPlainText(..)` 메서드에 DTO 객체인 StatementData를 전달하여 청구서를 생성한다
 ```java
 private final Invoice invoice;  
 private final Plays plays;  
@@ -326,7 +286,20 @@ private String renderPlainText(StatementData data) {
 **참고. 클래스 다이어그램**
 <img src="https://github.com/ljw1126/user-content/blob/master/refactoring2/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%81%201%EC%9E%A5_%ED%81%B4%EB%9E%98%EC%8A%A4%EB%B6%84%EB%A6%AC.png?raw=true">
 
-Statement에는 텍스트와 html을 렌더링 하는 책임만을 가지게 되도
+최대한 책의 구조와 유사하게 클래스 생성하였다
+
+**StatementData 초기화**
+- 정적 팩토리 메서드 create(..) 호출 
+	- Performance를 EnrichPerformance로 mapping (마찬가지로 정적 팩토리 메서드 호출)
+- 이때 생성자의 접근 제어자를 private 선언하여 정적 팩토리 메서드로만 초기화하도록 함
+- totalAmount와 totalVolumeCredits는 
+	- `{java}List<EnrichPerformance>` 순회하여 각 누적합을 구함
+
+**EnrichPerformance 초기화** 
+- PerformanceCalculator 생성
+	- amount와 volumeCredits 결과값 초기화
+
+ 개인적으로 Plays 때문에 시간이 좀 더 소요했었다. 지금까지 생성자 주입 방식으로 Statement 객체 초기화 후 `playFor(..)`사용했었다. 그런데 이 `playFor(..)`를 어디로 이동시킬지 고민하다보니 앞이 보이질 않았다. 그러다 <u>Toby님의 코드를 봤는데, 매개변수로 Plays 전달하여 Play 뽑아 사용하는 것을 보고, "아..굳이 멤버변수로 Plays 올릴 필요 없구나"라는 걸 깨닫고 인라인으로 처리하였다.</u> 그 결과 위의 클래스 다이어그램과 같이 구조가 만들어 질 수 있었다 
 
 
 **리팩토링 결과**
@@ -354,8 +327,14 @@ public class Statement {
 ```
 
 #### 3-3. 다형성
+Performance별 amount와 volumeCredits 계산하는 책임을 PerformanceCalculator 위임하였다
 
-각 Performance별 amount와 volumeCredits 계산하는 책임을 PerformanceCalculator에 위임하였다.
+앞서 살펴봤듯이 장르가 추가되면 amount()와 volumeCredits()의 비즈니스 로직 변경이 불가피한 구조이다.  그렇기 때문에  **"조건부 로직을 다형성으로 바꾸기"** 리팩터링을 진행하였다
+- 추상화 인터페이스 정의
+- 장르별 구현체 생성
+- 팩토리 메서드 생성 : PlayType에 따라 구현체 초기화
+- `추상화 인터페이스`에 의존하도록 변경 
+
 ```java
 public class PerformanceCalculator {  
     private final Performance performance;  
@@ -407,10 +386,72 @@ public class PerformanceCalculator {
 ```
 
 
-참고. 클래스 다이어그램
+
+**참고. 클래스 다이어그램**
 <img src="https://github.com/ljw1126/user-content/blob/master/refactoring2/%EB%A6%AC%ED%8C%A9%ED%86%A0%EB%A7%811%EC%9E%A5_%EB%8B%A4%ED%98%95%EC%84%B1.png?raw=true">
 
 
+**추상 클래스 생성**
+```java
+public abstract class PerformanceCalculator {  
+    protected final Performance performance;  
+    protected final Play play;  
+  
+    protected PerformanceCalculator(Performance performance, Play play) {  
+        this.performance = performance;  
+        this.play = play;  
+    }  
+  
+    public static PerformanceCalculator create(Performance performance, Play play) {  
+        return switch (play.getType()) {  
+            case TRAGEDY -> new TragedyCalculator(performance, play);  
+            case COMEDY -> new ComedyCalculator(performance, play);  
+            default -> throw new IllegalArgumentException(String.format("알 수 없는 장르: %s", play.getType()));  
+        };  
+    }  
+  
+    public int volumeCredits() {  
+        return Math.max(performance.getAudience() - 30, 0);  
+    }  
+  
+    public Play getPlay() {  
+        return play;  
+    }  
+  
+    public abstract int amount();  
+}
+```
+
+**장르별 구현체 생성**
+```java
+public class ComedyCalculator extends PerformanceCalculator{  
+    public ComedyCalculator(Performance performance, Play play) {  
+        super(performance, play);  
+    }  
+  
+    @Override  
+    public int amount() {  
+        int result = 30_000;  
+        if(performance.getAudience() > 30) {  
+            result += 10_000 + 500 * (performance.getAudience() - 20);  
+        }  
+        result += 300 * performance.getAudience();  
+  
+        return result;  
+    }  
+  
+    @Override  
+    public int volumeCredits() {  
+        return super.volumeCredits() + (performance.getAudience() / 5);  
+    }  
+}
+```
+
+**조건부 로직을 다형성으로 바꾸기** 리팩터링을 수행한 결과 아래의 효과가 있는 것으로 생각되었다 
+- 장르가 추가되더라도 구현체만 생성해서 팩토리 메서드에 추가하면 됨
+- 계산식이 변경되더라도 해당 장르 구현체만 수정하면 되기 때문에 관리 용이해짐
+- 런타임에 PlayType에 따라 구현체가 유연하게 변경될 수 있어짐
+- 추상화 인터페이스에 의존하기 때문에 구현체의 변경이 EnrichPerformance에 영향을 끼치진 않음
 
 ---
 ### 4. 인용구
@@ -433,6 +474,12 @@ public class PerformanceCalculator {
 >이렇게 하면 문제를 해결할 수 있다. 
 >커밋을 자주 했기 때문이기도 하고, 코드가 복잡할수록 단계를 작게 나누면 작업 속도가 빨라지기 때문이다
 
----
-### 
-함수 추출하기, 임시 변수를 질의 함수로 바꾸기, 변수를 인라인하기
+
+>[!note] p64
+>"캠핑자들에게는 '도착했을 때보다 깔끔하게 정돈하고 떠난다'는 규칙이 있다. 프로그래밍도 마찬가지다. 항시 코드베이스를 작업 시작 전보다 건강하게 만들어놓고 떠나야 한다"
+
+
+>[!note] p76
+>"좋은 코드를 가늠하는 확실한 방법은 얼마나 수정하기 쉬운가다"
+
+
