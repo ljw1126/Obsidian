@@ -1,6 +1,10 @@
 {
   "recentFiles": [
     {
+      "basename": "memo",
+      "path": "1. Project/리팩토링의 모든 것(2판)/memo.md"
+    },
+    {
       "basename": "Chapter1 - 리팩터링 첫 번째 예시",
       "path": "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md"
     },
@@ -195,10 +199,6 @@
     {
       "basename": "11.뱀",
       "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/11.뱀.md"
-    },
-    {
-      "basename": "13.치킨배달",
-      "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/13.치킨배달.md"
     }
   ],
   "omittedPaths": [],
