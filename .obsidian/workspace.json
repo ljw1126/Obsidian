@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "c1be8d15b33cdd47",
+        "id": "d30586338997cdeb",
         "type": "tabs",
         "children": [
           {
-            "id": "b1e92de28c6f6018",
+            "id": "f50ed7602bce2592",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -217,14 +217,14 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "b1e92de28c6f6018",
+  "active": "f50ed7602bce2592",
   "lastOpenFiles": [
-    "Excalidraw/Drawing 2025-01-19 10.22.52.excalidraw.md",
-    "1. Project/리팩토링의 모든 것(2판)/memo.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md",
-    "Excalidraw",
+    "1. Project/리팩토링의 모든 것(2판)/memo.md",
     "4. Archive/Git 마스터 과정/summary.md",
     "4. Archive/Git 마스터 과정/Git Cheat Sheet.md",
+    "Excalidraw/Drawing 2025-01-19 10.22.52.excalidraw.md",
+    "Excalidraw",
     "Excalidraw/Drawing 2025-01-13 16.59.36.excalidraw.md",
     "1. Project/Git 마스터 과정/1..md",
     "1. Project/리팩토링의 모든 것(2판)",

@@ -19,9 +19,13 @@ https://docs.aws.amazon.com/ko_kr/prescriptive-guidance/latest/modernization-dec
 https://johngrib.github.io/wiki/pattern/strangler/
 
 getter를 사용하는 부분
-- 디미터의 법칙
+- 디미터의 법칙(method chain)
 - 포워딩 메서드
 - .. 객체인지 자료구조인지 (클린코드 p124)
+	- 값인 경우 getter 사용, 객체인 경우 getter 지양
+
+일급컬렉션 사용, 컬렉션 조회시 얕은 복사와 깊은 복사
+- StatementData 는 데이터만을 가져야 하기 때문에 비즈니스 로직을 포함하는 일급 컬렉션을 가지는건 아닌거 같음.. `{java}List<EnrichPerfomance>`
 
 
 
