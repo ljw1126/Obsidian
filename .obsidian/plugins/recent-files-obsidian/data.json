@@ -1,6 +1,14 @@
 {
   "recentFiles": [
     {
+      "basename": "제 1 부. 시작하기",
+      "path": "1. Project/단위테스트의 기술/제 1 부. 시작하기.md"
+    },
+    {
+      "basename": "리뷰",
+      "path": "1. Project/단위테스트의 기술/리뷰.md"
+    },
+    {
       "basename": "memo",
       "path": "1. Project/리팩토링의 모든 것(2판)/memo.md"
     },
@@ -191,10 +199,6 @@
     {
       "basename": "12.기둥과 보 설치",
       "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/12.기둥과 보 설치.md"
-    },
-    {
-      "basename": "11.뱀",
-      "path": "4. Archive/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/11.뱀.md"
     }
   ],
   "omittedPaths": [],
