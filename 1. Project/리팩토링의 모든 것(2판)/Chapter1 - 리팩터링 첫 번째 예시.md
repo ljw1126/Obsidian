@@ -93,7 +93,7 @@ public class Statement {
 ---
 ### 2. 예시 프로그램을 처음 본 나의 소감 
 
-처음 예시를 봤을 때 목적에 맞게 충실하게 기능 구현이 되어 있는 것으로 보였다 
+처음 예시를 봤을 때 목적에 맞게 충실하게 기능 구현이 되어 있는 것으로 보였다
 더군다나 코드 양이 많지 않기 때문에 순차적으로 코드를 읽으면 나름 가독성 있어 보였다
 
 <img src = "https://raw.githubusercontent.com/ljw1126/user-content/refs/heads/master/meme/%EA%B7%B8%EB%9F%B4%EC%8B%B8%ED%95%9C%EB%8D%B0.webp"/>
