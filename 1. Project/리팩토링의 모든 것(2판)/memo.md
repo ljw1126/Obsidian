@@ -1,4 +1,8 @@
 
+리팩토링 2판 web edtion 
+https://martinfowler.com/articles/access-refactoring-web-edition.html
+
+
 >[!note] 생각 해보기
 >- 책에서 어디가 좋았는가 ? 
 >- 의견이 다른 부분이 있는가 ?
