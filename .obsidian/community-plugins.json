@@ -1,5 +1,4 @@
 [
-  "obsidian-git",
   "recent-files-obsidian",
   "settings-search",
   "obsidian-plugin-update-tracker",
@@ -20,5 +19,6 @@
   "code-styler",
   "copilot",
   "obsidian-plugin-toc",
-  "obsidian-latex-suite"
+  "obsidian-latex-suite",
+  "obsidian-git"
 ]
