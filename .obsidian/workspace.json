@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "b6aebf8fd34acecc",
+        "id": "daa08714a9c4c71d",
         "type": "tabs",
         "children": [
           {
-            "id": "554051d0bbe5cc67",
+            "id": "02cdae166e344018",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -208,11 +208,11 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "554051d0bbe5cc67",
+  "active": "02cdae166e344018",
   "lastOpenFiles": [
-    "1. Project/단위테스트의 기술/리뷰.md",
-    "1. Project/단위테스트의 기술/4장 모의 객체를 사용한 상호 작용 테스트.md",
     "1. Project/단위테스트의 기술/제 1 부. 시작하기.md",
+    "1. Project/단위테스트의 기술/4장 모의 객체를 사용한 상호 작용 테스트.md",
+    "1. Project/단위테스트의 기술/리뷰.md",
     "1. Project/단위테스트의 기술/3장. 의존성 분리와 스텁.md",
     "1. Project/단위테스트의 기술/2장. 첫 번째 단위 테스트.md",
     "Excalidraw/Drawing 2025-01-28 14.59.40.excalidraw.md",
