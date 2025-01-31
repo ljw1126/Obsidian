@@ -11,13 +11,32 @@
             "id": "28e2a9a39bac19b4",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "새 탭"
+              "title": "가이드 안내"
+            }
+          },
+          {
+            "id": "91c9d7b007799d55",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "1. Project/SK C & C/기록.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "기록"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -205,8 +224,12 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "28e2a9a39bac19b4",
+  "active": "91c9d7b007799d55",
   "lastOpenFiles": [
+    "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
+    "1. Project/SK C & C/기록.md",
+    "1. Project/SK C & C",
+    "1. Project/한빛미디어-나는리뷰어다",
     "1. Project/단위테스트의 기술/4장 모의 객체를 사용한 상호 작용 테스트.md",
     "1. Project/단위테스트의 기술/제 1 부. 시작하기.md",
     "1. Project/단위테스트의 기술/리뷰.md",
@@ -239,11 +262,7 @@
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/숫자 카드 게임.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/큰 수의 법칙.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch3. 그리드/1이 될 때까지.md",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch4. 구현/게임 개발.md",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch4. 구현",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch3. 그리드",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS/미로 탈출.md",
-    "4. Archive/이것이 취업을 위한 코딩테스트다/Ch5. DFS BFS",
     "4. Archive/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/스크린샷 2025-01-08 오후 3.37.15.png"
   ]
 }
