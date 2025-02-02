@@ -1,12 +1,20 @@
 {
   "recentFiles": [
     {
+      "basename": "기록",
+      "path": "1. Project/이직 준비/SK C & C/기록.md"
+    },
+    {
       "basename": "5장",
       "path": "1. Project/단위테스트의 기술/5장.md"
     },
     {
-      "basename": "기록",
-      "path": "1. Project/이직 준비/SK C & C/기록.md"
+      "basename": "2장. 첫 번째 단위 테스트",
+      "path": "1. Project/단위테스트의 기술/2장. 첫 번째 단위 테스트.md"
+    },
+    {
+      "basename": "제 1 부. 시작하기",
+      "path": "1. Project/단위테스트의 기술/제 1 부. 시작하기.md"
     },
     {
       "basename": "가이드 안내",
@@ -15,10 +23,6 @@
     {
       "basename": "랠릿 AI 질문",
       "path": "1. Project/이직 준비/랠릿 AI 질문.md"
-    },
-    {
-      "basename": "제 1 부. 시작하기",
-      "path": "1. Project/단위테스트의 기술/제 1 부. 시작하기.md"
     },
     {
       "basename": "4장 모의 객체를 사용한 상호 작용 테스트",
@@ -31,10 +35,6 @@
     {
       "basename": "3장. 의존성 분리와 스텁",
       "path": "1. Project/단위테스트의 기술/3장. 의존성 분리와 스텁.md"
-    },
-    {
-      "basename": "2장. 첫 번째 단위 테스트",
-      "path": "1. Project/단위테스트의 기술/2장. 첫 번째 단위 테스트.md"
     },
     {
       "basename": "Chapter1 - 리팩터링 첫 번째 예시",
