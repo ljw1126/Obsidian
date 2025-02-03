@@ -96,8 +96,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "61e96dd258911747",
@@ -211,7 +210,12 @@
   },
   "active": "91c9d7b007799d55",
   "lastOpenFiles": [
+    "1. Project/단위테스트의 기술/2장. 첫 번째 단위 테스트.md",
+    "1. Project/단위테스트의 기술/제 1 부. 시작하기.md",
+    "1. Project/단위테스트의 기술/3장. 의존성 분리와 스텁.md",
     "1. Project/단위테스트의 기술/5장.md",
+    "1. Project/단위테스트의 기술/리뷰.md",
+    "1. Project/단위테스트의 기술/4장 모의 객체를 사용한 상호 작용 테스트.md",
     "1. Project/이직 준비/랠릿 AI 질문.md",
     "4. Archive/취업/SK C & C/기록.md",
     "4. Archive/자기계발",
@@ -219,14 +223,9 @@
     "4. Archive/취업",
     "1. Project/리팩토링의 모든 것(2판)/memo.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md",
-    "1. Project/단위테스트의 기술/2장. 첫 번째 단위 테스트.md",
-    "1. Project/단위테스트의 기술/제 1 부. 시작하기.md",
     "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
-    "1. Project/단위테스트의 기술/4장 모의 객체를 사용한 상호 작용 테스트.md",
     "4. Archive/취업/SK C & C",
     "1. Project/한빛미디어-나는리뷰어다",
-    "1. Project/단위테스트의 기술/리뷰.md",
-    "1. Project/단위테스트의 기술/3장. 의존성 분리와 스텁.md",
     "Excalidraw/Drawing 2025-01-28 14.59.40.excalidraw.md",
     "Excalidraw",
     "1. Project/단위테스트의 기술",
