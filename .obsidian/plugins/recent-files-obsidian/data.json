@@ -1,6 +1,10 @@
 {
   "recentFiles": [
     {
+      "basename": "5장",
+      "path": "1. Project/단위테스트의 기술/5장.md"
+    },
+    {
       "basename": "4장 모의 객체를 사용한 상호 작용 테스트",
       "path": "1. Project/단위테스트의 기술/4장 모의 객체를 사용한 상호 작용 테스트.md"
     },
@@ -15,10 +19,6 @@
     {
       "basename": "2장. 첫 번째 단위 테스트",
       "path": "1. Project/단위테스트의 기술/2장. 첫 번째 단위 테스트.md"
-    },
-    {
-      "basename": "5장",
-      "path": "1. Project/단위테스트의 기술/5장.md"
     },
     {
       "basename": "리뷰",
