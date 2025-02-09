@@ -145,24 +145,70 @@ public String getTelephoneNumber() {
 매개변수와 임시 변수가 너무 많은 경우 
 - **임시 변수를 질의 함수로 바꾸기**로 임시 변수의 수를 줄임
 - **매개변수 객체 만들기**, **객체 통째로 넘기기**로 매개변수의 수를 줄임
-- 여전히 많다면 **함수를 명령으로 바꾸기**를 고려       //?
+- 여전히 많다면 **함수를 명령으로 바꾸기**(11.9)를 고려       //?
 
 추출할 코드 덩어리를 찾는 방법
 - 좋은 방법은 주석을 참고하는 것
 	- 주석은 코드만으로는 목적을 이해하기 어려운 부분에 달려있는 경우가 많다
 	- 함수로 빼내고, 함수 이름을 주석 내용을 토대로 지음
 - 조건문이나 반복문도 추출 대상의 실마리 제공
-	- **조건문 분해하기**         // ?
+	- **조건문 분해하기**(10.1)         // ?
 	- **함수 추출하기** : switch문의 각 case 본문을 함수 호출문 하나로 바꾼다
 	- **조건부 로직을 다형성으로 바꾸기** : 같은 조건을 기준으로 나뉘는 switch문이 여러 개인 경우
 - 반복문
 	- 반복문 자체를 추출해서 독립된 함수로 만든다
 	- **반복문 쪼개기** : 추출할 반복문 코드에 적합한 이름이 떠오르지 않는다면 성격이 다른 두 가지 작업이 섞여 있을 수도 있다. // 1장 예제 참고
 
+**함수를 명령으로 바꾸기(11.9)**
+```javascript 
+// 리팩터링 전
+function score(candidate, medicalExam, scoringGuide) {
+  let result = 0;
+  let healthLevel = 0;
+  // do something
+}
+
+
+// 리팩터링 후
+class Scorer {
+  constructor(candidate, medicalExam, scoringGuide) {
+     this._candidate = candidate;
+     this._medicalExam = medicalExam;
+     this._scoringGuide = scoringGuide;
+  }
+
+  execute() {
+     this._result = 0;
+     this._healthLevel = 0;
+     // do somethign
+  }
+}
+
+```
+
+
+**조건문 분해하기 (10.1)**
+```javascript 
+// 리팩터링 전
+if(!aDate.isBefore(plan.summerStar) && !aDate.isAfter(plan.summerEnd)) 
+  charge = quantity * plan.summerRate;
+else 
+  charge = quantity * plan.regularRate + plan.regularServiceCharge;
+
+
+// 리팩터링 후
+if(summer()) 
+  charge = summerCharge();
+else 
+  charget = regularCharge();
+
+```
+
+
 
 ## 3.4 긴 매개변수 목록 (Long Parameter List)
 종종 다른 매개변수에서 값을 얻어올 수 있는 매개변수가 있을 때
-- **매개변수를 질의 함수로 바꾸기로 제거**할 수 있다 // ?
+- **매개변수를 질의 함수로 바꾸기로 제거**(11.5)할 수 있다 // ?
 
 데이터 구조에서 값들을 뽑아 각각 별개의 매개변수로 전달하는 경우
 - **객체 통째로 넘기기**로 원본 데이터 구조 그대로 전달
@@ -171,10 +217,73 @@ public String getTelephoneNumber() {
 - **매개변수 객체로 만들기**로 하나로 묶는다
 
 함수의 동작 방식을 정하는 플래그 역할의 매개변수는 
-- **플래그 인수 제거하기**로 없애준다  // ??
+- **플래그 인수 제거하기**(11.3)로 없애준다  // ??
 
 클래스는 매개변수 목록을 줄이는 데 효과적인 수단이다. 특히 여러 개의 함수가 특정 매개변수들의 값을 공통 사용할 때 유용하다
-- 이 경우 **여러 함수를 클래스로 묶기** 이용하여 공통 값들을 클래스의 필드로 정의한다  // ?
+- 이 경우 **여러 함수를 클래스로 묶기**(6.9) 이용하여 공통 값들을 클래스의 필드로 정의한다  // ?
+
+
+**매개변수를 질의 함수로 바꾸기로 제거**(11.5) // 매개변수 줄이는 게 목적
+```javascript
+// 리팩터링 전
+availableVacation(anEmployee, anEmployee.grade);
+
+function availabelVacation(anEmployee, grade) {
+    // 연휴 계산
+}
+
+
+// 리팩터링 후
+availableVacation(anEmployee);
+
+function availabelVacation(anEmployee) {
+    const grade = anEmployee.grade;
+    // 연휴 계산
+}
+```
+
+
+**플래그 인수 제거하기**(11.3)
+- 조건이 복잡한 경우는 더 찾아보기
+```javascript
+// 리팩터링 전
+function setDimension(name, value) {
+  if(name === "height") {
+    this._height = value;
+	return;
+  }
+
+  if(name === "width") {
+    this._width = value;
+	return;
+  }
+}
+
+
+// 리팩터링 후
+function setHeight(value) {this._height = value;}
+function setWidth(value) {this._width = value;}
+```
+
+
+**여러 함수를 클래스로 묶기**(6.9)
+- 연관성 있는 함수들을 모은다
+- ex. 일급 컬렉션
+```javascript
+// 리팩터링 전
+function base(aReading) {...}
+function taxableCharge(aReading) {...}
+function calculateBaseCharge(aReading) {...}
+
+
+// 리팩터링 후, aReading은 생성자 주입하여 사용하는 듯
+class Reading {
+ base() {...}
+ taxableCharge() {...}
+ calculateBaseCharge() {...}
+}
+
+```
 
 
 ## 3.5 전역 데이터 (Global Data)
@@ -193,7 +302,7 @@ p117
 p118
 전역 데이터의 대표적인 형태는 전역 변수지만 클래스 변수와 싱글톤에서 같은 문제가 발생한다.  // ?
 
-이를 방지하기 위해 우리가 사용하는 대표적인 리팩터링은 **변수 캡슐화하기**이다 // ?, 불변 객체?
+이를 방지하기 위해 우리가 사용하는 대표적인 리팩터링은 **변수 캡슐화하기**(6.6)이다 // ?, 불변 객체?
 다른 코드에서 오염시킬 가능성이 있는 데이터를 발견할 때마다 이 기법을 가장 먼저 적용한다.
 이런 데이터를 함수로 감싸는 것만으로도 데이터를 수정하는 부분을 쉽게 찾을 수 있고 접근을 통제할 수 있게 된다. 더 나아가 접근자 함수들을 클래스나 모듈에 집어 넣고 그 안에서만 사용할 수 있도록 접근 범위를 최소로 줄이는 것도 좋다
 
@@ -201,7 +310,7 @@ p118
 
 전역 데이터가 아주 조금만 있더라도 캡슐화하는 편이다. 그래야 s/w가 진화하는 데 따른 변화에 대처할 수 있다.
 
-
+> 변수 캡슐화하기(6.6) 다시 읽어보기, 불변 객체라는건지.. 자바스크립트라서 덜 이해되네
 ## 3.6 가변 데이터 (Mutable Data)
 데이터를 변경했더니 예상치 못한 결과나 골치 아픈 버그로 이어지는 경우가 종종있다. 
 특히 이 문제가 아주 드문 조건에서만 발생한다면 원인을 알아내기가 매우 어렵다.
@@ -216,6 +325,81 @@ p118
 - **파생 변수를 질의함수로 바꾸기**
 - **여러 함수를 클래스로 묶기**, **여러 함수를 변환 함수로 묶기** : 변수를 갱신하는 코드들의 유효범위를 제한
 - **참조를 값으로 바꾸기** : 구조체처럼 내부 필드에 데이터를 담고 있는 변수라면, 내부 필드를 직접 수정하지 말고 구조체를 통째로 교체하는 편이 낫다
+
+
+**질의 함수와 변경 함수 분리하기**(11.1)
+```javascript 
+// 리팩터링 전, 메서드가 두 가지 책임을 가지고 있네
+function getTotalOutstandingAndSendBill() {
+	const result = customer.invoices.reduce((total, each) => each.amount + total, 0); // 질의 함수
+	sendBill(); // 변경 함수
+	return result;
+}
+
+
+// 리팩터링 후, 아마 클래스 필드 사용하는 듯
+function totalOutstanding() {
+  return customer.invoices.reduce((total, each) => each.amount + total, 0);
+}
+
+function sendBill() {
+  emailGateway.send(formatBill(customer));
+}
+```
+
+**파생 변수를 질의함수로 바꾸기**(9.3)
+- 가변 데이터를 다루는 방법을 나타내내
+```javascript
+// 리팩터링 전
+get discountedTotal() { return this._discountedTotal;}
+
+set discount(aNumber) {
+  const old = this._distcount;
+  this._discount = aNumber;
+  this._discountedTotal += old - aNumber;
+}
+
+
+// 리팩터링 후
+get discountedTotal() {return this._baseTotal - this._discount;}
+set discount(aNumber) {this._discount = aNumber;}
+```
+
+**여러 함수를 변환 함수로 묶기**(6.10)
+- 깊은 복사해서 연산한 결과를 할당하고 반환하네
+- 여러개가 계산되고 할당되어야 하면 한군데서 모으는게 나은듯
+```javascript
+// 리팩터링 전
+function base(aReading) {...}
+function taxableCharge(aReading) {...}
+
+
+// 리팩터링 후
+function enrichReading(argReading) {
+  const aReading = _.cloneDeep(argReading);
+  aReading.baseCharge = base(aReading);
+  aReading.taxableCharge = taxableCharge(aReading);
+  return aReading;
+}
+```
+
+**참조를 값으로 바꾸기**(9.4)
+- 참조로 다루는 경우에는 내부 객체는 그대로 둔 채 그 객체의 속성만 갱신하며, 값으로 다루는 경우에는 새로운 속성을 담은 객체로 기존 내부 객체를 통째로 대체한다(불변)
+- 반대 리팩터링: 값을 참조로 바꾸기(9.5)
+```javascript
+// 리팩터링 전
+class Product {
+  applyDiscount(arg) {this._price.amount -= arg;}
+}
+
+
+// 리팩터링 후
+class Product {
+  applyDiscount(arg) {
+    this._price = new Money(this._price.amount - arg, this._price.currency);
+  }
+}
+```
 
 
 ## 3.7 뒤엉킨 변경(Divergent Change)
