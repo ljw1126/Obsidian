@@ -446,6 +446,501 @@ p120 하단 표
 메서드나 클래스가 비대해지지만, 나중에 추출하기 리팩터링으로 더 좋은 형태로 분리할 수도 있다. <u>사실 우리는 작은 함수와 클래스에 지나칠 정도로 집착하지만, 코드를 재구성하는 중간 과정에서는 큰 덩어리로 뭉치는데 개의치 않는다</u>
 
 
+## 3.9 기능 편애 (Feature Envy)
+프로그램을 모듈화할 때는 코드를 여러 영역으로 나눈 뒤 영역 안에서 이뤄지는 상호작용은 최대한 늘리고 영역 사이에서 이뤄지는 상호작용은 최소로 줄이는 데 주력한다.
+
+기능 편애는 흔히 어떤 함수가 자기가 속한 모듈의 함수나 데이터보다 다른 모듈의 함수나 데이터와 상호작용 할 일이 더 많을 때 풍기는 냄새다
+
+- 함수 옮기기(8.1)
+- 함수 추출하기(6.1)
+
+**참고**. 디자인 패턴 
+- 전략 패턴(Strategy Pattern)
+- 방문자 패턴(Visitor Pattern)
+	- https://ko.wikipedia.org/wiki/%EB%B9%84%EC%A7%80%ED%84%B0_%ED%8C%A8%ED%84%B4
+
+가장 기본이 되는 원칙은 '함께 변경할 대상을 한데 모으는 것'이다.
+
+
+## 3.10 데이터 뭉치(Data Clumps)
+
+- 클래스 추출하기(7.5)
+- 매개변수 객체 만들기(6.8) 또는 객체 통째로 넘기기(11.4)
+
+데이터 뭉치인지 판별하려면 값 하나를 삭제해보자. 그랬을 때 나머지 데이터만으로는 의미가 없다며 객체로 환생하길 갈망하는 데이터 뭉치라는 뜻이다. -> 이어서 그 클래스로 옮기면 좋을 동작은 없는지 살펴보자
+
+데이터 뭉치가 생산성에 기여하는 정식 멤버로 등극하는 순간이다
+
+안티패턴 예제 💩
+```java
+class Customer {
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String email;
+
+    public Customer(String firstName, String lastName, String phoneNumber, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+    }
+
+    public void printCustomerInfo() {
+        System.out.println(firstName + " " + lastName + " | " + phoneNumber + " | " + email);
+    }
+}
+
+class Order {
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String email;
+
+    public Order(String firstName, String lastName, String phoneNumber, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+    }
+
+    public void printOrderInfo() {
+        System.out.println(firstName + " " + lastName + " | " + phoneNumber + " | " + email);
+    }
+}
+
+```
+- 필드가 두 클래스 중복
+- 관련된 데이터가 분산되어 있어 유지보수가 어렵고(여러번 수정) 일관성이 깨질 가능성이 큼
+
+
+리팩터링1. 클래스 추출하기 
+```java
+class ContactInfo {
+    private String firstName;
+    private String lastName;
+    private String phoneNumber;
+    private String email;
+
+    public ContactInfo(String firstName, String lastName, String phoneNumber, String email) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+    }
+
+    public void printInfo() {
+        System.out.println(firstName + " " + lastName + " | " + phoneNumber + " | " + email);
+    }
+}
+
+class Customer {
+    private ContactInfo contactInfo;
+
+    public Customer(ContactInfo contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public void printCustomerInfo() {
+        contactInfo.printInfo();
+    }
+}
+
+class Order {
+    private ContactInfo contactInfo;
+
+    public Order(ContactInfo contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public void printOrderInfo() {
+        contactInfo.printInfo();
+    }
+}
+
+```
+- 중복제거, 유지보수성 개선, 객체간 결합도가 낮아짐
+
+
+리팩터링2. 매개변수 객체로 만들기 
+```java
+class ShippingService {
+    public void shipPackage(String street, String city, String zipCode) {
+        System.out.println("Shipping to: " + street + ", " + city + " " + zipCode);
+    }
+}
+
+```
+
+
+```java
+class Address {
+    private String street;
+    private String city;
+    private String zipCode;
+
+    public Address(String street, String city, String zipCode) {
+        this.street = street;
+        this.city = city;
+        this.zipCode = zipCode;
+    }
+
+    public String format() {
+        return street + ", " + city + " " + zipCode;
+    }
+}
+
+class ShippingService {
+    public void shipPackage(Address address) {
+        System.out.println("Shipping to: " + address.format());
+    }
+}
+```
+- 코드 가독성 향상
+- 매개변수 순서를 잘못 입력하는 실수 방지 
+- Address 객체에 새로운 기능이나 필드 추가시 유지보수 용이
+
+
+리팩터링3. 객체 통째로 넘기기 
+이미 객체가 있다면, 개별 필드 대신 객체 자체를 넘기기
+```java
+class Customer {
+    private ContactInfo contactInfo;
+
+    public Customer(ContactInfo contactInfo) {
+        this.contactInfo = contactInfo;
+    }
+
+    public ContactInfo getContactInfo() {
+        return contactInfo;
+    }
+}
+
+class OrderProcessor {
+    public void processOrder(Customer customer) {
+        ContactInfo contactInfo = customer.getContactInfo();
+        System.out.println("Processing order for: " + contactInfo.format());
+    }
+}
+
+```
+- 데이터 구조가 바뀌어도 호출부 코드 변경 최소화
+- 불필요한 개별 필드 전달 대신 **객체 하나로 깔끔하게 전달**
+
+
+**정리**
+
+|             |                       |                       |
+| ----------- | --------------------- | --------------------- |
+| 클래스 추출하기    | 관련 필드가 반복됨            | 중복 제거, 응집도 향상         |
+| 매개변수 객체 만들기 | 매개변수 개수가 많음           | 코드 가독성 개선, 실수 방지      |
+| 객체 통째로 넘기기  | 이미 존재하는 객체에서 데이터만 꺼내씀 | 불필요한 필드 전달 제거, 코드 단순화 |
+// 생성자로 치면 빌더 패턴이 생각날 수 있겠네
+
+
+
+## 3.11 기본형 집착(Primitive Obsession)
+**절차**
+- 기본형을 객체로 바꾸기(7.3)     // 원시값을 포장하기를 뜻하는 듯 
+- 타입 코드를 서브 클래스로 바꾸기(12.6)와 조건부 로직을 다형성으로 바꾸기(10.4)
+
+자주 함께 몰려다니는 기본형 그룹도 데이터 뭉치다. 따라서 클래스 추출하기(7.5)와 매개변수 객체 만들기(6.8)를 이용하여 반드시 문명사회로 이끌어줘야 한다
+
+
+자료형들을 문자열로만 표현하는 악취는 아주 흔해서, 소위 '문자열화된(stringly typed) 변수'라는 이름까지 붙었다
+```java
+// 💩
+class Order {
+    private String status; // "NEW", "SHIPPED", "DELIVERED", "CANCELLED"
+
+    public Order(String status) {
+        this.status = status;
+    }
+
+    public boolean isDelivered() {
+        return "DELIVERED".equals(this.status);
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+}
+
+```
+- `"DELIVERED".equals(this.status)` 가 중복되어서 사용될 수 있음
+- `status` 값이 잘못된 문자열로 설정될 가능성이 있음 
+-  IDE 자동 완성 기능을 활용하기 어려움
+
+
+```java
+class Order {
+    private final OrderStatus status;
+
+    public Order(OrderStatus status) {
+        this.status = status;
+    }
+
+    public boolean isDelivered() {
+        return status.isDelivered();
+    }
+}
+
+enum OrderStatus {
+    NEW, SHIPPED, DELIVERED, CANCELLED;
+
+    public boolean isDelivered() {
+	   return this == DELIVERED;
+	}
+}
+```
+- `enum` 사용해서 한 군데에서 관리하고 재사용
+- 생성자 초기화 이후 변경 못하도록 막음 (불변)
+
+## 3.12 반복되는 switch 문(Repeated Switches)
+- switch문 모조리 **조건부 로직을 다형성으로 바꾸기**(10.4)
+
+중복된 switch문이 문제가 되는 이유는 조건절을 하나 추가할 때마다 다른 switc문들도 모두 찾아서 함께 수정해야 하기 때문이다. 이럴 때 다형성은 반복된 switch문이 내뿜는 사악한 기운을 제압하여 코드베이스를 최신 스타일로 바꿔주는 세련된 무기인 셈이다.
+
+
+## 3.13 반복(Loops)
+- **반복문을 파이프라인으로 바꾸기**(8.8) 적용
+	- 컬렉션 파이프라인을 이용 (primitive type도 stream 지원)
+
+
+## 3.14 성의 없는 요소(Lazy Element)
+나중에 본문을 더 채우거나 다른 메서드를 추가할 생각이었지만, 어떠한 사정으로 인해 그렇게 하지 못한 결과일 수 있다. 혹은 풍성했던 클래스가 리팩터링을 거치면서 역할이 줄어들었을 수 있다. 사정이 어떠하든 이런 프로그램 요소는 고이 보내드리는 게 좋다
+- 함수 인라인하기(6.2)
+- 클래스 인라인(7.6) // ?
+- 계층합치기(12.9) // 상속을 사용한 경우 ?
+
+// 이것도 야그니 아닌가?
+## 3.15 추측성 일반화(Speculative Generality)
+// 이것도 야그니 인거 같은데?
+
+이 냄새는 '나중에 필요할 거야'라는 생각으로 당장은 필요 없는 모든 종류의 후킹(hooking) 포인트와 특이 케이스 처리 로직을 작성해둔 코드에서 풍긴다. 그 결과는 물론 이해하거나 관리하기 어려워진 코드다. 미래를 대비해 작성한 부분을 실제로 사용하게 되면 다행이지만, 그렇지 않는다면 쓸데없는 낭비일 뿐이다. <u>당장 걸리적거리는 코드는 눈앞에서 치워버리자.</u>
+
+- **계층 합치기**(12.9) : 추상 클래스
+- **함수 인라인하기**(6.2) 나 **클래스 인라인하기**(7.6) : 쓸데없이 위임하는 코드 경우
+- **함수 선언 바꾸기**(6.5) : 본문에서 사용되지 않는 매개변수 경우
+
+추측성 일반화는 테스트 코드 말고는 사용하는 곳이 없는 함수나 클래스에서 흔히 볼 수 있다.
+- 테스트 케이스 삭제한 뒤에 **죽은 코드 제거하기**(8.9)로 제거하자
+
+
+## 3.16 임시 필드 (Temporary Field)
+- 특정 상황에서만 값이 설정되는 필드를 가진 클래스가 있다
+- 객체를 가져올 때 당연히 모든 필드가 채워져 있을거라 기대하는게 보통이지만, 임시 필드를 사용하면 <u>코드를 이해하기 어려워진다</u>
+
+적용해 볼 리팩토링 기법
+- **클래스 추출하기**(7.5)
+- **함수 옮기기**(8.1)
+- **특이 케이스 추가하기**(10.5) // ?
+
+안티패턴 예제 💩
+```java
+class ReportGenerator {
+    private String reportType;
+    private String pdfTemplate;
+    private String excelTemplate;
+
+    public ReportGenerator(String reportType) {
+        this.reportType = reportType;
+        if (reportType.equals("PDF")) {
+            this.pdfTemplate = "default-pdf-template";
+        } else if (reportType.equals("EXCEL")) {
+            this.excelTemplate = "default-excel-template";
+        }
+    }
+
+    public void generate() {
+        if (reportType.equals("PDF")) {
+            System.out.println("Generating PDF using template: " + pdfTemplate);
+        } else if (reportType.equals("EXCEL")) {
+            System.out.println("Generating EXCEL using template: " + excelTemplate);
+        } else {
+            throw new IllegalArgumentException("Unsupported report type");
+        }
+    }
+}
+```
+- 문자열화 된(stringly typed) 변수사용
+- `reportType` 추가시 조건문 로직 변경 전파 -> **OCP 원칙 위반**
+- 생성자 초기화시 없는 타입의 경우 특정 필드만 초기화됨 -> 객체의 일관성 부족 (이해 어려워짐)
+
+리팩터링1. 클래스 추출하기
+```java
+abstract class Report {
+    abstract void generate();
+}
+
+class PdfReport extends Report {
+    private String template = "default-pdf-template";
+
+    @Override
+    public void generate() {
+        System.out.println("Generating PDF using template: " + template);
+    }
+}
+
+class ExcelReport extends Report {
+    private String template = "default-excel-template";
+
+    @Override
+    public void generate() {
+        System.out.println("Generating EXCEL using template: " + template);
+    }
+}
+
+```
+
+리팩터링2. 함수 옮기기
+```java
+class ReportGenerator {
+    private Report report;
+
+    public ReportGenerator(Report report) {
+        this.report = report;
+    }
+
+    public void generateReport() {
+        report.generate();
+    }
+}
+```
+- 보고서 타입별 로직이 사라지고 Report 클래스에 책임을 위임
+- 새로운 보고서 타입으 추가될 때 기존 클래스를 수정할 필요가 없어짐
+
+리팩터링3. 특이 케이스 추가하기
+```java
+class NullReport extends Report {
+    @Override
+    public void generate() {
+        System.out.println("No report to generate.");
+    }
+}
+```
+- <u>null 체크 없이도 안전한 기본 동작을 제공할 수 있다</u>
+- 클라이언트 코드에서도 null 체크 없이 report.generate() 호출 가능
+
+
+|             | 적용 이유               | 개선점                    |
+| ----------- | ------------------- | ---------------------- |
+| 클래스 추출하기    | 서로 다른 속성을 가진 필드를 분리 | 객체의 책임을 분리하여 응집도를 높임   |
+| 함수 옮기기      | 특정 로직이 한 클래스에 집중됨   | 클래스 간 책임을 분배하여 가독성을 향상 |
+| 특이 케이스 추가하기 | null 체크 반복적으로 수행    | 안전한 기본 동작을 제공          |
+결과적으로 임시 필드를 제거하면 코드 가독성이 좋아지고 유지보수가 쉬워진다
+
+
+
+
+
+
+
+
+## 3.24 주석(Comments)
+
+> 주석을 남겨야겠다는 생각이 들면, 가장 먼저 주석이 필요 없는 코드로 리팩터링해본다.
+
+- 특정 코드 블록이 하는 일을 주석으로 남기고 싶다면 **함수 추출하기**(6.1)
+- 이미 추출되어 있는 함수임에도 여전히 설명이 필요하다면 **함수 선언바꾸기**(6.5)
+- 시스템이 동작하기 위한 선행조건을 명시하고 싶다면 **어셔션 추가하기**(10.6)
+
+뭘 할지 모를 때라면 주석을 달아두면 좋다. 현재 진행 상황뿐만 아니라 확실하지 않는 부분에 주석에 남긴다. 코드를 지금처럼 작성한 이유를 설명하는 용도로 달 수도 있다. 이런 정보는 나중에 코드를 수정해야 할 프로그래머에게, 특히 건망증이 심한 프로그래머에게 도움될 것이다.
+
+
+참고. 클린코드 4장. https://dev-ljw1126.tistory.com/104
+
+1.주석을 최대한 쓰지 말자
+
+"주석은 나쁜 코드를 보완하지 못한다"
+① 코드에 주석을 추가하는 일반적인 이유는 코드 품질이 나쁘기 때문이다.
+② 이는 곧 작성자가 의도를 명확히 표현하지 못했다는 것을 뜻하기도 함
+👉 난장판을 주석으로 설명하지 말고 개선하는데 시간을 보내자
+
+"주석은 방치된다"
+① 코드의 변화에 따라가지 못하고, 주석은 방치된다.
+② 방치된 주석은 뒤에 읽는 사람에게 혼용 야기 할 수 있다.
+👉 관리하지 못할 거면 자제하는 것이 낫다
+
+2.좋은 주석
+법적인 이유로 다는 주석
+```java
+//Copyright (C) 2003,2004,2005 by Object Mentor, Inc. All rights reserved 
+//GNU General Public License 
+```
+
+정보를 제공하는 주석
+```java
+//휴대폰 000-000-0000 || 000-0000-0000
+String PHONE_PATTERN = “^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$”;
+
+//시분 HH24MI(0000~2359) 
+String HH24MI_TIME_PATTERN = “^([01]\\d|2[0-3])([0-5])(\\d)$”;
+
+//날짜 YYYY-MM-dd 
+String DATE_PATTERN = “^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))$”;
+```
+
+의도를 설명하는 주석
+```java
+//스레드를 대량 생성하는 방법으로 어떻게든 경쟁 조건을 만들려 시도한다 
+for (int i=0;i<25000;i++) {  
+   .... 
+} 
+```
+- 주석 저자가 문제를 해결한 방식으로 저자의 의도가 분명하게 나타남
+
+의미를 명료하게 밝히는 주석
+```java
+assertTrue(a.compareTo(a) == 0)  //a == a 
+assertTrue(a.compareTo(b) != 0)  //a != b 
+assertTrue(a.compareTo(ab) == 0) //ab == ab 
+assertTrue(a.compareTo(b) != -1) //a < b 
+```
+- 그러나 이러한 주석은 주석이 올바른지 검증하기 쉽지 않다는 문제가 있다. 따라서 위와 같은 주석을 달 때는 더 나은 방법이 없는지 먼저 꼭 고민해야 한다.
+
+결과를 경고하는 주석
+```java
+// 여유 시간이 충분하지 않다면 실행하지 마십시오. 
+public void _testWithReallyBigFile() { 
+  writeLinesToFile(100000000); 
+  ..... 
+} 
+```
+
+TODO 주석
+```java
+//TODO: MdM 현재 필요하지 않다 
+//체크아웃 모델을 도입하면 함수가 필요없다. 
+protected VersionInfo makeVersion() throws Exception{ 
+    return null; 
+} 
+```
+
+
+3.주석보다 annotation
+- annotaiton은 코드에 대한 메타 데이터를 나타낸다
+- 코드의 실행 흐름에 간섭을 주기도 하고, 주석처럼 코드에 대한 정보를 줄 수 있다
+- 예
+	- @Deprecated 
+	- @NotThreadSafe
+	- @DisplayName
+
+4.나쁜주석
+• 주절거리는 주석  
+• 같은 이야기를 중복하는 주석  
+• 오해할 여지가 있는 주석  
+• 의무적으로 다는 주석 → 나쁜 습관💩
+• 이력을 기록하는 주석 → 형상관리(git, svn)로 과거 이력 확인 가능하므로 필요없음  
+• 특정 위치를 표시하는 주석  
+• 닫는 괄호에 다는 주석  
+• 공로를 돌리거나 저자를 표시하는 주석  
+• HTML 주석  
+• 전역정보 (ex. Port 번호) → 정보 관리 못할 거면 안 다는게 나음  
+• 너무 많은 정보  
+• 모호한 관계 등
+
+
 
 ---
 - 부록B를 참고하여 코드가 풍기는 냄새(악취)가 무엇인지 찾자 (예제는 없었다)
