@@ -1,6 +1,10 @@
 {
   "recentFiles": [
     {
+      "basename": "무제",
+      "path": "3. Resource/자기계발/코딩테스트/무제.md"
+    },
+    {
       "basename": "Chapter3 - 코드에서 나는 악취",
       "path": "1. Project/리팩토링의 모든 것(2판)/Chapter3 - 코드에서 나는 악취.md"
     },
@@ -195,10 +199,6 @@
     {
       "basename": "07.럭키 스트레이트",
       "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/07.럭키 스트레이트.md"
-    },
-    {
-      "basename": "09.문자열 압축",
-      "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/09.문자열 압축.md"
     }
   ],
   "omittedPaths": [],
