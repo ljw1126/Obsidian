@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "a29d85e10a0fac87",
+        "id": "e6a961c7afa91133",
         "type": "tabs",
         "children": [
           {
-            "id": "14c372403f3554c8",
+            "id": "534a7ef2a38ba102",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -205,13 +205,13 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "14c372403f3554c8",
+  "active": "534a7ef2a38ba102",
   "lastOpenFiles": [
+    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "2. Area/이직 준비/2월 8일 멘토링.md",
     "3. Resource/자기계발/코딩테스트/무제.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter3 - 코드에서 나는 악취.md",
     "3. Resource/자기계발/코딩테스트",
-    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "3. Resource/자기계발/단위테스트의 기술/7장 신뢰할 수 있는 테스트.md",
     "1. Project/한빛미디어-나는리뷰어다/1월",
     "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
