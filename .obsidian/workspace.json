@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "ff27f1eb50e4a787",
+        "id": "a29d85e10a0fac87",
         "type": "tabs",
         "children": [
           {
-            "id": "67f4564f3c5aa045",
+            "id": "14c372403f3554c8",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "2. Area/이직 준비/2월 8일 멘토링.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "2월 8일 멘토링"
+              "title": "새 탭"
             }
           }
         ]
@@ -209,14 +205,14 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "67f4564f3c5aa045",
+  "active": "14c372403f3554c8",
   "lastOpenFiles": [
+    "2. Area/이직 준비/2월 8일 멘토링.md",
     "3. Resource/자기계발/코딩테스트/무제.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter3 - 코드에서 나는 악취.md",
     "3. Resource/자기계발/코딩테스트",
     "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "3. Resource/자기계발/단위테스트의 기술/7장 신뢰할 수 있는 테스트.md",
-    "2. Area/이직 준비/2월 8일 멘토링.md",
     "1. Project/한빛미디어-나는리뷰어다/1월",
     "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md",
