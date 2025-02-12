@@ -9,7 +9,7 @@
 우리 경험에 따르면 숙련된 사람의 직관만큼 정확한 기준은 없다. 
 -> 종료 기준보다 리팩터링하면 해결할 수 있는 문제의 징후를 제시
 
-## 3.1 기이한 이름(Mysterious Name)
+### 3.1 기이한 이름(Mysterious Name)
 
 함수, 모듈, 변수, 클래스 등은 그 이름만 보고도 각각이 무슨 일을 하고 어떻게 사용해야 하는지 명확히 알 수 있도록 엄청나게 신경써서 이름을 지어야 한다.
 
@@ -105,7 +105,7 @@ public String getTelephoneNumber() {
 > 파라미터를 추가/삭제해야하는 경우도 절차가 동일하다
 
 
-## 3.2 중복 코드 (Duplicated Code)
+### 3.2 중복 코드 (Duplicated Code)
 
 - 함수 추출하기
 - 문장 슬라이드하기
@@ -121,7 +121,7 @@ public String getTelephoneNumber() {
 - JdbcTemplate를 직접 만들어가는 과정
 - https://dev-ljw1126.tistory.com/404
 
-## 3.3 긴 함수 (Long Function)
+### 3.3 긴 함수 (Long Function)
 
 간접 호출(indirection) 효과, 즉 코드를 이해하고, 공유하고, 선택하기 쉬워진다는 장점은 함수를 짧게 구성할 때 나오는 것이다.
 
@@ -206,7 +206,7 @@ else
 
 
 
-## 3.4 긴 매개변수 목록 (Long Parameter List)
+### 3.4 긴 매개변수 목록 (Long Parameter List)
 종종 다른 매개변수에서 값을 얻어올 수 있는 매개변수가 있을 때
 - **매개변수를 질의 함수로 바꾸기로 제거**(11.5)할 수 있다 // ?
 
@@ -286,7 +286,7 @@ class Reading {
 ```
 
 
-## 3.5 전역 데이터 (Global Data)
+### 3.5 전역 데이터 (Global Data)
 
 > "전역 데이터는 이를 함부로 사용한 프로그래머들에게 벌을 주는 지옥 4층에 사는 악마들이 만들었다"
 
@@ -311,7 +311,7 @@ p118
 전역 데이터가 아주 조금만 있더라도 캡슐화하는 편이다. 그래야 s/w가 진화하는 데 따른 변화에 대처할 수 있다.
 
 > 변수 캡슐화하기(6.6) 다시 읽어보기, 불변 객체라는건지.. 자바스크립트라서 덜 이해되네
-## 3.6 가변 데이터 (Mutable Data)
+### 3.6 가변 데이터 (Mutable Data)
 데이터를 변경했더니 예상치 못한 결과나 골치 아픈 버그로 이어지는 경우가 종종있다. 
 특히 이 문제가 아주 드문 조건에서만 발생한다면 원인을 알아내기가 매우 어렵다.
 이런 이유로 함수형 프로그래밍에서느느 데이터는 절대 변하지 않고, 데이터를 변경하려면 반드시(원래 데이터는 그대로 둔채) 변경하려는 값에 해당하는 복사본을 만들어서 반환한다는 개념을 기본으로 삼고 있다
@@ -402,7 +402,7 @@ class Product {
 ```
 
 
-## 3.7 뒤엉킨 변경(Divergent Change)
+### 3.7 뒤엉킨 변경(Divergent Change)
 코드를 수정할 때는 시스템에서 고쳐야 할 딱 한 군데를 찾아서 그 부분만 수정할 수 있기를 바란다. 
 이렇게 할 수 없다면 (서로 밀접한 악취인) **뒤엉킨 변경**과 **산탄총 수술** 중 하나가 풍긴다 // 상속?
 
@@ -420,7 +420,7 @@ ex. 데이터베이스가 추가될 때마다 함수 세개를 바꿔야 하고,
 	- **클래스 추출하기** : 모듈이 클래스라면 클래스 추출하여 맥락별 분리 방법을 잘 안내해 줄 것이다
 
 
-## 3.8 산탄총 수술(Shotgun Surgery)
+### 3.8 산탄총 수술(Shotgun Surgery)
 산탄총 수술은 뒤엉킨 변경과 비슷하면서도 정반대다.
 이 냄새는 코드를 변경할 때마다 자잘하게 수정해야 하는 클래스가 많을 때 풍긴다.
 
@@ -446,7 +446,7 @@ p120 하단 표
 메서드나 클래스가 비대해지지만, 나중에 추출하기 리팩터링으로 더 좋은 형태로 분리할 수도 있다. <u>사실 우리는 작은 함수와 클래스에 지나칠 정도로 집착하지만, 코드를 재구성하는 중간 과정에서는 큰 덩어리로 뭉치는데 개의치 않는다</u>
 
 
-## 3.9 기능 편애 (Feature Envy)
+### 3.9 기능 편애 (Feature Envy)
 프로그램을 모듈화할 때는 코드를 여러 영역으로 나눈 뒤 영역 안에서 이뤄지는 상호작용은 최대한 늘리고 영역 사이에서 이뤄지는 상호작용은 최소로 줄이는 데 주력한다.
 
 기능 편애는 흔히 어떤 함수가 자기가 속한 모듈의 함수나 데이터보다 다른 모듈의 함수나 데이터와 상호작용 할 일이 더 많을 때 풍기는 냄새다
@@ -639,7 +639,7 @@ class OrderProcessor {
 
 
 
-## 3.11 기본형 집착(Primitive Obsession)
+### 3.11 기본형 집착(Primitive Obsession)
 **절차**
 - 기본형을 객체로 바꾸기(7.3)     // 원시값을 포장하기를 뜻하는 듯 
 - 타입 코드를 서브 클래스로 바꾸기(12.6)와 조건부 로직을 다형성으로 바꾸기(10.4)
@@ -696,25 +696,25 @@ enum OrderStatus {
 - `enum` 사용해서 한 군데에서 관리하고 재사용
 - 생성자 초기화 이후 변경 못하도록 막음 (불변)
 
-## 3.12 반복되는 switch 문(Repeated Switches)
+### 3.12 반복되는 switch 문(Repeated Switches)
 - switch문 모조리 **조건부 로직을 다형성으로 바꾸기**(10.4)
 
 중복된 switch문이 문제가 되는 이유는 조건절을 하나 추가할 때마다 다른 switc문들도 모두 찾아서 함께 수정해야 하기 때문이다. 이럴 때 다형성은 반복된 switch문이 내뿜는 사악한 기운을 제압하여 코드베이스를 최신 스타일로 바꿔주는 세련된 무기인 셈이다.
 
 
-## 3.13 반복(Loops)
+### 3.13 반복(Loops)
 - **반복문을 파이프라인으로 바꾸기**(8.8) 적용
 	- 컬렉션 파이프라인을 이용 (primitive type도 stream 지원)
 
 
-## 3.14 성의 없는 요소(Lazy Element)
+### 3.14 성의 없는 요소(Lazy Element)
 나중에 본문을 더 채우거나 다른 메서드를 추가할 생각이었지만, 어떠한 사정으로 인해 그렇게 하지 못한 결과일 수 있다. 혹은 풍성했던 클래스가 리팩터링을 거치면서 역할이 줄어들었을 수 있다. 사정이 어떠하든 이런 프로그램 요소는 고이 보내드리는 게 좋다
 - 함수 인라인하기(6.2)
 - 클래스 인라인(7.6) // ?
 - 계층합치기(12.9) // 상속을 사용한 경우 ?
 
 // 이것도 야그니 아닌가?
-## 3.15 추측성 일반화(Speculative Generality)
+### 3.15 추측성 일반화(Speculative Generality)
 // 이것도 야그니 인거 같은데?
 
 이 냄새는 '나중에 필요할 거야'라는 생각으로 당장은 필요 없는 모든 종류의 후킹(hooking) 포인트와 특이 케이스 처리 로직을 작성해둔 코드에서 풍긴다. 그 결과는 물론 이해하거나 관리하기 어려워진 코드다. 미래를 대비해 작성한 부분을 실제로 사용하게 되면 다행이지만, 그렇지 않는다면 쓸데없는 낭비일 뿐이다. <u>당장 걸리적거리는 코드는 눈앞에서 치워버리자.</u>
@@ -727,7 +727,7 @@ enum OrderStatus {
 - 테스트 케이스 삭제한 뒤에 **죽은 코드 제거하기**(8.9)로 제거하자
 
 
-## 3.16 임시 필드 (Temporary Field)
+### 3.16 임시 필드 (Temporary Field)
 - 특정 상황에서만 값이 설정되는 필드를 가진 클래스가 있다
 - 객체를 가져올 때 당연히 모든 필드가 채워져 있을거라 기대하는게 보통이지만, 임시 필드를 사용하면 <u>코드를 이해하기 어려워진다</u>
 
@@ -831,13 +831,544 @@ class NullReport extends Report {
 결과적으로 임시 필드를 제거하면 코드 가독성이 좋아지고 유지보수가 쉬워진다
 
 
+### 3.17 메시지 체인 (Message Chains)
+- **위임 숨기기**(7.7)
+- **함수 추출하기**(6.1)로 결과 객체를 사용하는 코드 일부를 따로 빼낸 다음 **함수 옮기기**(8.1)로 체인을 숨길 수 있는지 살펴보자
+
+체인을 구성하는 객체 중 특정 하나를 사용하는 클라이언트 중 그 이후의 객체들도 사용하길 원하는 클라이언트가 제법 된다면, 이 요구를 처리해줄 메서드를 추가한다.
+
+// chat gpt 예제 
+```java hl:44
+class Person {
+    private Department department;
+
+    public Person(Department department) {
+        this.department = department;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+}
+
+class Department {
+    private Manager manager;
+
+    public Department(Manager manager) {
+        this.manager = manager;
+    }
+
+    public Manager getManager() {
+        return manager;
+    }
+}
+
+class Manager {
+    private String name;
+
+    public Manager(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Manager manager = new Manager("Alice");
+        Department department = new Department(manager);
+        Person person = new Person(department);
+
+        // 메시지 체인 발생 (체인 길어짐) 💩
+        String managerName = person.getDepartment().getManager().getName();
+        System.out.println(managerName); // Alice
+    }
+}
+
+```
+- 메서드 체인이 깊어질수록 캡슐화가 깨지고 결합도 증가 -> 변경시 사이드 이펙트 전파 발생
+- `Department`나 `Manager`의 내부 구현이 바뀌면 `Person`을 사용하는 모든 코드가 영향을 받음
+
+**리팩터링 후**
+```java
+class Person {
+    private Department department;
+
+    public Person(Department department) {
+        this.department = department;
+    }
+
+    // ✅ 위임 숨기기 (Department를 직접 호출하지 않도록 메서드 추가)
+    public Manager getManager() {
+        return department.getManager();
+    }
+
+    // ✅ 함수 추출하기 (Manager의 이름을 바로 가져올 수 있도록)
+    public String getManagerName() {
+        return getManager().getName();
+    }
+}
+
+class Department {
+    private Manager manager;
+
+    public Department(Manager manager) {
+        this.manager = manager;
+    }
+
+    public Manager getManager() {
+        return manager;
+    }
+}
+
+class Manager {
+    private String name;
+
+    public Manager(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Manager manager = new Manager("Alice");
+        Department department = new Department(manager);
+        Person person = new Person(department);
+
+        // ✅ 메시지 체인 제거
+        String managerName = person.getManagerName();
+        System.out.println(managerName); // Alice
+    }
+}
+
+```
+- **위임 숨기기 (Hide Delegate)**
+    - `Person` 클래스가 `Department`를 직접 참조하지 않고 `getManager()`를 통해 접근
+- **함수 추출하기 (Extract Function)**
+    - `getManagerName()` 메서드를 `Person`에 추가하여 `Main`에서 `person.getManager().getName()`을 직접 호출하지 않도록 수정
+- **함수 옮기기 (Move Function) - 필요 시**
+    - `getManagerName()`은 `Person`이 자주 호출하므로 `Person`에 추가하는 것이 적절
+    - 만약 `Department`를 통해 접근하는 것이 더 자연스럽다면 `Department`에 `getManagerName()`을 추가할 수도 있음
+
+**리팩터링 후 장점**
+✅ **결합도 감소**: `Person`이 `Department`와 `Manager`의 내부 구조를 몰라도 됨  
+✅ **코드 가독성 향상**: 클라이언트 코드가 간결해지고 의미가 분명해짐  
+✅ **유지보수성 증가**: `Department`나 `Manager`의 구현이 바뀌어도 `Person`만 변경하면 됨
 
 
 
+// 헤드 퍼스트 디자인 패턴 책 내용 중
+**참고. 최소 지식 원칙 (Principle of Least Knowledge) = 데미터/데메테르 법칙**
+
+> 객체 지향 구현시 각 모듈간의 결합도를 최소화하여 설계한다는 원칙
+
+**장점**
+- 객체 사이의 의존성/결합도를 줄일 수 있으며, S/W 관리가 더 편해짐
+
+**단점**
+- 메소드 호출을 처리하는 Wrapper (래퍼) 클래스를 더 만들어야 할 수 있음
+→시스템이 복잡해지고, 개발시간도 늘어나고, 성능도 떨어질 수 있다
+
+1. 원칙을 따르지 않는 경우
+
+```java
+public float getTemp() {
+  return station.getThermometer().getTemperature();
+}
+```
+
+메소드 체인이 깊어질수록 아래와 같은 단점을 가진다
+- 서로 관련없는 객체의 내부 구조에 접근하게 되어 의존성/결합도가 높아짐
+- 코드 가독성 저하된다
+- 연쇄 호출된 메소드가 수정되면 다른 메소드에 영향을 줄 수 있다
+
+2. 원칙을 따르는 경우
+
+```java
+public float getTemp(Station station) {
+	return station.getTemperature();
+}
+```
+
+**최소 지식 원칙 - 가이드 라인**
+- 객체 자기 자신의 메소드
+- 메소드 인자로 전달된 객체의 메소드
+- 맴버 변수 또는 지역 스코프 내에서 생성한 객체의 메소드
+- 객체에 속하는 구성요소 (ex. Wrapper 클래스)
+
+### 3.18 중재자(Middle Man)
+객체의 대표적인 기능 하나로, 외부로부터 세부사항을 숨겨주는 **캡슐화**가 있다
+캡슐화하는 과정에서 위임(delegation)이 자주 활용된다.
+
+지나치면 문제가 된다. 클래스가 제공하는 메서드 중 절반이 다른 클래스에 구현을 위임하고 있다면 어떤가? 이럴때는
+- **중개자 제거하기**(7.8) : 실제로 일을 하는 객체와 직접 소통하게 하자
+- **함수 인라인하기**(6.2) : 위임 메서드를 제거한 후 남는 일이 거의 없다면 호출하는 쪽으로 인라인하자
+
+// 메서드 체인에서 다룬 안티 패턴으로 복구시키네..
+ **언제 중개자를 제거해야 할까?**(chat-gpt)
+- 클래스의 **메서드 절반 이상이 단순히 다른 객체의 메서드를 호출할 때**
+- **중개자를 제거해도 캡슐화가 크게 깨지지 않는 경우**
+- 유지보수를 위해 불필요한 계층을 줄이는 것이 더 유리한 경우
+
+// chat-gpt 
+나 : 메서드 체인이랑 중재자랑 비슷한데 에제가 너무 간단해서 판단이 어려워요
+
+| 냄새 유형  | 특징                      | 문제점                                   | 해결 방법                                        |
+| ------ | ----------------------- | ------------------------------------- | -------------------------------------------- |
+| 메서드 체인 | 연속적인 메서드 호출             | 객체의 내부 구조가 너무 많이 노출됨 (캡슐화 깨지고 결합도 상승) | **위임 숨기기(7.7)**, **함수 추출하기(6.1) → 옮기기(8.1)** |
+| 중재자    | 클래스가 하는 일 없이 대부분 객체에 위임 | 클래스가 실제 로직 없이 중계 역할만 함 (불필요한 추상화)     | **중개자 제거하기(7.8)**, **함수 인라인하기(6.2)**         |
+
+ ✅ **핵심 기준 (언제 리팩터링해야 할까?)**
+1. **객체 내부 구조를 너무 많이 노출하는가?**  
+    → YES ✅ → **메서드 체인 문제** 🚨 (위임 숨기기 적용)
+2. **이 클래스가 실질적인 역할 없이 중계만 하는가?**  
+    → YES ✅ → **중재자 냄새 문제** 🚨 (중개자 제거하기 적용)
+3. **객체가 직접 처리해야 하는 책임이 있는가?**  
+    → YES ✅ → 메서드를 해당 객체로 옮기기
+
+🎯 **중재자 냄새 개선이 중요한 경우 (Side Effect 전파 문제)**
+예를 들어, **어떤 객체가 다른 객체를 수정하거나 영향을 끼치는 경우**,  너무 깊은 체인은 **사이드 이펙트**(부작용)를 일으킬 수 있음
+```java
+// ❌ 중재자 냄새 + 사이드 이펙트 전파 (문제 발생 가능)
+person.getDepartment().getManager().setName("Bob");  // 🚨 깊숙한 객체까지 변경
+```
+**👉 값 조회하는 단순한 체인은 괜찮지만, 변경이 일어나는 경우 최소화 필요!**  
+
+**✅ 리팩터링 방향**
+- 객체의 변경은 직접 담당하는 객체가 하도록 한다
+- 너무 깊은 체인은 숨기고, 적절한 메서드로 감싸서 제공
+
+📌 **정리**
+✔ **메서드 체인은 캡슐화 문제 → 적절히 숨기기**  
+✔ **중재자는 불필요한 위임 문제 → 불필요하면 제거**  
+✔ **조회는 문제없지만, 변경이 있는 경우 최소화 필요**
+
+### 3.19 내부자 거래(Insider Trading) 
+
+커피 자판기 옆에서 은밀히 데이터를 주고 받는 모듈들이 있다면
+- **함수 옮기기**(8.1)와 **필드 옮기기**(8.2)
+- **위임 숨기기**(7.7): 여러 모듈이 같은 관심사를 공유한다면 공통 부분을 정식으로 처리하는 제 3의 모듈을 새로 만들거나 다른 모듈이 중간자 역할을 하게 만든다
 
 
+상속 구조에서 자식 클래스는 항상 부모 클래스가 공개하고 싶은 것 이상으로 부모에 대해 알려고 한다. 그러다가 부모 품을 떠나야 할 때가 온다면 **서브 클래스를 위임으로 바꾸기**(12.10)나 **슈퍼 클래스를 위임으로 바꾸기**(12.11)를 활용하자
 
-## 3.24 주석(Comments)
+// 내 생각 
+관련성있는 필드나 함수를 한 곳에 모아 응집도와 유지보수성을 높이고 해당 객체를 메시지로 주고 받으며 두 모듈이 통신하도록 한다는 의미인듯 
+
+
+//chat-gpt 
+**"내부자 거래 (Insider Trading)"** 냄새는 **서로 너무 밀접하게 결합된 모듈 간의 데이터 공유**를 뜻해요.
+
+ **내부자 거래(Insider Trading) 냄새**는
+- **모듈 간 결합도가 너무 높아 내부 구현을 서로 깊이 알게 되는 것**이 문제
+- **관련 있는 함수와 필드를 적절한 객체로 이동하여 책임을 위임**
+- **각 객체가 직접 데이터를 주고받는 대신, 적절한 인터페이스를 통해 소통**하도록 리팩토링하는 게 핵심입니다.
+
+ **✅ 내부자 거래의 핵심 문제점**
+- 특정 클래스가 다른 클래스의 내부 구현에 **직접 의존**하면, 변경 시 연쇄적으로 영향을 받음 → **결합도가 높아짐**
+- 모듈이 독립적으로 동작하지 못하고, **데이터를 은밀하게 공유**하는 관계가 형성됨
+
+잘못된 예: 서비스가 컨트롤러의 내부 구조에 의존
+```java
+class OrderController {
+    private final OrderService orderService;
+    
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
+    
+    public void placeOrder(HttpServletRequest request) {  // ❌ 요청 객체를 그대로 넘김
+        orderService.processOrder(request);
+    }
+}
+
+class OrderService {
+    public void processOrder(HttpServletRequest request) { // ❌ 컨트롤러의 내부 구조를 사용
+        String productId = request.getParameter("productId");
+        int quantity = Integer.parseInt(request.getParameter("quantity"));
+        System.out.println("Processing order: " + productId + ", Quantity: " + quantity);
+    }
+}
+```
+**🚨 문제점**
+- `OrderService`가 **컨트롤러의 내부 구현(HttpServletRequest)** 에 의존 → **내부자 거래 발생**
+- 서비스는 `request`를 알 필요가 없음 → **DTO를 사용해 데이터를 전달해야 함**
+
+개선: DTO를 사용해 명확한 경계 구분 
+```java
+class OrderRequest {
+    private final String productId;
+    private final int quantity;
+    
+    public OrderRequest(String productId, int quantity) {
+        this.productId = productId;
+        this.quantity = quantity;
+    }
+    
+    public String getProductId() { return productId; }
+    public int getQuantity() { return quantity; }
+}
+
+class OrderController {
+    private final OrderService orderService;
+
+    public OrderController(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    public void placeOrder(HttpServletRequest request) {  
+        OrderRequest orderRequest = new OrderRequest(
+            request.getParameter("productId"),
+            Integer.parseInt(request.getParameter("quantity"))
+        );
+        orderService.processOrder(orderRequest);
+    }
+}
+
+class OrderService {
+    public void processOrder(OrderRequest orderRequest) { 
+        System.out.println("Processing order: " + orderRequest.getProductId() 
+                           + ", Quantity: " + orderRequest.getQuantity());
+    }
+}
+
+```
+✅ **서비스는 컨트롤러 내부 구조를 몰라도 됨**  
+✅ **의존성이 줄어들어 결합도가 낮아지고, 유지보수성 증가**
+
+
+잘못된 예: 서비스 계층이 도메인 직접 접근하여 사용 
+```java
+class Order {
+    String productId;
+    int quantity;
+}
+
+class OrderService {
+    public void processOrder(Order order) {
+        // ❌ Order의 내부 필드를 직접 사용 → 내부자 거래 냄새 발생
+        System.out.println("Processing order: " + order.productId + ", Quantity: " + order.quantity);
+    }
+}
+```
+
+개선: 서비스에 있는 도메인 로직 이동 
+```java
+class Order {
+    private final String productId;
+    private final int quantity;
+
+    public Order(String productId, int quantity) {
+        this.productId = productId;
+        this.quantity = quantity;
+    }
+
+    // ✅ 내부 필드 대신 메서드를 통해 데이터 제공 (캡슐화)
+    public String getProductId() { return productId; }
+    public int getQuantity() { return quantity; }
+
+    // ✅ 도메인 로직을 Order 내부로 이동
+    public void process() {
+        System.out.println("Processing order: " + productId + ", Quantity: " + quantity);
+    }
+}
+
+class OrderService {
+    public void processOrder(Order order) {
+        // ✅ Order 객체에게 메시지를 보내서 작업하도록 위임
+        order.process();
+    }
+}
+```
+
+
+✔ **내부자 거래 냄새란?**
+- **모듈 간 결합도가 너무 높아 내부 구현을 서로 깊이 알게 되는 문제**
+- **객체의 속성을 직접 접근하거나, 불필요한 데이터 공유가 많을 때 발생**
+
+✔ **해결 방법**
+- **연관된 필드와 메서드를 같은 객체에 위치** → 응집도를 높이고 결합도를 낮춤
+- **DTO를 활용하여 명확한 데이터 전달 방식 유지**
+- **객체 간 직접 속성을 공유하지 말고, 메시지를 주고받는 방식으로 변경**
+
+🎯 결국 **책임을 올바른 곳으로 이동하여 유지보수성을 높이는 게 핵심!**
+
+💡 **DTO, 캡슐화, 메서드 이동을 활용해 내부자 거래를 줄이고 결합도를 낮추는 것이 핵심!**
+
+### 3.20 거대한 클래스 (Large Class)
+한 클래스가 너무 많은 일을 하려다 보면 필드 수가 상당히 늘어난다. 그리고 클래스에 필드가 너무 많으면 중복 코드가 생기기 쉽다. 
+
+- **클래스 추출하기**(7.5) : 필드 일부를 따로 묶는다
+- **슈퍼 클래스 추출하기**(12.8)나 **타입 코드를 서브 클래스로 바꾸기**(12.6)
+	- 위에서 분리한 컴포넌트를 원래 클래스와 상속 관계로 만드는 게 좋다면 적용
+
+// 넥스트 스텝 - 블랙잭 게임이 생각나네 https://dev-ljw1126.tistory.com/420
+
+클래스가 항시 모든 필드를 사용하지는 않을 수도 있다. 이럴 때는 앞에서 언급한 추출 기법들을 여러 차례 수행해야 할지도 모른다. 
+
+<u>필드가 너무 많은 클래스와 마찬가지로 코드량이 너무 많은 클래스</u>도 중복 코드와 혼동을 일으킬 여지가 크다. 가장 간단한 해법은 그 클래스 안에서 자체적으로 중복을 제거하는 것이다 (..)
+
+<u>클라이언트들이 거대 클래스를 이용하는지 패턴을 파악하여 그 클래스를 어떻게 쪼갤지 단서를 얻을 수도 있다. 먼저 클라이언트들이 거대 클래스의 특정 기능 그룹만 주로 사용하는지 살핀다. 이때 각각의 기능 그룹이 개별 클래스로 추출될 후보다.</u>
+- **클래스 추출하기**(7.5)
+- **슈퍼 클래스 추출하기**(12.8)
+- **타입 코드를 서브 클래스로 바꾸기**(12.6)
+
+
+### 3.21 서로 다른 인터페이스의 대안 클래스들 (Alternative Classes with Different Interfaces)
+클래스를 사용할 때의 큰 장점은 필요에 따라 언제든 다른 클래스로 교체할 수 있다는 것이다.
+(단, 교체하려면 인터페이스가 같아야 한다)
+
+- **함수 선언 바꾸기**(6.5) : 메서드 시그니처를 일치시킨다
+- **함수 옮기기**(8.1) : 인터페이스가 같아질 때까지 필요한 동작들을 클래스 안으로 밀어 넣는다
+- **슈퍼 클래스 추출하기**(12.8) : 그러다 대안 클래스들 사이에 중복 코드가 생기면 슈퍼 클래스 추출하기를 적용할지 고려해본다
+
+ **정리**(chat gpt)
+- **슈퍼 클래스(Superclass)** = 여러 서브클래스의 공통 속성을 가진 부모 클래스 (추상 클래스일 필요는 없음)
+- **슈퍼 클래스 추출하기 (12.8)** = **중복된 코드가 많을 때, 부모 클래스로 정리**
+- **추상 클래스(Abstract Class)** 는 반드시 오버라이드해야 하는 **추상 메서드** 포함 가능
+
+즉, **공통된 기능이 있다면 슈퍼 클래스로 정리하는 게 좋지만, 필요 없는 상속을 남발하지 않도록 주의**해야 해요
+
+
+### 3.22 데이터 클래스 (Data Class)
+>[!note] 데이터 클래스
+>데이터 필드와 게터/세터 메서드로만 구성된 클래스를 말한다.
+>
+
+그저 데이터 저장 용도로만 쓰이다 보니 다른 클래스가 너무 깊이까지 함부로 다룰 때가 많다.
+
+- **레코드 캡슐화하기**(7.1) : public 필드는 private로 변경
+- **세터 제거하기**(11.7) : 변경하면 안되는 필드는 접근을 원천 봉쇄
+- **함수 옮기기**(8.1): 다른 클래스에서 데이터 클래스의 게터나 세터를 사용하는 메서드를 찾아서 그 메서드를 데이터 클래스로 옮길 수 있는지 살펴보자
+- **함수 추출하기**(6.1) : 메서드를 통째로 옮기기 어렵다면 옮길 수 있는 부분만 별도 메서드로 뽑아낸다
+
+한편, 데이터 클래스는 필요한 동작이 엉뚱한 곳에 정의돼 있다는 신호일 수 있다. 
+이런 경우라면 클라이언트 코드를 데이터 클래스로 옮기기만 해도 대폭 개선된다.
+물론 예외도 잇다. 
+특히 다른 함수를 호출해 얻은 결과 레코드(데이터 객체)로는 동작 코드(?)를 넣을 이유가 없다.
+대표적인 예로 단계 쪼개기(6.11)의 결과로 나온 중간 데이터 구조가 있다. 이런 데이터 구조는 불변(immutable)이다. <u>불변 필드는 굳이 캡슐화할 필요 없고, 불변 데이터로부터 나오는 정보는 게터를 통하지 않고 그냥 필드 자체를 공개해도 된다</u>
+
+// chat-gpt 
+**💡 데이터 클래스(Data Class)란?**
+- **데이터 클래스는 말 그대로 데이터를 저장하는 데 집중된 클래스**입니다.
+- **필드(속성)만 존재**하고, 동작(메서드)은 거의 없는 구조
+- `getter`, `setter`, `equals`, `hashCode` 같은 기본 메서드만 있음
+- 자바에서는 `record`(Java 14+) 또는 `Lombok @Data`를 활용하면 쉽게 만들 수 있음
+```java
+// ✅ Java 14+ record (자동으로 getter, equals, hashCode 제공)
+public record User(String name, int age) {}
+
+// ✅ Lombok 활용 (@Data = getter, setter, equals, hashCode, toString 자동 생성)
+@Data
+public class User {
+    private final String name;
+    private final int age;
+}
+```
+
+
+**🛑 데이터 클래스가 문제되는 경우 (냄새)**
+ - **데이터만 가지고 있고, 관련 동작(메서드)이 외부에서 처리됨**
+```java
+class Order {
+    private String product;
+    private int quantity;
+    
+    public Order(String product, int quantity) {
+        this.product = product;
+        this.quantity = quantity;
+    }
+
+    // Getter만 있음
+    public String getProduct() { return product; }
+    public int getQuantity() { return quantity; }
+}
+
+// ❌ Order에 대한 로직이 외부에 있음
+class OrderService {
+    public int calculateTotal(Order order, int pricePerUnit) {
+        return order.getQuantity() * pricePerUnit; 
+    }
+}
+```
+- `Order` 클래스에는 **데이터만 있고**, 핵심 로직(총 가격 계산)이 `OrderService`에 있음
+- **데이터 클래스는 동작을 포함하지 않고 단순한 데이터 전달 역할만 함** → 유지보수 어려움
+
+ **✅ 데이터 클래스의 동작을 내부로 이동 (리팩터링)**
+- **데이터를 가지고 있는 클래스에 로직을 추가**하면 응집도가 높아짐
+- **클라이언트 코드가 불필요하게 데이터를 꺼내 쓰지 않아도 됨** (캡슐화)
+```java
+class Order {
+    private String product;
+    private int quantity;
+    private int pricePerUnit;
+    
+    public Order(String product, int quantity, int pricePerUnit) {
+        this.product = product;
+        this.quantity = quantity;
+        this.pricePerUnit = pricePerUnit;
+    }
+
+    // ✅ 데이터를 가지고 있는 클래스에서 처리하도록 이동
+    public int calculateTotal() {
+        return quantity * pricePerUnit;
+    }
+}
+```
+- 이제 `Order` 인스턴스에서 `calculateTotal()`을 호출하면 총 가격을 얻을 수 있음
+- **데이터와 동작이 한곳에 모여 있어서 응집도가 높아짐**
+
+
+**💡 예외적인 경우 (불변 데이터 구조는 OK!)**
+불변(immutable) 데이터 클래스는 예외적으로 괜찮음.
+- 예를 들어, **단계 쪼개기(6.11)의 중간 데이터 구조**처럼 **순수한 데이터 전용 객체**
+- 다른 메서드가 데이터를 수정할 일이 없으므로 **getter 없이 필드 공개 가능**
+```java
+record ProductInfo(String name, int price) {}  // ✅ 불변 데이터 객체
+
+var info = new ProductInfo("Laptop", 2000);
+System.out.println(info.name());  // getter 없이 필드 접근 가능
+```
+- `record`를 사용하면 **자동으로 불변 객체가 됨**
+- 이 경우에는 동작을 추가할 필요 없이 **순수 데이터 저장소 역할만 해도 OK**
+
+**🔹 정리**
+✅ **데이터 클래스 냄새란?**
+- 필드만 있고 동작이 없는 클래스
+- 동작(메서드)이 외부 클래스에서 처리됨
+- **데이터를 가지고 있는 클래스에 관련 동작을 추가하는 것이 더 좋음**
+
+✅ **예외적으로 괜찮은 경우**
+- **불변(Immutable) 데이터 객체** (ex. `record`, DTO)
+- **단계 쪼개기(6.11)에서 나온 중간 데이터 구조**
+
+**즉, 데이터를 조작하는 동작이 있다면, 해당 데이터를 소유한 클래스 내부로 옮기는 것이 좋다**
+
+### 3.23 상속 포기(Refused Bequest)
+부모의 유산을 원치 않거나 필요없다면 어떻게 할까? 수많은 유산 중에서 관심 있는 몇 개만 받고 끝내려는 경우는 얼마든지 있을 수 있다.
+
+예전에는 아래 방식을 권장했음
+- **메서드 내리기**(12.4)와 **필드 내리기**(12.5) : 같은 계층에 서브 클래스를 하나 만들고 부모 클래스에서 물려 받지 않을 필드와 메서드를 새로 만든 서브 클래스로 내린다
+	- 그러면 부모에는 공통된 부분만 남는다
+	- 한 걸음 더 나아가서 부모 클래스는 모두 추상 클래스여야 한다고 말하는 사람도 많다
+
+우리는 이 방식을 권장하지 않는다. 아니, 항상 이렇게 해야 한다는 입장은 아니다
+일부 동작을 재활용하기 위한 목적으로 상속을 활용하기도 하는데, 실무 관점에서 아주 유용한 방식이다. 솔직히 냄새를 풍기지만, 보통은 참을만한 경우가 많다. 
+그래서 상속을 포기할 시 혼란과 문제가 생긴다면 앞에서 설명한 예전 방식을 따른다.
+<u>단, 무조건 이래야 한다는 생각은 버리자. </u>
+
+상속 포기 냄새는 서브 클래스가 부모의 동작은 필요로하지만 인터페이스는 따르고 싶지 않을 때 특히 심하게 난다. 구현을 따르지 않는 것은 이해할 수 있지만 인터페이스를 따르지 않는다는 것은 상당히 무례한 태도다.
+
+이 경우 **서브 클래스를 위임으로 바꾸기**(12.10)나 **슈퍼 클래스를 위임으로 바꾸기**(12.11)를 활용해서 아예 상속 매커니즘에서 벗어나보자
+
+
+### 3.24 주석(Comments)
 
 > 주석을 남겨야겠다는 생각이 들면, 가장 먼저 주석이 필요 없는 코드로 리팩터링해본다.
 
@@ -947,4 +1478,5 @@ protected VersionInfo makeVersion() throws Exception{
 - 3.6을 작성하는 중에 든 생각이지만, 코드의 냄새를 찾으려면 경험과 감각이 있어야해보인다
 - 코드를 읽는 습관이 연습이 된다는 느낌이 든다
 - 3.7에서 서로 다른 **맥락(context)** 용어가 나왔는데, 그 맥락은 집합을 의미하는 걸까
-
+- 무엇이 힘들었는가?
+	- 기법과 상황을 상상하지 못함 -> chat-gpt와 리팩터링 카탈로그 활용
