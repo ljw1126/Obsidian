@@ -96,8 +96,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "61e96dd258911747",
@@ -209,7 +208,7 @@
       "copilot:Open Copilot Chat": false
     }
   },
-  "active": "534a7ef2a38ba102",
+  "active": "28bab7a986b18dda",
   "lastOpenFiles": [
     "1. Project/리팩토링의 모든 것(2판)/Chapter2 - 리팩터링 원칙.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md",
