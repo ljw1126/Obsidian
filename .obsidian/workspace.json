@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "e6a961c7afa91133",
+        "id": "e0793614ce23161e",
         "type": "tabs",
         "children": [
           {
-            "id": "534a7ef2a38ba102",
+            "id": "8b178d707f86794d",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Chapter4 - 테스트 구축하기"
+              "title": "New tab"
             }
           }
         ]
@@ -183,14 +179,23 @@
               "icon": "lucide-file",
               "title": "Plugin no longer active"
             }
+          },
+          {
+            "id": "80dce658769c9273",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
           }
         ],
-        "currentTab": 4
+        "currentTab": 6
       }
     ],
     "direction": "horizontal",
-    "width": 397,
-    "collapsed": true
+    "width": 397
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -208,20 +213,22 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "534a7ef2a38ba102",
+  "active": "8b178d707f86794d",
   "lastOpenFiles": [
-    "1. Project/리팩토링의 모든 것(2판)/memo.md",
-    "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md",
-    "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md",
-    "1. Project/리팩토링의 모든 것(2판)/Chapter2 - 리팩터링 원칙.md",
-    "1. Project/리팩토링의 모든 것(2판)/Chapter3 - 코드에서 나는 악취.md",
-    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
-    "2. Area/이직 준비/2월 8일 멘토링.md",
     "3. Resource/자기계발/코딩테스트/무제.md",
     "3. Resource/자기계발/코딩테스트",
     "3. Resource/자기계발/단위테스트의 기술/7장 신뢰할 수 있는 테스트.md",
+    "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md",
+    "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계/Untitled.md",
+    "Untitled.md",
+    "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계",
+    "1. Project/리팩토링의 모든 것(2판)/Chapter3 - 코드에서 나는 악취.md",
+    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
+    "2. Area/이직 준비/2월 8일 멘토링.md",
     "1. Project/한빛미디어-나는리뷰어다/1월",
     "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
+    "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md",
+    "1. Project/리팩토링의 모든 것(2판)/Chapter2 - 리팩터링 원칙.md",
     "3. Resource/자기계발/단위테스트의 기술/5장.md",
     "3. Resource/자기계발/단위테스트의 기술/제 1 부. 시작하기.md",
     "3. Resource/자기계발/단위테스트의 기술/메모.md",
@@ -232,6 +239,7 @@
     "4. Archive/취업/SK C & C/기록.md",
     "3. Resource/자기계발",
     "4. Archive/취업",
+    "1. Project/리팩토링의 모든 것(2판)/memo.md",
     "4. Archive/취업/SK C & C",
     "1. Project/한빛미디어-나는리뷰어다",
     "Excalidraw/Drawing 2025-01-28 14.59.40.excalidraw.md",
@@ -240,12 +248,8 @@
     "1. Project/이직 준비/무제 파일.md",
     "1. Project/이직 준비/test.tex",
     "1. Project/이직 준비/무제 파일.md",
-    "1. Project/이직 준비/무제 파일.tex",
     "1. Project/이직 준비/경력 기술서.md",
     "3. Resource/자기계발/Git 마스터 과정/summary.md",
-    "3. Resource/자기계발/Git 마스터 과정/Git Cheat Sheet.md",
-    "Excalidraw/Drawing 2025-01-19 10.22.52.excalidraw.md",
-    "Excalidraw/Drawing 2025-01-13 16.59.36.excalidraw.md",
     "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/스크린샷 2025-01-08 오후 3.37.15.png"
   ]
