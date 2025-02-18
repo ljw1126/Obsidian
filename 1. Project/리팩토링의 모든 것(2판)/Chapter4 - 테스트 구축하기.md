@@ -153,3 +153,4 @@ p144
 
 ---
 - 자바 dto vs record : https://yozm.wishket.com/magazine/detail/2814/
+- (naver)fixture-monkey: https://github.com/naver/fixture-monkey?tab=readme-ov-file
