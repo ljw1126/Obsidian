@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md",
+                "file": "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Chapter4 - 테스트 구축하기"
+              "title": "Chapter1 - 리팩터링 첫 번째 예시"
             }
           }
         ]
@@ -96,8 +96,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "61e96dd258911747",
@@ -197,7 +196,6 @@
     "hiddenItems": {
       "switcher:빠른 전환기 열기": false,
       "daily-notes:오늘의 일일 노트 열기": false,
-      "obsidian-excalidraw-plugin:Create new drawing": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "graph:그래프 뷰 열기": false,
       "canvas:새 캔버스 만들기": false,
@@ -212,8 +210,8 @@
   },
   "active": "ecb7f2326f2ff275",
   "lastOpenFiles": [
-    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md",
+    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "3. Resource/자기계발/코딩테스트/무제.md",
     "3. Resource/자기계발/Git 마스터 과정/Git Cheat Sheet.md",
     "4. Archive/raycast.md",

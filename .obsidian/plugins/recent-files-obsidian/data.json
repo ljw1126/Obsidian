@@ -1,6 +1,10 @@
 {
   "recentFiles": [
     {
+      "basename": "Chapter1 - 리팩터링 첫 번째 예시",
+      "path": "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md"
+    },
+    {
       "basename": "Chapter4 - 테스트 구축하기",
       "path": "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md"
     },
@@ -27,10 +31,6 @@
     {
       "basename": "memo",
       "path": "1. Project/리팩토링의 모든 것(2판)/memo.md"
-    },
-    {
-      "basename": "Chapter1 - 리팩터링 첫 번째 예시",
-      "path": "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md"
     },
     {
       "basename": "Chapter2 - 리팩터링 원칙",
