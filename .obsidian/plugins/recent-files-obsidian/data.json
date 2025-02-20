@@ -1,16 +1,24 @@
 {
   "recentFiles": [
     {
+      "basename": "36.편집 거리",
+      "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/36.편집 거리.md"
+    },
+    {
+      "basename": "kanban dashboard",
+      "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
+    },
+    {
+      "basename": "그로킹 알고리즘(개정판)",
+      "path": "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md"
+    },
+    {
       "basename": "Chapter1 - 리팩터링 첫 번째 예시",
       "path": "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md"
     },
     {
       "basename": "Chapter4 - 테스트 구축하기",
       "path": "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md"
-    },
-    {
-      "basename": "그로킹 알고리즘(개정판)",
-      "path": "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md"
     },
     {
       "basename": "무제",
@@ -87,10 +95,6 @@
     {
       "basename": "28.고정점 찾기",
       "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/28.고정점 찾기.md"
-    },
-    {
-      "basename": "kanban dashboard",
-      "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/kanban dashboard.md"
     },
     {
       "basename": "왕실의 나이트",
@@ -195,10 +199,6 @@
     {
       "basename": "43.어두운길",
       "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/43.어두운길.md"
-    },
-    {
-      "basename": "27.정렬된 배열에서 특정 수의 개수 구하기",
-      "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/27.정렬된 배열에서 특정 수의 개수 구하기.md"
     }
   ],
   "omittedPaths": [],
