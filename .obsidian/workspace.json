@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "7f35dd2eaa090b10",
+        "id": "dbdea6def75622aa",
         "type": "tabs",
         "children": [
           {
-            "id": "dc53dc7c58066e21",
+            "id": "7add507346e76f08",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/36.편집 거리.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "36.편집 거리"
+              "title": "새 탭"
             }
           }
         ]
@@ -208,8 +204,9 @@
       "obsidian-excalidraw-plugin:New drawing": false
     }
   },
-  "active": "dc53dc7c58066e21",
+  "active": "7add507346e76f08",
   "lastOpenFiles": [
+    "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/36.편집 거리.md",
     "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
     "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter1 - 리팩터링 첫 번째 예시.md",
@@ -245,7 +242,6 @@
     "3. Resource/자기계발/단위테스트의 기술",
     "1. Project/이직 준비/무제 파일.md",
     "1. Project/이직 준비/test.tex",
-    "1. Project/이직 준비/무제 파일.md",
     "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/스크린샷 2025-01-02 오후 12.02.23.png",
     "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/Ch8. 다이나믹 프로그래밍/스크린샷 2025-01-08 오후 3.37.15.png"
   ]
