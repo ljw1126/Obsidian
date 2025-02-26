@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "3. Resource/자기계발/SQL/fastcampus.md",
+                "file": "1. Project/좋은 강의.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "fastcampus"
+              "title": "좋은 강의"
             }
           }
         ]
@@ -210,8 +210,9 @@
   },
   "active": "7add507346e76f08",
   "lastOpenFiles": [
-    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "3. Resource/자기계발/SQL/fastcampus.md",
+    "1. Project/좋은 강의.md",
+    "1. Project/한빛미디어-나는리뷰어다/1월/그로킹 알고리즘(개정판).md",
     "3. Resource/자기계발/SQL",
     "3. Resource/자기계발/무제.md",
     "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
@@ -239,7 +240,6 @@
     "3. Resource/자기계발/단위테스트의 기술/4장 모의 객체를 사용한 상호 작용 테스트.md",
     "3. Resource/자기계발/단위테스트의 기술/3장. 의존성 분리와 스텁.md",
     "3. Resource/자기계발/단위테스트의 기술/2장. 첫 번째 단위 테스트.md",
-    "2. Area/이직 준비/랠릿 AI 질문.md",
     "3. Resource/자기계발",
     "4. Archive/취업",
     "4. Archive/취업/SK C & C",
