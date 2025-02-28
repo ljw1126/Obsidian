@@ -1,6 +1,10 @@
 {
   "recentFiles": [
     {
+      "basename": "무제",
+      "path": "3. Resource/자기계발/코딩테스트/무제.md"
+    },
+    {
       "basename": "기록",
       "path": "3. Resource/자기계발/리팩터링2판 - 엘리/기록.md"
     },
@@ -43,10 +47,6 @@
     {
       "basename": "Chapter4 - 테스트 구축하기",
       "path": "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md"
-    },
-    {
-      "basename": "무제",
-      "path": "3. Resource/자기계발/코딩테스트/무제.md"
     },
     {
       "basename": "Git Cheat Sheet",
