@@ -318,6 +318,9 @@ public class Order {
 
 
 ### 7.5 클래스 추출하기
+- 테스트와 함께 점진적으로 리팩터링
+	- 초기화 테스트 생성해서 VO생성, equals, hashCode 재생성 및 리네이밍을 반복
+- VO 만드는 걸 뜻하는 듯함
 
 ```java
 public class Person {  
@@ -335,3 +338,219 @@ public class Person {
 }
 ```
 
+
+### 7.6 클래스 인라인하기
+
+
+```java
+public class TrackingInformation {  
+    private String shippingCompany; // 배송 회사  
+    private String trackingNumber; // 추적 번호  
+  
+    public TrackingInformation(String shippingCompany, String trackingNumber) {  
+        this.shippingCompany = shippingCompany;  
+        this.trackingNumber = trackingNumber;  
+    }  
+  
+    public String display() {  
+        return String.format("%s: %s", this.shippingCompany, this.trackingNumber);  
+    }  
+}
+
+
+public class Shipment {  
+    private TrackingInformation trackingInformation;  
+  
+    public Shipment(TrackingInformation trackingInformation) {  
+        this.trackingInformation = trackingInformation;  
+    }  
+  
+    public String display() {  
+        return trackingInformation.display();  
+    }  
+  
+    public TrackingInformation getTrackingInformation() {  
+        return trackingInformation;  
+    }  
+  
+    public void setTrackingInformation(TrackingInformation trackingInformation) {  
+        this.trackingInformation = trackingInformation;  
+    }  
+}
+```
+
+리팩터링 후 - 점진적으로 개선한다
+```java
+public class Shipment {  
+    private String shippingCompany; // 배송 회사  
+    private String trackingNumber; // 추적  
+  
+    public Shipment(String shippingCompany, String trackingNumber) {  
+        this.shippingCompany = shippingCompany;  
+        this.trackingNumber = trackingNumber;  
+    }  
+  
+    public String display() {  
+        return String.format("%s: %s", this.shippingCompany, this.trackingNumber);  
+    }  
+  
+    public void setShippingCompany(String arg) {  
+        this.shippingCompany = arg;  
+    }  
+  
+    public void setTrackingNumber(String arg) {  
+        this.trackingNumber = arg;  
+    }  
+}
+```
+
+
+### 7.7 위임 숨기기 
+> Hide Delegate
+
+```java
+public class Person {  
+    private final String name;  
+    private Department department;  
+  
+    public Person(String name, Department department) {  
+        this.name = name;  
+        this.department = department;  
+    }  
+  
+    public String getName() {  
+        return name;  
+    }  
+  
+    public Department getDepartment() {  
+        return department;  
+    }  
+  
+    public void setDepartment(Department department) {  
+        this.department = department;  
+    }  
+  
+    public static class Department {  
+        private String chargeCode;  
+        private String manager;  
+  
+        public Department(String chargeCode, String manager) {  
+            this.chargeCode = chargeCode;  
+            this.manager = manager;  
+        }  
+  
+        public String getChargeCode() {  
+            return chargeCode;  
+        }  
+  
+        public void setChargeCode(String chargeCode) {  
+            this.chargeCode = chargeCode;  
+        }  
+  
+        public String getManager() {  
+            return manager;  
+        }  
+  
+        public void setManager(String manager) {  
+            this.manager = manager;  
+        }  
+    }  
+}
+
+```
+
+
+```java
+import static org.assertj.core.api.Assertions.assertThat;  
+  
+class PersonTest {  
+  
+    @Test  
+    void manager() {  
+        Person person = new Person("tester", new Person.Department("001", "toby"));  
+    
+        String manager = person.getDepartment().getManager(); // 💩 
+  
+        assertThat(manager).isEqualTo("toby");  
+    }  
+}
+```
+
+- 클라이언트는 부서 클래스의 작동 방식, 다시 말해 부서 클래스가 관리자 정보를 제공한다는 사실을 알아야 한다
+- 이러한 의존성을 줄이려면 클라이언트가 부서 클래스를 알수 없게 숨기고, 대신 사람 클래스에 간단한 위임 메서드를 만들면 된다
+
+
+리팩터링 후
+```java
+
+public class Person {
+	//..
+	
+	public String manager() {  // 위임 메서드 (= 포워딩 메서드?)
+	    return this.department.getManager();  
+	}
+}
+
+```
+
+```java
+class PersonTest {  
+  
+    @Test  
+    void manager() {  
+        Person person = new Person("tester", new Person.Department("001", "toby"));  
+  
+        String manager = person.manager();  //✨
+  
+        assertThat(manager).isEqualTo("toby");  
+    }  
+}
+```
+
+
+### 7.8 중재자 제거하기
+> Remove Middle Man
+
+
+
+> [!note] 이 냄새는 데메테르 법칙을 너무 신봉할 때 자주 나타난다. 나는 이 법칙을 '이 따금 유용한 데메테르의 제안' 정도로 부르는게 훨씬 낫다고 생각한다 
+
+
+예제는 복사 붙여 넣기 하고 끝이라서 의미 없을듯 .. 설명이랑 링크 주소나 읽어보자
+
+
+### 7.9 알고리즘 교체하기 
+> Substitute Algorithm
+
+```java
+public class Person {  
+  
+    public String foundPerson(String[] peoples) {  
+        for(String people : peoples) {  
+            if(people.equals("Don")) return "Don";  
+  
+            if(people.equals("John")) return "John";  
+  
+            if(people.equals("Jane")) return "Jane";  
+        }  
+  
+        return "";  
+    }  
+}
+```
+
+
+리팩터링 후 - `foundPerson2(..)` 생성해서 구현 > 테스트 > 기존 메서드 삭제 > remaning
+```java
+public class Person {  
+  
+    public String foundPerson(String[] peoples) {  
+        final List<String> candidate = List.of("Don", "John", "Jane");  
+        return Arrays.stream(peoples)  
+                .filter(candidate::contains)  
+                .findFirst()  
+                .orElse("");  
+    }  
+      
+}
+```
