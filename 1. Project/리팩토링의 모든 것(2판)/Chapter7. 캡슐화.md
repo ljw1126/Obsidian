@@ -15,6 +15,104 @@
 실무에서도 depth가 1이상 넘어본적 없는데, 
 내부적으로 setter를 호출하여 파라미터를 넘기는게 맞는건가??
 
+**변경 전💩**
+
+```java
+public class CustomerData {
+  private Map<String, Customer> data;
+
+  public CustomerData(Map<String, Customer> data) {
+    this.data = new HashMap<>();
+
+    for (Map.Entry<String, Customer> entry : data.entrySet()) {
+      this.data.put(entry.getKey(), new Customer(entry.getValue()));
+    }
+  }
+
+  public int usage(String customerId, String year, String month) {
+    Map<String, Customer> copied = rawData();
+    Customer customer = copied.get(customerId);
+    return customer.usages(year, month);
+  }
+  
+  public Result compareUsage(String customerId, String laterYear, String month) {
+    Map<String, Customer> copied = rawData();
+
+    Customer customer = copied.get(customerId);
+    int later = customer.usages(laterYear, month);
+    int earlier = customer.usages(String.valueOf(Integer.parseInt(laterYear) - 1), month);
+
+    return new Result(later, later - earlier);
+  }
+
+  private Map<String, Customer> rawData() {
+    return new CustomerData(this.data).data;
+  }
+
+  public void setUsage(String customerId, String year, String month, int amount) {
+    Customer customer = this.data.get(customerId);
+
+    Assert.notNull(customer, "Customer is Null");
+
+    customer.setUsage(year, month, amount);
+  }
+}
+
+
+public class Customer {
+    private final String id;
+    private final String name;
+    private final Map<String, MonthlyUsage> usages;
+
+    public Customer(Customer customer) {
+        this(customer.id, customer.name, customer.usages);
+    }
+
+    public Customer(String id, String name, Map<String, MonthlyUsage> usages) {
+        this.id = id;
+        this.name = name;
+        this.usages = new HashMap<>();
+
+        for (Map.Entry<String, MonthlyUsage> entry : usages.entrySet()) {
+            this.usages.put(entry.getKey(), new MonthlyUsage(entry.getValue()));
+        }
+    }
+
+    public int usages(String year, String month) {
+        return usages.get(year).getAmount(month);
+    }
+
+    public void setUsage(String year, String month, int amount) {
+        MonthlyUsage monthlyUsage = this.usages.get(year);
+
+        Assert.notNull(monthlyUsage, "MonthlyUsage is null");
+
+        monthlyUsage.setUsage(month, amount);
+    }
+}
+
+
+public class MonthlyUsage {
+  private final Map<String, Integer> usageByMonth;
+
+  public MonthlyUsage(MonthlyUsage monthlyUsage) {
+    this(new HashMap<>(monthlyUsage.usageByMonth));
+  }
+
+  public MonthlyUsage(Map<String, Integer> usageByMonth) {
+    this.usageByMonth = usageByMonth;
+  }
+
+  public int getAmount(String month) {
+    return usageByMonth.getOrDefault(month, 0);
+  }
+
+  public void setUsage(String month, int amount) {
+    usageByMonth.put(month, amount);
+  }
+}
+```
+
 
 ### 7.2 컬렉션 캡슐화하기
 - [컬렉션 파이프라인 패턴](https://martinfowler.com/articles/collection-pipeline/)
@@ -288,6 +386,40 @@ class OrderTest {
 변수 대신 함수로 만들어두면 비슷한 계산을 수행하는 다른 함수에서도 사용할 수 있어 **코드 중복**이 줄어든다
 
 
+```java
+public class Order {  
+    private final int quantity;  
+    private final Item item;  
+  
+    public Order(int quantity, Item item) {  
+        this.quantity = quantity;  
+        this.item = item;  
+    }  
+  
+    public double price() {  
+        final int basePrice = this.quantity * this.item.getPrice();  
+        double discountFactor = 0.98;  
+  
+        if(basePrice > 1000) discountFactor -= 0.03;  
+  
+        return basePrice * discountFactor;  
+    }  
+}
+
+public class Item {  
+    private final int price;  
+  
+    public Item(int price) {  
+        this.price = price;  
+    }  
+  
+    public int getPrice() {  
+        return price;  
+    }  
+}
+```
+
+
 
 ✨리팩터링 후
 ```java
@@ -322,6 +454,7 @@ public class Order {
 	- 초기화 테스트 생성해서 VO생성, equals, hashCode 재생성 및 리네이밍을 반복
 - VO 만드는 걸 뜻하는 듯함
 
+**💩before**
 ```java
 public class Person {  
     private String name;  
@@ -338,6 +471,19 @@ public class Person {
 }
 ```
 
+**✨after**  
+```java  
+public class Person {  
+    private String name;    private TelephoneNumber telephoneNumber;  
+    public Person(String name, TelephoneNumber telephoneNumber) {        this.name = name;        this.telephoneNumber = telephoneNumber;    }        // getter, setter 생략  
+}  
+  
+  
+public class TelephoneNumber {  
+    private String areaCode;    private String number;  
+    public TelephoneNumber(String areaCode, String number) {        this.areaCode = areaCode;        this.number = number;    }        // getter, setter 생략  
+}  
+```
 
 ### 7.6 클래스 인라인하기
 
