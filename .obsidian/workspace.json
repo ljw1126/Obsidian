@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계/Untitled.md",
+                "file": "3. Resource/세미나 & 기술 블로그/긱 뉴스.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Untitled"
+              "title": "긱 뉴스"
             }
           }
         ]
@@ -96,7 +96,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "61e96dd258911747",
@@ -210,9 +211,11 @@
   },
   "active": "7add507346e76f08",
   "lastOpenFiles": [
+    "3. Resource/세미나 & 기술 블로그/좋은 강의.md",
+    "3. Resource/세미나 & 기술 블로그/긱 뉴스.md",
+    "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계/Untitled.md",
     "README.md",
     "3. Resource/세미나 & 기술 블로그",
-    "3. Resource/세미나 & 기술 블로그/좋은 강의.md",
     "1. Project/한빛미디어-나는리뷰어다/3월",
     "1. Project/한빛미디어-나는리뷰어다/무제.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter7. 캡슐화.md",
@@ -238,7 +241,6 @@
     "1. Project/한빛미디어-나는리뷰어다/가이드 안내.md",
     "1. Project/한빛미디어-나는리뷰어다/1월/도서 리뷰.md",
     "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/알고리즘 유형별 기출문제/36.편집 거리.md",
-    "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/kanban dashboard.md",
     "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계",
     "3. Resource/자기계발/코딩테스트",
     "1. Project/한빛미디어-나는리뷰어다/2월",

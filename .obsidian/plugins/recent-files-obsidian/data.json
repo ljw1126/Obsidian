@@ -1,16 +1,20 @@
 {
   "recentFiles": [
     {
+      "basename": "긱 뉴스",
+      "path": "3. Resource/세미나 & 기술 블로그/긱 뉴스.md"
+    },
+    {
+      "basename": "좋은 강의",
+      "path": "3. Resource/세미나 & 기술 블로그/좋은 강의.md"
+    },
+    {
       "basename": "Untitled",
       "path": "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계/Untitled.md"
     },
     {
       "basename": "README",
       "path": "README.md"
-    },
-    {
-      "basename": "좋은 강의",
-      "path": "3. Resource/세미나 & 기술 블로그/좋은 강의.md"
     },
     {
       "basename": "Chapter7. 캡슐화",
@@ -195,10 +199,6 @@
     {
       "basename": "전보",
       "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/전보.md"
-    },
-    {
-      "basename": "미래 도시",
-      "path": "3. Resource/자기계발/이것이 취업을 위한 코딩테스트다/Ch9. 최단경로/미래 도시.md"
     }
   ],
   "omittedPaths": [],
