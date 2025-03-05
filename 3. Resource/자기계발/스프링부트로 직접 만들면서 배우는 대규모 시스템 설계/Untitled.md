@@ -149,3 +149,232 @@ $ init -a board -g com.example -n board --package-name com.example.board -p jar 
 			• 타임스탬프 : 순차성
 			• 노드ID + 시퀀스 번호 : 고유성
 	• 유니크, 시간 기반 순차성, 분산 환경에서의 높은 성능
+
+---
+### 조회 쿼리 성능 개선
+**게시글 목록 조회 방식 2가지**
+- 페이지 번호, 무한 스크롤
+
+
+**페이지 번호** 
+- N번 페이지에서 M개의 게시글: SQL offest, limit 사용
+- <u>offest 지점부터 limit개 데이터 조회</u>
+
+```sql
+select * from article 
+where board_id = {board_id}
+order by created_at desc
+limit {limit} offset {offset};
+```
+- 3초 걸림
+
+
+> **explain** 명령어를 사용하면 쿼리 플랜을 확인할 수 있다
+- `type = ALL`
+	- 테이블 전체를 읽는다(full scan)
+- `Extra = Using where; Using filesort`
+	- where절로 조건 필터링
+	- 데이터가 많기 때문에 메모리에서 정렬을 수행할 수 없어서, 파일(디스크)에서 데이터를 정렬하는 **filesort** 수행
+
+**인덱스에 대한 이해**
+- 데이터를 빠르게 찾기 위한 방법
+- 인덱스 관리를 위해 부가적인 쓰기 작업과 공간이 필요
+- 다양한 데이터 특성과 쿼리를 지원하는 자료구조
+	- B+ tree, Hash, LSM tree, R tree, Bitmap
+- Relational Database에서는 주로 `B+ tree(밸런스 트리)` 사용
+	- 데이터가 정렬된 상태로 저장된다
+	- 검색, 삽입, 삭제 연산을 로그 시간에 수행 가능
+	- 트리 구조에서 leaf node 간 연결되기 때문에 범위 검색 효율적
+- 인덱스를 추가하면
+	- 쓰기 시점에 B+ tree 구조의 정렬된 상태의 데이터가 생성된다
+	- 이미 인덱스로 지정된 컬럼에 대해 정렬된 상태를 가지고 있기 때문에 
+		- 조회 시점에 전체 데이터를 정렬하고 필터링할 필요가 없다
+		- 따라서 조회 쿼리를 빠르게 수행할 수 있다
+
+**인덱스 생성**
+- 게시판 별로 최신순으로 정렬
+- `board_id`: 오름차순, `article_id`: 내림차순 
+- 인덱스는 순서가 중요
+```sql
+create index idx_board_id_article_id on article(board_id asc, article_id desc);
+```
+
+**인덱스를 위와 같이 생성한 이유**
+- 대용량 트래픽을 고려해서 설계 중
+- 동시 요청시에 생성 시간은 충돌 될 수 있다
+	- 따라서 created_at을 정렬조건으로 사용한다면, 시간에 따라 순서가 명확하지 않을 수 있다
+	- 목록 조회에 대한 결과값이 달라질 수 있다
+	- 데이터의 중복 또는 누락의 가능성
+- 밀리/나노초 단위의 더욱 정밀한 데이터 타입을 가진다고 해도,
+	- 확률은 줄어들지만 시간 충돌 문제는 여전하고, 저장공간만 더 필요해질 수 있다
+- article_id는 분산시스템에서 고유한 오름차순을 위해 고안된 **알고리즘(snow flake)** 을 사용한다
+	- <u>충돌 확률이 완전히 0은 아니지만, 생성 시간(created_at)보다 충돌 가능성이 현저히 적다</u>
+	- 오름차순으로 생성 시간에 의해 정렬된 상태를 가지고 있다
+	- 따라서 article_id를 최신 순(내림차순)으로 정렬할 수 있다
+
+**수정된 SQL Query**
+```sql
+select * from article 
+where board_id = {board_id}
+order by article_id desc
+limit {limit} offset {offset};
+```
+- 0.01 초 걸림
+- query plan 분석시 
+	- `key = idx_board_id_article_id` 로 생성한 인덱스가 쿼리에 사용된 것을 확인할 수 있다
+- 이것으로 끝인걸까? 아래 쿼리를 실행해보자
+
+
+```sql
+select * from article 
+where board_id = 1
+order by article_id desc
+limit 30 offset 1499970;
+```
+- 2.79초 걸림(다시 느려짐)
+- qurey plan 확인시 인덱스는 그대로 사용중
+	- `offset`만 다를뿐
+- 동작 순서
+	- 1. Secondary Index에서 article_id(기본키)를 찾는다
+	- 2. Clustered Index에서 article 데이터를 찾는다 
+	- 3. offset 1499970을 만날 때까지 반복하며 skip 한다.
+	- 4. limit 30개를 추출한다.
+
+**인덱스에 대한 이해**
+- MySQL 기본 스토리지 엔진
+	- InnoDB
+	- 스토리지 엔진(Storage Engine): DB에서 데이터 저장 및 관리 장치
+- 그리고, InnoDB는 테이블마다 `Clustered Index`를 자동 생성한다
+	- Primay key를 기준으로 정렬된 Clustered Index 
+	- `Clustered Index` 는 leaf node의 값으로 **행 데이터(row data)** 를 가진다
+		- 이는 곧 추가 탐색이 필요 x
+- 반면 신규 생성한 인덱스는 `Non-Clustered Index`, `Secondary Index`(보조 인덱스)라고 부른다
+	- `Secondary Index`는 leaf node에 데이터에 접근하기 위한 **포인터**를 가진다
+		- Clustered Index의 데이터에 접근하기 위한 포인터
+		- 즉, Primary key로 볼 수 있다.
+
+|     | `Clustered Index`       | `Non-Clustered Index`        |
+| --- | ----------------------- | ---------------------------- |
+| 생성  | 테이블의 primary key로 자동 생성 | 테이블의 컬럼으로 직접 생성              |
+| 데이터 | 행 데이터(row data)         | 데이터에 접근하기 위한 포인터, 인덱스 컬럼 데이터 |
+| 개수  | 테이블 당 1개만               | 테이블 당 여러 개 생성가능              |
+데이터는 `Clustered Index`가 가지고 있기 때문에 `Non-Clustered Index`를 타면 포인터를 가지고 다시 `Clustered Index`를 타게 된다 (offset 수 만큼 데이터에 접근하는 것도 비효율적이네)
+
+
+**SQL Query (Covering Index)**
+```sql
+select board_id, article_id from article 
+where board_id = 1
+order by article_id desc
+limit 30 offset 1499970;
+```
+- 0.2초 수행
+- query plan
+	- 동일하게 인덱스 사용
+	- `Extra = Using Index` 가 추가되었는데, 인덱스만 사용해서 데이터를 조회했음을 의미
+	- 이렇게 인덱스의 데이터만으로 조회를 수행할 수 있는 인덱스를 `Covering Index`라고 한다
+
+**Covering Index**
+- 인덱스만으로 쿼리의 모든 데이터를 처리할 수 있는 인덱스
+- 데이터(Clustered Index)를 읽지 않고, 인덱스(Secondary Index) 포함된 정보만으로 쿼리 가능한 인덱스
+
+**수정된 SQL Query**
+```sql
+select * from (
+	select board_id, article_id from article 
+	where board_id = 1
+	order by article_id desc
+	limit 30 offset 1499970
+) t left joint article on t.article_id = article.article_id;
+```
+- 0.15초 만에 수행
+
+
+<font color="#ff0000">하지만 뒷 페이지로 갈 수록 속도가 또 느려짐</font>
+```sql
+select * from (
+	select board_id, article_id from article 
+	where board_id = 1
+	order by article_id desc
+	limit 30 offset 8999970
+) t left joint article on t.article_id = article.article_id;
+```
+- article_id를 추출하기 위해 Seconday Index만 탄다고 하더라도 offset만큼 Index Scan이 필요하다
+- <u> 고로 데이터에 접근하지 않더라도 offset이 늘어날 수록 느려질 수 밖에 없는 것이다</u>
+- 방안1. 데이터를 한번 더 분리한다.
+	- 예를 들면, 게시글을 1년 단위로 테이블 분리 
+		- 개별 테이블의 크기를 작게 만듦
+		- 각 단위에 대해 전체 게시글 수를 관리함
+	- offset을 인덱스 페이지 단위 skip 하는 것이 아니라, 1년동안 작성된 게시글 수 단위로 즉시 skip 한다
+		- 조회하고자 하는 offset이 1년동안 작성된 게시글 수 보다 크다면,
+			- 해당 개수만큼 즉시 skip
+			- 더 큰 단위로 skip을 수행하게 되는 것
+		- 애플리케이션에서 이처럼 처리하기 위한 코드 작성 필요
+- 방안2. 정책으로 풀어내기
+	- 30만번 페이지를 조회하는게 정상적인 사용자 일까?
+	- 데이터 수집을 목적으로 하는 어뷰저일 수도 있다.
+	- 정책으로 게시글 목록 조회는 10,000번 페이지까지 제한한다
+	- 시간 범위 또는 텍스트 검색 기능을 제공할 수도 있다
+		- 더 작은 데이터 집합 내에서 페이징을 수행한다
+- 방안3. 무한 스크롤 방식
+	- 뒷 페이지를 가더라도 **균등한** 조회 속도를 가진다
+
+---
+
+게시글 건수 조회시 **1,200만건**이나 되면 <font color="#ff0000">1초</font>가 걸림 
+- 그런데 이러한 사용처에서 모든 게시글 수가 필요할지는 의문이다
+	- 우리는 전체 게시글 수가 필요한 것이 아니다 
+	- 이동 가능한 페이지 번호 활성화에 필요한 것이다. // 건수 노출하지 않는 경우
+- 페이지 당 30개의 게시글 노출, 10 페이지씩 이동 가능한 상황에서 
+	- 사용자가 1 ~ 10번 페이지에 있을 경우 301개의 게시글 유무만 알면 된다
+		- 301개면 다음 버튼 활성화, 301개 미만이면 개수만큼 페이지 버튼 활성화
+	- 사용자가 11 ~ 20번 페이지에 있을 경우 601개의 게시글 유무만 알면 된다
+		- 601개면 다음 버튼 활성화, 601개 미만이면 개수만큼 페이지 버튼 활성화 
+- 이동 가능한 페이지 번호의 활성화를 위해 모든 게시글의 개수를 알 필요가 없다
+	- <u>사용자의 현재 페이지 기준으로, 게시글 개수의 일부만 확인하면 된다 !</u>
+
+> 공식 = (((n - 1) / k) + 1) * m * k + 1
+- `n` : 현재 페이지
+- `m` : 페이지당 게시글 개수
+- `k` : 이동 가능한 페이지 개수
+- `((n - 1) / k)`의 나머지는 버림
+
+
+```sql
+select count(*)
+from (
+  select article_id from article where board_id = {board_id} limit {limit}
+) t;
+```
+count query에서는 limit이 동작하지 않고 전체 개수를 반환하므로 
+- sub query에서 `Covering Index`로 limit 만큼 조회하고 count 하는 방식
+
+사용자가 10,001 ~ 10,010번 페이지에 있다고 가정하면 300,301(limit)개까지만 카운트 해볼 수 있다
+- 실행시 `0.07초` 걸림 (전체 카운트는 거의 <font color="#ff0000">1</font>초)
+
+---
+### 페이지 번호 방식
+Native 쿼리로 ArticleRepository에 조회 쿼리 작성
+
+---
+### 무한 스크롤 방식
+- 사용자가 게시글을 <font color="#ff0000">삭제/추가</font>할 경우 
+	- 페이지 번호 방식을 사용하면 데이터가 <font color="#ff0000">중복/누락</font> 될 수 있다 (사용성 문제가 생김)
+	- 이를 해결하기 위해서는 무한 스크롤 사용
+- 무한 스크롤에서는 **기준점 포인터**를 사용
+	- 1. 첫 페이지를 조회한 사용자는 마지막 조회한 데이터의 기준점을 알고 있다
+	- 2. 다음 페이지를 불러 올 때 마지막 조회한 데이터의 기준점을 파라미터로 전달한다면?
+	- 3. 데이터베이스에서는 기준점으로 쿼리를 수행한다
+		- 이때 기준점에 생성된 인덱스르 통해 로그 시간에 접근할 수 있다
+		- 즉, offset만큼 scan 하는 과정이 필요하지 않다. limit 개수를 즉시 추출할 수 있다
+		- 따라서, 아무리 뒷 페이지로 가더라도, 균등한 속도를 보장할 수 있다
+- <u>무한 스크롤에서는 몇 페이지까지 있는지 알 필요가 없으므로, 게시글 개수도 필요 없다</u>
+
+```sql
+select * from article
+where board_id = {board_id} and article_id < {last_article_id}
+order by article_id desc limit 30;
+```
+- query plan
+	- `key = idx_board_id_article_id` 인덱스가 사용됨 (article_id 기준 내림차순)
+	- 마지막 페이지 번호를 기준으로 조회해도 속도 빠름
