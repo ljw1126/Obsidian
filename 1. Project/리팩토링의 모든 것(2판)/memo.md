@@ -37,3 +37,27 @@ getter를 사용하는 부분
 
 
 
+---
+
+**Intellij에서 Jest 사용시 import 적용되지 않아 인식되지 않는 경우** 
+https://stackoverflow.com/questions/52186833/unresolved-function-or-method-xxx-from-jest-23-5-0-in-webstorm-2018-2-3
+
+**Jest는 기본적으로 CommonJS 방식을 사용하고 있음**
+- `module.exports = { .. }` 
+- `const thing = require('..')`
+- ESM 모듈 방식을 사용하면 `import`, `export` 키워드를 사용할 수 있다
+	- **비동기적으로 실행**됨 (파일을 미리 파싱하고 최적화 가능).
+	- 브라우저와 Node.js 둘 다 지원 가능
+	- Jest 에서는 기본적으로 지원되지 않아 따로 설정이 필요하다
+
+✅ Jest를 ESM 모드에서 실행 방법
+1. `package.json`에 `"type": "module"` 추가
+2. Jest 설정 파일(`jest.config.js`)에서 ESM 지원 추가
+
+```javascript
+export default { 
+	transform: {}, 
+	extensionsToTreatAsEsm: [".js"], 
+};
+```
+3. 파일 확장자 `.mjs` 사용 (또는 `import` 사용 시 `.js`도 가능)

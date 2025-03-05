@@ -1,6 +1,10 @@
 {
   "recentFiles": [
     {
+      "basename": "memo",
+      "path": "1. Project/리팩토링의 모든 것(2판)/memo.md"
+    },
+    {
       "basename": "긱 뉴스",
       "path": "3. Resource/세미나 & 기술 블로그/긱 뉴스.md"
     },
@@ -43,10 +47,6 @@
     {
       "basename": "Chapter4 - 테스트 구축하기",
       "path": "1. Project/리팩토링의 모든 것(2판)/Chapter4 - 테스트 구축하기.md"
-    },
-    {
-      "basename": "memo",
-      "path": "1. Project/리팩토링의 모든 것(2판)/memo.md"
     },
     {
       "basename": "Chapter3 - 코드에서 나는 악취",
