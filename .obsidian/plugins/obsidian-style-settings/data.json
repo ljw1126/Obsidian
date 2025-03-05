@@ -33,5 +33,8 @@
   "anuppuccin-custom-background@@anp-custom-bg-card-fg-opacity-dark": 0.4,
   "anuppuccin-theme-settings@@anuppuccin-theme-dark": "ctp-mocha",
   "anuppuccin-theme-settings@@anp-table-toggle": true,
-  "anuppuccin-custom-background@@anp-background-image-dark": "url(\"https://images.pexels.com/photos/301494/pexels-photo-301494.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2\")"
+  "anuppuccin-custom-background@@anp-background-image-dark": "url(\"https://images.pexels.com/photos/301494/pexels-photo-301494.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2\")",
+  "anuppuccin-custom-background@@anp-custom-bg-blur-light": 2,
+  "anuppuccin-custom-background@@anp-custom-bg-brightness-light": 1,
+  "anuppuccin-custom-background@@anp-custom-bg-card-fg-opacity-light": 0.4
 }
