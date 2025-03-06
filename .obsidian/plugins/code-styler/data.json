@@ -383,7 +383,7 @@
         },
         "highlights": {
           "activeCodeblockLineColour": "--color-base-30",
-          "activeEditorLineColour": "--color-base-20",
+          "activeEditorLineColour": "#C3C3C4",
           "defaultColour": "--text-highlight-bg",
           "alternativeHighlights": {}
         },
