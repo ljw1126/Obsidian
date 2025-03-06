@@ -20,8 +20,21 @@
               "icon": "lucide-file",
               "title": "메모"
             }
+          },
+          {
+            "id": "3606a8586858070e",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.8.7"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.8.7"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -171,13 +184,13 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "obsidian-excalidraw-plugin:New drawing": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "obsidian-excalidraw-plugin:Create new drawing": false,
       "table-editor-obsidian:Advanced Tables Toolbar": false,
       "file-cleaner-redux:Clean files": false,
       "obsidian-kanban:Create new board": false,
@@ -185,7 +198,7 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "e0ee6566acb7af10",
+  "active": "3606a8586858070e",
   "lastOpenFiles": [
     "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계/메모.md",
     "3. Resource/자기계발/Java Spring 테스트를 추가하고 싶은 개발자들의 오답노트/메모.md",
