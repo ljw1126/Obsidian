@@ -60,4 +60,23 @@ export default {
 	extensionsToTreatAsEsm: [".js"], 
 };
 ```
-3. 파일 확장자 `.mjs` 사용 (또는 `import` 사용 시 `.js`도 가능)
+1. 파일 확장자 `.mjs` 사용 (또는 `import` 사용 시 `.js`도 가능)
+
+--- 
+
+**jacoco, sonar 설정**
+
+1. jacoco, sonar 플러그인 추가 및 설정 (`build.gradle` 참고)
+
+2. SonarCloud에 프로젝트 연결 후 토큰 생성
+- User Profile > MyAccount > Security 탭이동하여 SONAR_TOKEN 생성
+- 토큰 생성 후 확인이 안되므로 잘 저장해두기 (맥북 깃허브 디렉토리에 list.txt에 기록)
+
+3. github action 추가
+- `.github/workflows/pr.yml` 생성 후 jacoco와 sonar 실행하면 자동으로 pr decoration 생성해준다
+
+4. SONAR_TOKEN 깃허브 등록
+- 프로젝트 저장소 > Settings > Secrets and variables > Repository secrets에 SONAR_TOKEN추가
+- 그리고 pull request 생성해서 확인한다
+
+그 외, README.md에 소나큐브 뱃지를 추가할 수 있다. 그리고 Quality Gateway 커스텀 설정 가능하니 필요한 경우 조정한다.
