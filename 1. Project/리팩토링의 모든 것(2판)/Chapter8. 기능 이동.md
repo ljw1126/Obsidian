@@ -202,3 +202,259 @@ public class AccountType {
 }
 
 ```
+
+
+
+
+### 8.6 문장 슬라이드 하기
+
+서비스 로직에 가깝다고 생각함
+```java
+public class BillingService {  
+  
+  private final PricingPlanRepository pricingPlanRepository;  
+  private final OrderRepository orderRepository;  
+  
+  public BillingService(  
+      PricingPlanRepository pricingPlanRepository, OrderRepository orderRepository) {  
+    this.pricingPlanRepository = pricingPlanRepository;  
+    this.orderRepository = orderRepository;  
+  }  
+  
+  public double processOrder(Long orderId) {  
+    PricingPlan pricingPlan = pricingPlanRepository.findPricingPlan();  
+    Order order = orderRepository.findById(orderId);  
+  
+    double charge = 0.0;  
+    int baseCharge = pricingPlan.getBase();  
+    int chargePerUnit = pricingPlan.getUnitCharge();  
+    int units = order.getUnits();  
+    double discount = 0;  
+    charge = baseCharge + units * chargePerUnit;  
+    int discountableUnits = Math.max(units - pricingPlan.getDiscountThreshold(), 0);  
+    discount = discountableUnits * pricingPlan.getDiscountFactor();  
+    if (order.isRepeatOrder()) discount += 20;  
+    charge = charge - discount;  
+    return charge;  
+  }  
+}
+```
+
+
+그래서 Repository는 단일 인터페이스만 가지므로 아래와 가팅 람다로 처리하여 단위 테스트 함
+```java
+class BillingServiceTest {  
+  
+  @Test  
+  void processOrderTest() {  
+    PricingPlan pricingPlan = new PricingPlan(100, 10, 5, 0.1);  
+    Order order = new Order(10, false);  
+    BillingService billingService = new BillingService(() -> pricingPlan, (orderId) -> order);  
+  
+    double actual = billingService.processOrder(9999L);  
+  
+    assertThat(actual).isEqualTo(199.5);  
+  }  
+}
+```
+
+> 명령 - 질의 분리 원칙을 지켜가며 코딩 ?
+
+
+```java
+
+public double processOrder(Long orderId) {  
+  // 가격 정책과 주문 정보를 가져온다  
+  PricingPlan pricingPlan = pricingPlanRepository.findPricingPlan();  
+  Order order = orderRepository.findById(orderId);  
+  
+  // 기본 청구 금액을 계산한다  
+  int baseCharge = pricingPlan.getBase();  
+  int chargePerUnit = pricingPlan.getUnitCharge();  
+  int units = order.getUnits();  
+  double charge = baseCharge + units * chargePerUnit;  
+  
+  // 할인 금액을 계산한다  
+  int discountableUnits = Math.max(units - pricingPlan.getDiscountThreshold(), 0);  
+  double discount = discountableUnits * pricingPlan.getDiscountFactor();  
+  if (order.isRepeatOrder()) {  
+    discount += 20;  
+  }  
+  
+  return charge - discount;  
+}
+
+```
+
+문장 교환하기(Swap Statement)라는 이름이 거의 똑같은 리팩터링도 있다.
+
+### 8.7 반복문 쪼개기
+
+반복문 쪼개기의 묘미는 그 자체가 아닌, 다음 단계로 가는 디딤돌 역할에 있다.
+
+```java
+public class YoungestTotalSalary {  
+  private final List<Person> peoples;  
+  
+  public YoungestTotalSalary(List<Person> peoples) {  
+    this.peoples = new ArrayList<>(peoples);  
+  }  
+  
+  public String getYoungestTotalSalary() {  
+    int youngest = peoples.isEmpty() ? Integer.MAX_VALUE : peoples.get(0).getAge();  
+    long totalSalary = 0;  
+    for (Person person : peoples) {  
+      if (person.getAge() < youngest) youngest = person.getAge();  
+      totalSalary += person.getSalary();  
+    }  
+  
+    return String.format("최연소: %s, 총 급여: %s", youngest, totalSalary);  
+  }  
+}
+```
+
+
+```java
+class YoungestTotalSalaryTest {  
+  
+  @Test  
+  void getYoungestTotalSalaryTest() {  
+    List<Person> people =  
+        List.of(new Person(25, 50000), new Person(30, 60000), new Person(22, 70000));  
+    YoungestTotalSalary youngestTotalSalary = new YoungestTotalSalary(people);  
+  
+    String actual = youngestTotalSalary.getYoungestTotalSalary();  
+  
+    Assertions.assertThat(actual).isEqualTo("최연소: 22, 총 급여: 180000");  
+  }  
+}
+```
+
+첫번째로 반복문을 복사하고, 두번째로 반복문 복제로 인해 잘못된 결과를 초래할 수 있는 중복을 제거, 문장 슬라이드
+```java
+public class YoungestTotalSalary {  
+  private final List<Person> peoples;  
+  
+  public YoungestTotalSalary(List<Person> peoples) {  
+    this.peoples = new ArrayList<>(peoples);  
+  }  
+  
+  public String getYoungestTotalSalary() {  
+    long totalSalary = 0;  
+    for (Person person : peoples) {  
+      totalSalary += person.getSalary();  
+    }  
+  
+    int youngest = peoples.isEmpty() ? Integer.MAX_VALUE : peoples.get(0).getAge();  
+    for (Person person : peoples) {  
+      if (person.getAge() < youngest) youngest = person.getAge();  
+    }  
+  
+    return String.format("최연소: %s, 총 급여: %s", youngest, totalSalary);  
+  }  
+}
+```
+
+함수 추출하기와 알고리즘 교체하기 적용
+```java
+public class YoungestTotalSalary {  
+  private final List<Person> peoples;  
+  
+  public YoungestTotalSalary(List<Person> peoples) {  
+    this.peoples = new ArrayList<>(peoples);  
+  }  
+  
+  public String getYoungestTotalSalary() {  
+    return String.format("최연소: %s, 총 급여: %s", youngest(), totalSalary());  
+  }  
+  
+  private int youngest() {  
+    return peoples.stream()  
+        .mapToInt(Person::getAge)  
+        .min()  
+        .orElseThrow(() -> new IllegalArgumentException("No people available"));  
+  }  
+  
+  private long totalSalary() {  
+    return peoples.stream().mapToInt(Person::getSalary).sum();  
+  }  
+}
+```
+
+
+### 8.8 반복문을 파이프라인으로 바꾸기 
+
+```java
+public class IndiaSearch {  
+  private IndiaSearch() {}  
+  
+  public static List<SearchResult> acquireData(String input) {  
+    String[] lines = input.split("\n");  
+    boolean firstLine = true;  
+    List<SearchResult> result = new ArrayList<>();  
+    for (String line : lines) {  
+      if (firstLine) {  
+        firstLine = false;  
+        continue;  
+      }  
+  
+      if (line.trim().equals("")) continue;  
+  
+      String[] record = line.split(",");  
+      if (record[1].trim().equals("India")) {  
+        result.add(new SearchResult(record[0].trim(), record[2].trim()));  
+      }  
+    }  
+  
+    return result;  
+  }  
+}
+
+```
+
+
+```java
+class IndiaSearchTest {  
+  
+  @Test  
+  void acquireDataTest() {  
+    String input =  
+        """  
+office, country, telephone  
+Chicago, USA, +1 312 373 1000  
+Beijing, China, +86 4008 900 505  
+Bangalore, India, +91 80 4064 9570  
+Porto Alegre, Brazil, +55 31 3079 3550  
+Chennai, India, +91 44 660 44766  
+""";  
+  
+    List<SearchResult> actual = IndiaSearch.acquireData(input);  
+  
+    assertThat(actual)  
+        .hasSize(2)  
+        .containsExactly(  
+            new SearchResult("Bangalore", "+91 80 4064 9570"),  
+            new SearchResult("Chennai", "+91 44 660 44766"));  
+  }  
+}
+```
+
+흐름을 지켜가면서 파이프라인으로 리팩터링을 하니 재미있음
+```java
+public class IndiaSearch {  
+  private IndiaSearch() {}  
+  
+  public static List<SearchResult> acquireData(String input) {  
+    return Arrays.stream(input.split("\n"))  
+        .skip(1)  
+        .filter(line -> !line.trim().isEmpty())  
+        .map(line -> line.split(","))  
+        .filter(record -> record[1].trim().equals("India"))  
+        .map(record -> new SearchResult(record[0].trim(), record[2].trim()))  
+        .toList();  
+  }  
+}
+```
+
+반복문을 파이프라인으로 대체하는 예를 더 보고 싶은 경우 
+- 저자 블로그의 [Refactoring with Loops and Collection Pipelines](https://martinfowler.com/articles/refactoring-pipelines.html) 참고
