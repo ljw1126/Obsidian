@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계/메모.md",
+                "file": "3. Resource/자기계발/서버개발자 과제전형 완벽가이드/memo.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "메모"
+              "title": "memo"
             }
           }
         ]
@@ -78,7 +78,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "270cf8701be24470",
@@ -187,6 +188,9 @@
   "active": "3606a8586858070e",
   "lastOpenFiles": [
     "3. Resource/자기계발/스프링부트로 직접 만들면서 배우는 대규모 시스템 설계/메모.md",
+    "3. Resource/자기계발/서버개발자 과제전형 완벽가이드/memo.md",
+    "3. Resource/세미나 & 기술 블로그/좋은 강의.md",
+    "3. Resource/자기계발/서버개발자 과제전형 완벽가이드",
     "3. Resource/자기계발/Java Spring 테스트를 추가하고 싶은 개발자들의 오답노트/메모.md",
     "3. Resource/자기계발/Practical Testing 실용적인 테스트 가이드/메모.md",
     "3. Resource/자기계발/Java Spring 테스트를 추가하고 싶은 개발자들의 오답노드/Untitled",
@@ -194,7 +198,6 @@
     "3. Resource/자기계발/Practical Testing 실용적인 테스트 가이드/인프런 - Practical Testing",
     "3. Resource/자기계발/Practical Testing 실용적인 테스트 가이드",
     "1. Project/이직 준비/2월 8일 멘토링.md",
-    "3. Resource/세미나 & 기술 블로그/좋은 강의.md",
     "3. Resource/세미나 & 기술 블로그/긱 뉴스.md",
     "1. Project/리팩토링의 모든 것(2판)/Chapter7. 캡슐화.md",
     "3. Resource/자기계발/리팩터링2판 - 엘리/기록.md",
