@@ -60,7 +60,10 @@ export default {
 	extensionsToTreatAsEsm: [".js"], 
 };
 ```
+<<<<<<< Updated upstream
 3. 파일 확장자 `.mjs` 사용 (또는 `import` 사용 시 `.js`도 가능)
+=======
+1. 파일 확장자 `.mjs` 사용 (또는 `import` 사용 시 `.js`도 가능)
 
 --- 
 
@@ -106,3 +109,4 @@ SONAR_TOKEN={저장소 소나토큰} ./gradlew clean test jacocoTestReport sonar
 - 원이: **SonarCloud 자동 분석**과 **깃허브 액션의 CI 분석** **요청**이 충돌
     - 참고로 연결된 저장소에 push가 발생되면 SonarCloud에서 자동으로 분석 실행
 - 해결: SonarCloud 자동 분석을 끔 (Administration - Analysis Method 메뉴 이동해서 disable 처리) 
+>>>>>>> Stashed changes
