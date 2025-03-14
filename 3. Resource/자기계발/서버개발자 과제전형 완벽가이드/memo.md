@@ -110,4 +110,225 @@ dependencies {
 
 ### 외부 API 연동 - OpenAPI & RestClient
 - 네이버 개발자 센터 : https://developers.naver.com/main/
-- 카카오 개발자 센터 : 
+	- [도서 검색 API](https://developers.naver.com/docs/serviceapi/search/book/book.md#%EC%B1%85)
+
+
+> [!note]
+> RestTemplate - RestClient - FeignClient
+
+API 호출에 앞서 Run/Debug Configuration에서 Environment variable에 client id와 secret key 를 추가하면 환경 변수가 인식된다
+
+최대한 빠르게 작성가능한 `FeignClient` 사용
+- SpringCloud: [https://spring.io/projects/spring-cloud](https://spring.io/projects/spring-cloud)
+- FeignClient: [https://docs.spring.io/spring-cloud-openfeign/reference/spring-cloud-openfeign.html](https://spring.io/projects/spring-cloud)
+- [우아한 feign 적용기](https://techblog.woowahan.com/2630/)
+
+FeignClient는 HTTP API를 호출할 수 있는 선언적 웹 서비스 클라이언트다. API 호출시 필요한 복잡한 코드를 최소화하고 마치 로컬 메서드 호출하든 간편함을 제공한다.
+
+```java
+
+@FeignClient("stores")
+public interface StoreClient {
+	@RequestMapping(method = RequestMethod.GET, value = "/stores")
+	List<Store> getStores();
+}
+
+// 커스텀 configuration 클래스 설정 가능 (없으면 default 설정 적용됨)
+// 인터셉터(헤더에 특정 값 추가), 인코더, 디코더 등을 추가 가능
+@FeignClient(name = "stores", configuration = FooConfiguration.class)
+public interface StoreClient {
+	// ..
+}
+```
+
+**사용방법**
+```java
+@EnableFeignClients
+
+// 해당 패키지 기준 스캔
+@EnableFeignClients(basePackages = "com.example.clients")
+
+// 정의한 클라이언트 명시적으로 작성
+@EnableFeignClients(clients = InventoryServiceFeignClient.class) 
+```
+
+의존성 추가 
+
+```text
+// external/naver-client/build.gradle
+jar.enabled = false  
+  
+dependencies {  
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'  
+}
+
+
+// 루트/build.gradle
+subprojects {  
+    //..
+    
+    ext {  
+        set('springCloudVersion', "2024.0.0")  
+    }  
+    dependencyManagement {  
+        imports {  
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"  
+        }  
+    }
+    
+	//..
+```
+
+
+
+```java
+@FeignClient(name = "naverClient", url = "${external.naver.url}", configuration = NaverClientConfiguration.class)  
+public interface NaverClient {  
+    @GetMapping("/v1/search/book.json")  
+    String search(@RequestParam("query") String query,  
+                  @RequestParam("start") int start,  
+                  @RequestParam("display") int display);  
+}
+
+
+public class NaverClientConfiguration {  
+  
+    @Bean  
+    public RequestInterceptor requestInterceptor(  
+            @Value("${external.naver.headers.client-id}") String clientId,  
+            @Value("${external.naver.headers.client-secret}") String clientSecret  
+    ) {  
+        return requestTemplate -> requestTemplate.header("X-Naver-Client-Id", clientId)  
+                .header("X-Naver-Client-Secret", clientSecret);  
+    }}
+}
+
+
+@SpringBootTest(classes = NaverClientTest.TestConfig.class)  
+@ActiveProfiles("test")  
+class NaverClientTest {  
+  
+    @EnableAutoConfiguration  
+    @EnableFeignClients(clients = NaverClient.class)  
+    static class TestConfig {}  
+  
+    @Autowired  
+    NaverClient naverClient;  
+  
+    @Test  
+    void callNaver() {  
+        String http = naverClient.search("HTTP", 1, 10);  
+        System.out.println(http);  
+  
+        assertThat(http.isEmpty()).isFalse();  
+    }}
+}
+```
+
+
+JUnit5가 아닌 groovy 언어 기반 테스트 **spock**를 사용해본다
+- 강력한 mocking 기능도 지원한다
+- 일반적으로 `Specification` 상속받아 작성
+- Spock: [https://spockframework.org](https://spockframework.org/)
+- Spock Repository: [https://mvnrepository.com/artifact/org.spockframework](https://spockframework.org/)
+
+build.gradle 
+```text
+plugins {  
+    id 'org.springframework.boot' version '3.4.3'  
+    id 'io.spring.dependency-management' version '1.1.7'  
+}  
+  
+subprojects {  
+    apply plugin: 'java'  
+    apply plugin: 'groovy'   // 여기
+    apply plugin: 'org.springframework.boot'  
+    apply plugin: 'io.spring.dependency-management'  
+  
+    group = 'com.library'  
+    version = '0.0.1-SNAPSHOT'  
+  
+    dependencies {  
+        //.. 두 개 추가
+        testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'  
+        testImplementation 'org.spockframework:spock-spring:2.4-M4-groovy-4.0'  
+    }  
+  
+}
+```
+
+
+**NaverErrorDecoder 생성**
+- 테스트 작성시 관심사가 아닌건 Mocking 처리한다
+- reponse builder 호출시 request가 필요한데 관심사가 아니니 적당히 stub처리
+
+```java
+package com.library.feign  
+  
+import com.fasterxml.jackson.databind.ObjectMapper  
+import feign.Request  
+import feign.Response  
+import spock.lang.Specification  
+  
+class NaverErrorDecoderTest extends Specification {  
+    ObjectMapper objectMapper = Mock()  
+    NaverErrorDecoder errorDecoder = new NaverErrorDecoder(objectMapper);  
+  
+    def "에러 디코더에서 에러 발생시 RuntimeException 예외가 throw 된다" () {  
+        given:  
+        def responseBody = Mock(Response.Body)  
+        def inputStream = new ByteArrayInputStream()  
+        def response = Response.builder()  
+                                .status(400)  
+                                .request(Request.create(Request.HttpMethod.GET, "testurl", [:], null, null, null))  
+                                .body(responseBody)  
+                                .build()  
+  
+        1 * responseBody.asInputStream() >> inputStream  
+        1 * objectMapper.readValue(*_) >> new NaverErrorResponse("error!", "E01");  
+  
+        when:  
+        errorDecoder.decode(_ as String, response);  
+  
+        then:  
+        RuntimeException e = thrown()  
+        e.message == "error!"  
+    }  
+}
+```
+
+
+### 외부 API 연동 - 응답 객체 정의
+- `NaverBookResponse`, `Item` 객체 정의
+- API 네이밍이 이상한 경우 `@JsonProperty("pubdate")  private String pubDate;` 와 같이 맵핑처리 후 백엔드에서는 카멜 케이스로 다루도록 한다
+
+>[!info] 매번 environmenet variables 에 API 키값 넣기 번거로운 경우 
+>- Run/Debug Configuration 에서 좌측 하단 Edit configuration templates.. 선택
+>- gradle에서 환경 변수 추가 후 Modify options에서 run as test 추가
+>- configuration에 전체 삭제 후 다시 실행시 탬플릿 통해 환경 변수 추가됨
+
+>[!warning] NaverErrorResponse에 기본 생성자가 누락되어 있어서 추가
+>API 호출 에러 발생시 decoder() 실행하여 mapping 처리하는데, jackson은 기본 생성자가 필요
+
+
+### 공통 모듈 예외 처리 
+- `common` 모듈 정의 (공통 사용하기 위해)
+- `external/naver-client` 모듈에서 common 모듈 추가 후 `NaverErrorDecoder`에서 에러 정의
+
+### API 구현 
+- [spock](https://github.com/spockframework/spock)
+- [spock-example](https://github.com/spockframework/spock-example)
+- Controller, Service, Dto 에 대한 테스트 진행
+	- Controller, Service의 경우 Mocking 통해 verify 검증
+	- Dto는 생성 테스트
+
+
+>[!warning] 이슈 기록
+>search-api 실행시 external > naver-client 클래스를 찾지 못하는 이슈가 발생
+- 설정에 Build, Execution, Deployment > Gradle에서 gradle 설정되어 있는지 확인
+	- Gradle user home이 잘 설정되어 있는지도 확인
+- external > naver-client 모듈 패키지 경로에서 
+	- `com.library` > `com.library.naverclient`로 변경
+- 루트에 위치한 `gradle` 폴더에서 wrapper 빼고 다 삭제
+- 인텔리제이 캐시 클리어
+- gradle
