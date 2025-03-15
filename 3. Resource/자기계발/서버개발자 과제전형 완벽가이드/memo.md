@@ -329,6 +329,23 @@ class NaverErrorDecoderTest extends Specification {
 	- Gradle user home이 잘 설정되어 있는지도 확인
 - external > naver-client 모듈 패키지 경로에서 
 	- `com.library` > `com.library.naverclient`로 변경
-- 루트에 위치한 `gradle` 폴더에서 wrapper 빼고 다 삭제
-- 인텔리제이 캐시 클리어
-- gradle
+- 루트에 위치한 `gradle` 폴더에서 wrapper 빼고 다 삭제 (**캐시 디렉터리가 문제였을수도 있음**)
+- 인텔리제이 캐시 초기화
+
+SearchApiApplication을 아래와 같이 변경 
+
+```java
+@EnableFeignClients(clients = {NaverClient.class})   // naver-client의 의존성이 api를 사용하고 있어야 함
+@SpringBootApplication  
+public class SearchApiApplication {  
+  
+    public static void main(String[] args) {  
+       System.setProperty("spring.config.name", "application-naver-client"); // naver-client 모듈의 설정 사용 
+       SpringApplication.run(SearchApiApplication.class, args);  
+    }  
+}
+```
+- 추가로 naver-client에서 `api()` 메소드 찾지 못했었는데 root에 위치한 build.gradle에 `java-library` 플러그인 추가하니 해결
+- run configuration에서 profile = local 설정, NAVER 키 값 2개 환경변수 설정하고 실행
+
+
