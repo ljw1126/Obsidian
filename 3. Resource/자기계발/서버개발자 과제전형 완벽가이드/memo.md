@@ -349,3 +349,66 @@ public class SearchApiApplication {
 - run configuration에서 profile = local 설정, NAVER 키 값 2개 환경변수 설정하고 실행
 
 
+### 검색 통계 기능 구현 
+
+- JPA 사용시 매개변수에 Pageable이 있으면 알아서 limit, offset을 넣어주는게 인상 깊다 
+	- `Pageable`(인터페이스) > `PageRequest`(구현체)사용
+- GlobalExceptionHanlder 에서 request 요청 관련 에러 추가
+	- `NoResourceFoundException` : 잘못된 url 요청할 경우
+	- `MissingServletRequestParameterException` : 파라미터 누락할 경우
+	- `MethodArgumentTypeMismatchException`: 파라미터 타입이 다를 경우
+	- 그외 `BindException`은 Validation 에러 발생시 정보를 담고 있다
+		- SearchRequest DTO 참고
+```java
+@ExceptionHandler(NoResourceFoundException.class)  
+public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException e) {  
+    log.error("NoResourceFound Exception occurred. message={}, className={}", e.getMessage(), e.getClass().getName());  
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)  
+            .body(new ErrorResponse(ErrorType.NO_RESOURCE.getDescription(), ErrorType.NO_RESOURCE));  
+}  
+  
+@ExceptionHandler(MissingServletRequestParameterException.class)  
+public ResponseEntity<ErrorResponse> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {  
+    log.error("MissingServletRequestParameter Exception occurred. parameterName={}, message={}", e.getParameterName(), e.getMessage());  
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)  
+            .body(new ErrorResponse(ErrorType.INVALID_PARAMETER.getDescription(), ErrorType.INVALID_PARAMETER));  
+}  
+  
+@ExceptionHandler(MethodArgumentTypeMismatchException.class)  
+public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {  
+    log.error("MethodArgumentTypeMismatch Exception occurred. message={}", e.getMessage());  
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)  
+            .body(new ErrorResponse(ErrorType.INVALID_PARAMETER.getDescription(), ErrorType.INVALID_PARAMETER));  
+}
+```
+
+
+### 문서화 
+- springdoc: [https://springdoc.org/#how-can-i-configure-swagger-ui](https://springdoc.org/#how-can-i-configure-swagger-ui)
+- github(예시 코드): [https://github.com/springdoc/springdoc-openapi-demos](https://github.com/springdoc/springdoc-openapi-demos)
+- 구현완료 후 로컬환경 접속주소: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+>[!info] restdoc - 오픈 소스 플러그인 - swagger ui 사용하는 방법도 존재함
+
+> [!info] 공식 저장소에 예제가 있으니 학습 테스트나 참고하는게 좋은 습관인듯 함
+
+
+---
+>[!warning] spring boot 버전에 따라 openapi 의존성 버전도 다르다 [공식 링크](https://springdoc.org/#what-is-the-compatibility-matrix-of-springdoc-openapi-with-spring-boot)
+
+- 강의는 3.2.x 버전이라 2.5.0 openapi 사용해도 됨
+- 나의 경우 3.4.x버전이라 2.8.5 openapi 사용해서 동작함
+
+**Chat-GPT답변. 2.5.0 → 2.8.5 변경 후 정상 동작하는 이유**
+
+1. **Spring Boot 3.x 호환성 문제**
+    - `springdoc-openapi 2.5.0` 버전은 Spring Boot 3.1.x까지는 호환되지만, 3.4.x에서는 일부 변경된 API를 지원하지 않습니다.
+    - Spring Boot 3.2+에서는 Spring Framework 6.1+ API가 사용되며, `springdoc-openapi 2.8.5`에서 이에 맞게 수정되었습니다.
+2. **ControllerAdviceBean 관련 변경**
+    - `springdoc-openapi 2.5.0`에서는 `ControllerAdviceBean.<init>(Object)` 생성자를 사용하는데,  
+        Spring Framework 6.1에서는 해당 생성자가 변경되면서 **NoSuchMethodError**가 발생합니다.
+    - `2.8.5`에서는 최신 Spring Framework API 변경 사항이 반영되어 이 문제가 해결되었습니다.
+3. **OpenAPI 문서 엔드포인트(/v3/api-docs) 내부 구조 변경**
+    - `springdoc-openapi 2.5.0`에서는 `swagger-ui` 렌더링을 위해 일부 필드가 예상과 다르게 생성되었습니다.
+    - 3.4.x 환경에서 `springdoc-openapi 2.8.5`를 사용하면, Swagger UI가 `openapi: 3.x.y` 형식을 올바르게 인식합니다.
+---
