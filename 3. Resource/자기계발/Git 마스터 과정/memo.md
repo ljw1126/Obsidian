@@ -24,3 +24,11 @@ git reset --hard origin/master
 # A부터 B까지의 모든 커밋을 가져오기 
 git cherry-pick A^..B
 ```
+
+
+### merge
+>[!info] merge시 생성되는 orig 확장자 파일이 생성되지 않도록 비활성화
+
+```shell
+$ git config --global mergetool.keepBackup false
+```
