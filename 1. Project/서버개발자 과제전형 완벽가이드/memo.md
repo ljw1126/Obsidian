@@ -418,3 +418,81 @@ public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(M
 ### 서킷 브레이커
 - 카카오 애플리케이션 생성 ([링크](https://developers.kakao.com/docs/latest/ko/daum-search/dev-guide#search-book))
 - REST API 키만 있으면 됨
+
+
+>[!warning] gradle Task 'wrapper' not found in project 
+- kakao-client 서브 모듈을 만들고 Gradle 새로고침 실행시 발생
+- 루트 프로젝트의 하위 모듈에 포함되지 않고 자체적으로 kakao-client 모듈 sync가 이루어짐
+
+`.idea/gradle.xml`에 보면 아래와 같이 kakao-client 모듈이 포함되야 한다
+```xml
+
+ <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="17" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/common" />
+            <option value="$PROJECT_DIR$/external" />
+            <option value="$PROJECT_DIR$/external/naver-client" />
+            <option value="$PROJECT_DIR$/external/kakao-client" />
+            <option value="$PROJECT_DIR$/search-api" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+
+
+```
+
+
+근데 확인해보니 아래와 같이 `GradleProjectSettings`가 하나 더 생긴 상태에서 kakao-client가 포함되었다.  그래서 주석 제거하고 직접 위와 같이 수정 후 인텔리제이 재실행하니 정상적으로 인식되었다
+```xml
+<GradleProjectSettings>
+	<option name="externalProjectPath" value="$PROJECT_DIR$" />
+	<option name="gradleJvm" value="17" />
+	<option name="modules">
+	<set>
+		<option value="$PROJECT_DIR$" /> 
+		<option value="$PROJECT_DIR$/common" /> 
+		<option value="$PROJECT_DIR$/external" />
+		<option value="$PROJECT_DIR$/external/naver-client" />
+		<option value="$PROJECT_DIR$/search-api" />
+	</set>
+</option>
+</GradleProjectSettings> 
+<GradleProjectSettings> 
+<option name="externalProjectPath" value="$PROJECT_DIR$/external/kak ao-client" />  
+<option name="gradleJvm" value="17" />
+</GradleProjectSettings> 
+```
+
+IDE 자체적으로 이런 이슈가 자주 있어서 `.idea` 폴더를 삭제하고 다시 프로젝트를 실행하는 방식을 권장하는거 같다(https://ksabs.tistory.com/184)
+
+
+### Kakao API 추가 연동
+
+> 마찬가지로 run configuration에서 gradle template 설정 통해 `카카오 REST API 키` 등록
+
+- KakaoClient 인터페이스 생성 
+	- @FeignClient 선언
+- KakaoClientConfiguration 생성
+	- 아래 두 개의 Bean을 등록
+	- request 인터셉터 : 요청시 헤더 추가
+	- ErrorDecoder 구현체 등록
+- KakaoErrorDecoder
+	- ErrorDecoder 구현체 
+	- 카카오 @FeignClient 에러 발생시 여기서 처리됨
+- 테스트 생성
+	- KakaoErrorDecoderTest : 단위 테스트
+	- KakaoClientIntegrationTest : 통합 테스트 
+		- 실제 호출 테스트 후 @Ignore 처리
+	- KakaoBookRepository : search-api 모듈 위치, 단위 테스트
+	- 전체 테스트 실행 후 실패 테스트 수정
+	- 서킷 브레이크 테스트시
+		- application-search-api.yml에 설정을 바꾸고, NaverRepository에서 런타임 에러 던지도록 수정하여 postman으로 확인
+		- 처음 네이버를 호출하지만, 장애 상황 발생 후 서킷이 OPEN되고 바로 FallBack 호출하는 것을 로그 통해 확인가능하다
