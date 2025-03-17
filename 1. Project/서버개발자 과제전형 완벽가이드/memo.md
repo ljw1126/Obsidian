@@ -412,3 +412,9 @@ public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(M
     - `springdoc-openapi 2.5.0`에서는 `swagger-ui` 렌더링을 위해 일부 필드가 예상과 다르게 생성되었습니다.
     - 3.4.x 환경에서 `springdoc-openapi 2.8.5`를 사용하면, Swagger UI가 `openapi: 3.x.y` 형식을 올바르게 인식합니다.
 ---
+
+## 섹션5. 고가용성을 위한 설계 
+
+### 서킷 브레이커
+- 카카오 애플리케이션 생성 ([링크](https://developers.kakao.com/docs/latest/ko/daum-search/dev-guide#search-book))
+- REST API 키만 있으면 됨
