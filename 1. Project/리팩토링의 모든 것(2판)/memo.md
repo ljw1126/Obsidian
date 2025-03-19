@@ -106,3 +106,47 @@ SONAR_TOKEN={저장소 소나토큰} ./gradlew clean test jacocoTestReport sonar
 - 원이: **SonarCloud 자동 분석**과 **깃허브 액션의 CI 분석** **요청**이 충돌
     - 참고로 연결된 저장소에 push가 발생되면 SonarCloud에서 자동으로 분석 실행
 - 해결: SonarCloud 자동 분석을 끔 (Administration - Analysis Method 메뉴 이동해서 disable 처리) 
+
+
+>[!warning] @Testcontainers 사용시 docker daemon 이 실행중이 아닌 경우 테스트가 실패한다
+
+
+### Gradle
+
+`bootJar` vs `jar`
+- 각각 `*.jar(executeable)`,  `*-plain.jar` 생성된다
+	- `*.jar` : 독립 실행 가능
+	- `*-plain.jar` : 독립 실행 불가
+- `coupon-issue` 프로젝트에서
+	- 기본 `bootJar.enabled = false` , `jar.enabled = false` 설정
+	- `coupon-core` : 실행 가능하면 안됨, `jar.enabled = true`
+	- `coupon-api` : 실행 가능해야 하므로 `bootJar.enabled = true`
+	- `coupon-consumer`: 실행 가능해야 하므로 `bootJar.enabled = true`
+
+`coupon-api`와 `coupon-consumer` jar 파일 압축을 풀 경우
+```text
+- BOOT-INF
+	- classes
+	- lib
+	- classpath.idx
+	- layers.idx
+- META-INF
+	- services
+	- MANIFEST.MF
+- org
+```
+- `BOOT-INF/lib` : coupon-core-plain.jar 포함되어 있음
+
+
+`coupon-core` plain-jar 압축 풀 경우
+```text
+- com
+- META-INF
+	- MANIFEST.MF
+- sql
+- application-core.yml
+```
+- `MANIFEST.MF` : 파일만 존재, 스프링 부트와 연결할 뿐 단독 실행 못함
+
+
+**참고.** [기술 블로그](https://jacobhboy66.tistory.com/51) 
