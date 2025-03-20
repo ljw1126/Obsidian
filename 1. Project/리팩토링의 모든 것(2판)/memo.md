@@ -150,3 +150,12 @@ SONAR_TOKEN={저장소 소나토큰} ./gradlew clean test jacocoTestReport sonar
 
 
 **참고.** [기술 블로그](https://jacobhboy66.tistory.com/51) 
+
+### jacoco, sonar 
+- 멀티 모듈 프로젝트를 사용하면서 서브 모듈에 개별 jacocoReport가 생성되어 확인도 따로 하게 됨
+- `jacoco-report-aggregation` 플러그인 사용해서 한 군데에 모았으나 sonarcloud에서 **xml**을 인식하지 못하는 모습을 보인다
+
+참고. 
+[우아한 형제](https://techblog.woowahan.com/2661/)
+[기술 블로그](https://haril.dev/blog/2022/07/29/jacoco-aggregation-report)
+
