@@ -155,7 +155,100 @@ SONAR_TOKEN={저장소 소나토큰} ./gradlew clean test jacocoTestReport sonar
 - 멀티 모듈 프로젝트를 사용하면서 서브 모듈에 개별 jacocoReport가 생성되어 확인도 따로 하게 됨
 - `jacoco-report-aggregation` 플러그인 사용해서 한 군데에 모았으나 sonarcloud에서 **xml**을 인식하지 못하는 모습을 보인다
 
-참고. 
+**해결**
+- `code-coverage-report` 서브 모듈 만들어서 jacoco report를 통합하는 것은 맞았다 
+- `jar.enabled = true` 해야 함
+```gradle
+plugins {  
+    id 'jacoco-report-aggregation'  
+}  
+  
+repositories {  
+    mavenCentral()  
+}  
+  
+dependencies {  
+    jacocoAggregation(project(":coupon-core"))  
+    jacocoAggregation(project(":coupon-api"))  
+    jacocoAggregation(project(":coupon-consumer"))  
+}  
+  
+jar {  
+    enabled = true  
+}
+```
+
+**경로 이슈 해결**
+루트 디렉터리의 build.gradle에서 `*.xmlReportPaths` 경로 설정이 잘못되어서 인식되지 못했었다
+그래서 `${rootProject.projectDir}` 추가하여 sonar 실행시 올바르게 인식하도록 하였다
+```gradle
+sonar {  
+    properties {  
+        property("sonar.organization", "leejinwoo1126")  
+        property("sonar.host.url", "https://sonarcloud.io")  
+        property("sonar.projectKey", "ljw1126_coupon-issue")  
+        property("sonar.projectName", "coupon-issue")  
+        property("sonar.sources", "src/main/java")  
+        property("sonar.tests", "src/test/java")  
+        property("sonar.coverage.jacoco.xmlReportPaths", "${rootProject.projectDir}/code-coverage-report/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml")  
+        property("sonar.junit.reportPaths", "build/test-results/test")  
+    }  
+}  
+  
+tasks.register("codeCoverageReport") {  
+    dependsOn ":code-coverage-report:testCodeCoverageReport"  
+    doLast {  
+        println "Code coverage report executed from code-coverage-report module."  
+    }  
+}
+```
+
+
+```shell
+$ SONAR_TOKEN={} ./gradlew clean codeCoverageReport sonar
+```
+- codeCoverageReport 실행시 모듈별로 test , jacocoReport, 통합이 이뤄진다
+- 루트 모듈에서 `code-coverage-report` 모듈의 gradle 명령을 실행하는 형태
+- 그래서 sonar 실행시 이전 버전과 비교한 테스트 커버리지가 측정되어 sonarcloud에서 확인가능하다
+
+
+**버전 이슈 해결**
+아래와 같이 버전을 맞출 경우 sonar 실행시 gradle에 depreacted된 메서드로 인해 실행이 되지 않았다 (아래 sonar problem report)
+
+```
+- The org.gradle.api.plugins.Convention type has been deprecated.`:sonar` 
+- The org.gradle.api.plugins.JavaPluginConvention type has been deprecated.`:sonar`
+```
+
+- java 21
+- gradle 8.13 
+- org.sonarqube (LTS, 6.x)
+- jacoco 0.8.11 
+
+
+`*.xmlReportPaths` 경로가 잘못되었던거였기에 이전에 실행되던 버전으로 원복하니 정상 실행되었다.
+- java 17
+- gradle 8.10
+- org.sonarqube 5.0.0.4638
+- jacoco 0.8.8
+
+
+>[!warning] SonarCloud에 해당 프로젝트 자동 분석 설정이 켜져 있는 경우 충돌 발생 가능
+>- 인텔리제이에서 SonarCloud 연동한 경우 자동 분석이 진행되는 걸로 생각됨
+>- 그래서 sonar 실행시 충돌 발생
+>- 이 경우 SonarCloud의 프로젝트 자동 분석 설정을 off 한다
+
+
+**코드 커버리지 패키지 제외**
+- dto, configuration, exception 패키지가 포함되서 전체 커버리지가 낮아짐
+- 참고. [스택 오버 플로우](https://stackoverflow.com/questions/77321859/how-to-exclude-files-from-jacoco-report-with-gradle)
+
+
+
+**참고.** 
 [우아한 형제](https://techblog.woowahan.com/2661/)
 [기술 블로그](https://haril.dev/blog/2022/07/29/jacoco-aggregation-report)
-
+[Gradle - Compatibility Notes](https://docs.gradle.org/8.10/userguide/compatibility.html)
+[jacoco Releases info](https://github.com/jacoco/jacoco/releases)
+[gradle - org.sonarqube](https://plugins.gradle.org/plugin/org.sonarqube/5.0.0.4638)
+[sonarqube doce](https://docs.sonarsource.com/sonarqube-server/latest/analyzing-source-code/scanners/sonarscanner-for-gradle/)
