@@ -501,3 +501,228 @@ IDE 자체적으로 이런 이슈가 자주 있어서 `.idea` 폴더를 삭제�
 > - 테스트 대상이 되는 **Repository와 직접적으로 연관된 Service 또는 다른 빈이 함께 초기화되려 하고 있기 때문**
 > - KakaoClient 빈은 Mock 처리하여 해결
 
+
+### 이벤트 발행
+- 프로그램 내부에서 일어난 일련의 사건 
+	- ex. 검색, 주문 
+- 사용 이유: 
+	- `비동기 처리`: 이벤트를 사용하는 시스템 구성 요소들이 비동기로 통신할 수 있어 시스템 응답 향상시키고 자원을 효율적으로 사용 가능
+	- `확장성`이 있다: 결합도를 낮추고, 독립적으로 scale-out도 할 수 있게 함
+- 장점
+	- 응답성
+	- 장애 격리
+	- 복구 용이성: 장애 복구 유리
+- 단점
+	- 복잡성: 설계와 구현이 상대적으로 복잡
+	- 디버깅 어려움: 이벤트 흐름을 추적하는 것이 상대적으로 어려움
+	- 일관성 보장하기 상대적으로 어렵다
+
+>[!info] 
+>- 비동기 큐는 사용하지 않고 애플리케이션 레벨에서 우선 처리 (자원 한정)
+>- Redis를 바로 사용하지 않고 로컬 캐시부터 사용하듯이
+
+
+조회 동작에서 DB 저장하는 부분을 비동기로 격리시키려 한다
+```java
+@Service  
+@RequiredArgsConstructor  
+public class BookApplicationService {  
+    private final BookQueryService bookQueryService;  
+    private final DailyStatCommandService dailyStatCommandService;  
+    private final DailyStatQueryService dailyStatQueryService;  
+  
+    public PageResult<SearchResponse> search(String query, int page, int size) {  
+        PageResult<SearchResponse> response = bookQueryService.search(query, page, size);  
+	    
+        DailyStat dailyStat = new DailyStat(query, LocalDateTime.now());  
+        dailyStatCommandService.save(dailyStat);  
+        return response;  
+    }
+	//..
+}
+```
+
+
+`SearchEvent` record를 생성 후 핸들러 통해 처리 위임
+```java
+@Slf4j  
+@Component  
+@RequiredArgsConstructor  
+public class SearchEventHandler {  
+    private final DailyStatCommandService dailyStatCommandService;  
+  
+    @EventListener  
+    public void handleEvent(SearchEvent event) {  
+        log.info("[SearchEventHandler] handleEvent: {}", event);  
+        DailyStat dailyStat = new DailyStat(event.query(), event.timestamp());  
+        dailyStatCommandService.save(dailyStat);  
+    }}
+```
+- 테스트 
+	- `BookApplicationService` 수정
+	- `SearchEventHandler` 생성
+- 이벤트 핸들러로 격리를 했지만 같은 Thread에서 실행되기 때문에 이벤트 지연 발생시 (Thread.sleep(..)) 응답도 지연된다
+- 그래서 `@Async` 와 `@EnableAsync`를 붙여서 Thread를 분리하도록 한다
+
+
+```java
+@Configuration  
+public class AsyncConfig implements AsyncConfigurer {  
+  
+    @Bean("lsExecutor")  
+    @Override  
+    public Executor getAsyncExecutor() {  
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();  
+        int cpuCoreCount = Runtime.getRuntime().availableProcessors();  
+        executor.setCorePoolSize(cpuCoreCount);  
+        executor.setMaxPoolSize(cpuCoreCount * 2);  
+        executor.setQueueCapacity(10);  
+        executor.setKeepAliveSeconds(60);  
+		// 서비스 shutdown 될때 스레드가 작업중인 경우 60초 기다리도록 활성화
+		executor.setWaitForTasksToCompleteOnShutdown(true);  
+        executor.setAwaitTerminationSeconds(60);  
+        executor.setThreadNamePrefix("LS-");  
+        executor.initialize();  
+  
+        return executor;  
+    }
+}
+```
+- 서비스 특성에 따라 설정을 조정할 필요 있다
+	- cpu 연산이 많다면 `core pool size == max pool size`
+	- IO 작업이 많다면 `max pool size= 2 * core pool size` 
+	- 즉각적인 실행이 필요하다면 queue 사이즈를 무제한으로 하고, 캐시 스레드 정책 사용(김영한님 강의)
+
+**참고.** [기술블로그](https://blogshine.tistory.com/654)
+
+
+**TestController**
+- 테스트용 컨트롤러를 만들고 동시에 10개의 요청을 보낸다
+- 그리고 AsyncConfig에서 Thread core pool, max pool 사이즈를 조정하면 실패 케이스를 확인한다
+- 이때, 조회시 DB 저장 이벤트는 `@Async` 처리했기 때문에 비동기 처리 되므로 빠르게 처리됨
+```java
+@Slf4j  
+@RestController  
+@RequiredArgsConstructor  
+@RequestMapping("/v1/test")  
+public class TestController {  
+    private final RestClient restClient = RestClient.create();  
+  
+    @GetMapping  
+    public void test() {  
+        List<CompletableFuture<Void>> futures = new ArrayList<>();  
+        for (int i = 0; i < 10; i++) {  
+            int requestId = i;  
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {  
+                try {  
+                    ResponseEntity<String> result = restClient.get()  
+                            .uri("http://localhost:8080/v1/books?query=java&page=1&size=2")  
+                            .retrieve()  
+                            .toEntity(String.class);  
+                    log.info("result = {} requestId = {}", result, requestId);  
+                } catch (Exception e) {  
+                    log.error("실패! requestId = {}", requestId, e);  
+                }            });  
+            futures.add(future);  
+        }  
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()])).join();  
+    }}
+```
+
+
+```text
+// 4개 성공, 6개 실패
+executor.setCorePoolSize(2);  
+executor.setMaxPoolSize(2);  
+executor.setQueueCapacity(2);
+
+// 6개 성공, 4개 실패
+executor.setCorePoolSize(2);  
+executor.setMaxPoolSize(4);  
+executor.setQueueCapacity(2);
+```
+
+---
+
+## 섹션6. 면접 대비 
+
+### 가이드
+- 중요한 점 
+	- 내가 하고 싶은 이야기를 하는게 아니다
+		- **면접관이 듣고 싶은 이야기를 해야 한다** (묻는 말에 간결히)
+	- **운** (50%)
+
+### 코드레벨
+- Q. 네이밍, 코딩 스타일 
+	- 좋은 네이밍은 코드의 가독성과 유지보수성에 높임
+	- `google-java-format` 보통 사용, 코드 레벨에서는 camel-case, DB 는 snake-case로 구분
+- Q. 당신이 생각하는 좋은 변수 네이밍 원칙은 무엇인가요 
+	- 의미 있는 이름 
+	- 일관성 유지
+	- 축약서 사용 지양
+	- 코딩 컨벤션 준수
+- Q. 코딩 컨벤션을 준수해야하는 이유는 무엇이라고 생각하나요?
+	- 일관성 과 코드 가독성 유지
+	- 팀 작업시 협업 효율 향상
+- Q. 이 부분은 왜 이렇게 짰는가?
+	- 질문의 의도를 잘 파악해야 한다
+	- 지적에 대한 공감, 의견을 참고해서 수정하거나 
+- Q. Lombok 사용 이유
+	- 장점: 코드 간결화, (애노테이션 기반) 생산성 향상
+	- 단점: 컴파일 의존성, 디버깅 어려움, 무분별한 애노테이션 사용
+
+### 데이터 파티셔닝 및 관리
+- DB 성능과 관리 효율성 향상 가능
+- 접근 데이터셋이 제한적일때 유용하다
+- **파티셔닝 종류 (대표 5가지)**
+	- Range : 날짜나 숫자 범위
+	- List : 
+	- Columns : 여러 열의 조합을 기준
+	- Hash : 지정된 열의 해쉬 값으로 균등 분포
+	- Key: 
+- **파티셔닝 처리에 대한 주의점**
+	- `조회 조건`: 파티션 키로 조회하도록 유도 (그렇지 않으면 모든 파티션 조회)
+	- `인덱스`: 
+	- `주기적 삭제`: 오래된 파티션을 관리, DB 성능에도 긍정적 영향
+	- `쿼리 성능 모니터링` :  예상치 못한 성능 저하가 발생하는지 모니터링
+		- 배치성이면 상관없는데 실시간성(유저호출)에 파티션을 전체 풀 스캔 때리는 경우
+			- 조회 성능 최적화 고려 : 인덱스가 될 수도 있고
+			- NoSQL 데이터베이스 고려 가능 
+			- (최후의 보루) 비즈니스 적으로 막음, 관계자와 제약 사항을 둬야 함 (최대한 지양)
+- Q. 도서 데이터를 직접 관리하려면 어떤 방법이 있을까?
+	- 1.  자체 데이터셋 구축
+	- 2. 저장소 종류 : `엘라스틱서치` (수평적 확장 가능, 텍스트 검색 지원)
+
+### API 호출량 제한
+- Q. API 호출량에 대한 제한을 둬야하지 않는가?
+	- 서버 자원을 보호하고, 공정하게 서비스 이용 가능하도록 한다
+		- 악의적인 공격 방어
+		- 그렇기에 적절한 호출량으로 제한한다 
+	- 방법1. 토큰 버킷(token bucket)
+		- 토큰 갯수가 고정되어 있고 요청 스레드마다 토큰을 소비하고 반환 
+		- ex. 고정 윈도우(fixed) 알고리즘, 슬라이딩 윈도우 알고리즘 
+			- 고정 윈도우(fixed) 알고리즘: 1분에 2개씩 처리 가능할 때 경계부분에 요청오면 4개가 처리됨 (30초, 1분)
+	- 방법2. 이동 윈도우 카운터(sliding window counter), TCP 혼잡제어(tcp congestion)control)
+		- 위에 윈도우 알고리즘 보완 가능
+		- 이동 윈도우 카운터(sliding window counter): factor 수치 곱해서 계산 (이해x)
+		- TCP 혼잡제어(tcp congestion) : 넷플릭스에서 만듦 (이해x)
+	- 현재 프로젝트의 시스템 호출량
+		- API 호출량 제한이 있음 
+			- 사용자 요청 > 일일 API 호출 제한인 경우
+			- 방법1. 제휴를 통해 호출량 증가
+			- 방법2. 키를 여러개 발급 받아 서버통해 관리하고 호출량 기록 (인메모리)
+
+### 시스템 디자인 고도화
+- AS-IS (현재 모습)
+	- 모놀리틱 방식
+	- 장애전파 취약
+- TO-BE ()
+	- private 망
+		- API 서버 : 사용자 요청을 다른 서버 위임
+		- External 서버 : naver, kakao 호출 // 분리하여 변경에 영향 줄임
+		- DB Server : DB replication, auto-failover
+		- Message 서버 : 이벤트 발행
+		- Worker 서버 : 이벤트 수신해서 DB 서버에 저장
+		- (선택) Search Engine : 자체 데이터셋 구축이 필요하다면 엘라스틱 서치 고려 가능
+
+>[!info] 시스템 디자인에 정답은 없다
