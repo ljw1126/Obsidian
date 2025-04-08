@@ -1,3 +1,9 @@
+참고. 
+- [유튜브 영상](https://www.youtube.com/watch?v=fkqXQOjj8cA)
+
+이력
+- 20250407 크롤러, 슬랙 연동 완료
+
 
 운영체제에 맞는 claude 데스크탑 버전 설치
 https://claude.ai/download
@@ -36,7 +42,19 @@ MCP 서버 목록
 https://github.com/devflowinc/trieve/tree/main/clients/mcp-server
 
 슬랙
-https://github.com/modelcontextprotocol/servers/tree/main/src/slack
+- https://github.com/modelcontextprotocol/servers/tree/main/src/slack
+- create a slack apps 
+- bot token scopes configuration, Navigate to "OAuth & Permissions" and add these scopes:
+	- `channels:history` - View messages and other content in public channels
+	- `channels:read` - View basic channel information
+	- `chat:write` - Send messages as the app
+	- `reactions:write` - Add emoji reactions to messages
+	- `users:read` - View users and their basic information
+- `Settings > Install App`메뉴 에서 `Install to Claude`
+	-  slack bot token 을 복사해서 아래 설정 파일에 추가해준다
+	-  slack team id는 주소창에 T로 시작하는 정보를 복사한다
+- 슬랙에 `ai 뉴스` 채널 생성 후 app을 추가해준다
+	- `/invite @Claude` 실행하여 추가 가능
 
 ```text
 {
@@ -55,3 +73,4 @@ https://github.com/modelcontextprotocol/servers/tree/main/src/slack
   }
 }
 ```
+
