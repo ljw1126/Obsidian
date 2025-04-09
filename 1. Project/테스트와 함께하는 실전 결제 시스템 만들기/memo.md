@@ -190,3 +190,130 @@
 프로젝트명: simple-payment-system
 강의자료: https://github.com/gracefulife/fastcampus-test-payment-system
 
+참고. 
+- [Spock 소개 및 튜토리얼 - 기억보단 기록을](https://jojoldu.tistory.com/228)
+- [Spock으로 테스트하기 - Naver D2](https://d2.naver.com/helloworld/568425)
+
+`spock 관련`
+```text
+plugins {  
+    id 'java'  
+    id 'org.springframework.boot' version '3.4.4'  
+    id 'io.spring.dependency-management' version '1.1.7'  
+    id 'groovy'   // 추가
+}
+dependencies {
+	// ..
+
+    // 추가
+	testImplementation 'org.spockframework:spock-core:2.4-M4-groovy-4.0'  
+	testImplementation 'org.spockframework:spock-spring:2.4-M4-groovy-4.0'
+}
+```
+
+
+**WalletService**
+- `addBalance`
+	- 정책1. 잔액이 마이너스가 되면 오류가 발생해야 한다
+	- 정책2. 최대 충전한도는 10만원이다
+
+```java
+@RequiredArgsConstructor  
+@Service  
+public class WalletService {  
+    private final static BigDecimal BALANCE_LIMIT = new BigDecimal(100_000);  
+  
+    private final WalletRepository walletRepository;  
+    
+    // 트랜잭션 스크립트 스타일
+    @Transactional  
+    public AddBalanceWalletResponse addBalance(AddBalanceWalletRequest request) {  
+        final Wallet wallet = walletRepository.findById(request.walletId())  
+                .orElseThrow(() -> new IllegalStateException("지갑이 없습니다"));  
+  
+        BigDecimal balance = wallet.getBalance();  
+        balance = balance.add(request.amount());  
+  
+        if(balance.compareTo(BigDecimal.ZERO) < 0) {  
+            throw new IllegalStateException("잔액이 충분하지 않습니다");  
+        }  
+        if(BALANCE_LIMIT.compareTo(balance) < 0) {  
+            throw new IllegalStateException("한도를 초과했습니다");  
+        }  
+        wallet.setBalance(balance);  
+        wallet.setUpdatedAt(LocalDateTime.now());  
+        walletRepository.save(wallet);  
+  
+        return new AddBalanceWalletResponse(  
+                wallet.getId(),  
+                wallet.getUserId(),  
+                wallet.getBalance(),  
+                wallet.getCreatedAt(),  
+                wallet.getUpdatedAt()  
+        );    }}
+
+
+
+```
+
+
+Wallet 도메인으로 비즈니스 로직을 위임
+
+```java
+@NoArgsConstructor  
+@AllArgsConstructor  
+@Data  
+@Entity  
+public class Wallet {  
+    private final static BigDecimal BALANCE_LIMIT = new BigDecimal(100_000);  
+  
+    @Id  
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  
+    private Long id;  
+  
+    private Long userId;  
+  
+    private BigDecimal balance;  
+  
+    private LocalDateTime createdAt;  
+  
+    private LocalDateTime updatedAt;  
+  
+    public Wallet(Long userId) {  
+        this.userId = userId;  
+        this.balance = new BigDecimal(0);  
+        this.createdAt = LocalDateTime.now();  
+        this.updatedAt = LocalDateTime.now();  
+    }  
+    public void addBalance(BigDecimal amount, LocalDateTime timestamp) {  
+        BigDecimal newBalance = this.balance.add(amount);  
+  
+        if(newBalance.compareTo(BigDecimal.ZERO) < 0) {  
+            throw new IllegalStateException("잔액이 충분하지 않습니다");  
+        }  
+        if(BALANCE_LIMIT.compareTo(newBalance) < 0) {  
+            throw new IllegalStateException("한도를 초과했습니다");  
+        }  
+        this.balance = newBalance;  
+        this.updatedAt = timestamp;  
+    }}
+```
+
+
+```java
+@Transactional  
+public AddBalanceWalletResponse addBalance(AddBalanceWalletRequest request) {  
+    final Wallet wallet = walletRepository.findById(request.walletId())  
+            .orElseThrow(() -> new IllegalStateException("지갑이 없습니다"));  
+  
+    wallet.addBalance(request.amount(), LocalDateTime.now());  
+    walletRepository.save(wallet);  
+  
+    return new AddBalanceWalletResponse(  
+            wallet.getId(),  
+            wallet.getUserId(),  
+            wallet.getBalance(),  
+            wallet.getCreatedAt(),  
+            wallet.getUpdatedAt()  
+    );}
+```
