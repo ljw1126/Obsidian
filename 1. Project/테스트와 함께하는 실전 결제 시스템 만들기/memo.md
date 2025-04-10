@@ -184,7 +184,7 @@
 ```
 
 
-### 02. 프로젝트 셋업
+### 02. 프로젝트 셋업 ~ 04
 > java 17, spring boot 3.x, spock, jpa, lombok, Thymeleaf, mysql
 
 프로젝트명: simple-payment-system
@@ -357,3 +357,69 @@ def "지갑 조회 요청을 하면 정보를 반환한다"() {
 - `@WebMvcTest`에서 자동 설정 미적용 이슈
 
 Jackson 라이브러리에 설정된 내용에 따라 직렬화/역직렬화가 결정되는데, 설정 포맷에 따라 날짜가 다르게 출력할 수 있구나 
+
+
+---
+
+### 05. 결제 만들기
+
+
+Transaction 도메인을 생성
+- 이때 Wallet 에서 잔액 충전을 하지 않도록 정책 변경 
+	- `/api/balance`
+	- 잔액 충전에 대한 책임을 TransactionController에서 담당
+- TransactionService는 WalletService를 의존한다
+	- `charge(..)` : 충전
+		- orderId : UUID 사용하는데.. snowflake 사용하면 좋지 않을까?
+	- `payment(..)` : 결제
+- ChargeTransactionResponse, ChargeTransactionRequest record 생성
+- 참고. 10분 시퀀스 다이어그램
+
+**중복 충전 방지**
+- 요청시 orderId를 같이 보내서 서비스에서 확인
+- 데이터베이스에 orderId에 해당하는 Transaction 정보가 있으면 예외 반환
+
+
+
+
+**회고**
+- Transaction, Wallet 서비스에 구현 문제가 아직 남아있다
+
+---
+
+### 06. 핵심 기능에 발생할 수 있는 흔한 문제 상황
+
+**1. 충전 요청시**
+- orderId로 충전된 거래인지 확인하는 부분
+	- charge가 동시에 여러 번 충전 요청오는 경우 가정해보자
+		- 동시에 들어왔을때 정상동작하지 않는데 (데이터 부정합)
+	- update 할 때도 atomic update 불가능한 케이스
+
+**2.결제/충전 등 삽입시 중복 요청**
+- `orderId (멱등키)` 사용하는 케이스, 클라이언트가 요청시 같이 보냄 
+
+**3.네트워크 분단**
+- `클라이언트 - 서버`, `서버 - 결제서버` 요청 간에 **connect timeout**, **read timeout** 발생 가능 
+	- 찾아보기 ! 
+	- 클라이언트 - 주문 서버 간의 요청이 끊긴 후 주문 요청은 정상 처리되는 경우 
+		- 새로고침하면 되니 큰 이슈는 아닌 것으로 보입
+	- 단, 주문 서버 - 결제 서버 간의 요청이 끊긴 경우 결제 서버 문제가 발생해서 주문 서버가 응답을 받지 못하는 경우 (잔고 데이터를 갱신되고 주문 데이터는 삽입 못한 경우)
+		- 대표적인 대응 방법 몇가지 확인 예정
+
+
+### 07. 시뮬레이션 통해 문제 확인하기
+- 3번은 PG 다룰 때 확인 
+
+
+**1.지갑 생성시**
+- WalletService에서 멀티 스레드로 동시 요청해서 1개가 생성되는지 확인한다 👍
+	- 지갑이 생성되지 않은 유저로 확인한다
+	- findBy\*로 조회하니 한건만 조회해야 하는데 여러개 확인되면 원치 않는 에러가 발생
+**2.충전/결제시**
+- TransacationService에서 충전 요청을 멀티스레드로 동시 실행해본다
+
+
+
+멱등키 (자주 쓰인다함, orderId)
+Fixture Monkey 
+멀티 스레드 환경 테스트 방법이.. board-msa 였나?
