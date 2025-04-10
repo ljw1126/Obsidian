@@ -317,3 +317,43 @@ public AddBalanceWalletResponse addBalance(AddBalanceWalletRequest request) {
             wallet.getUpdatedAt()  
     );}
 ```
+
+
+spock  언더바 
+- https://spockframework.org/spock/docs/2.3/interaction_based_testing.html
+
+spock with WebMvcTest
+- https://blog.allegro.tech/2018/04/Spring-WebMvcTest-with-Spock.html
+- https://blog.naver.com/dodi258/222190863323
+
+
+WalletController @WebMvcTest 중에 날짜 포맷이 맞지 않는 에러가 발생함 
+```java
+def "지갑 조회 요청을 하면 정보를 반환한다"() {  
+    given:  
+    def userId = 1L  
+    def yesterday = LocalDateTime.now().minusDays(1L)  
+    walletService.findWalletByUserId(_) >> new SearchWalletResponse(1L, userId, BigDecimal.ZERO, yesterday, yesterday)  
+  
+    when:  
+    def response = mockMvc.perform(MockMvcRequestBuilders.get("/api/${userId}/wallet"))  
+  
+    then:  
+    response.andExpect(status().isOk())  
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))  
+            .andExpect(jsonPath('$.id').value(1L))  
+            .andExpect(jsonPath('$.userId').value(userId))  
+            .andExpect(jsonPath('$.balance').value(BigDecimal.ZERO))  
+            .andExpect(jsonPath('$.createdAt').value(yesterday)) //toString()변경시 통과
+            .andExpect(jsonPath('$.updatedAt').value(yesterday))  
+}
+```
+
+
+**🔧 JSON 직렬화에 영향을 주는 건? (Chat-GPT)**
+- `ObjectMapper` 전역 설정 (예: `WRITE_DATES_AS_TIMESTAMPS`)
+- `@JsonFormat` 어노테이션
+- 커스텀 `Module` (예: `JavaTimeModule`)
+- `@WebMvcTest`에서 자동 설정 미적용 이슈
+
+Jackson 라이브러리에 설정된 내용에 따라 직렬화/역직렬화가 결정되는데, 설정 포맷에 따라 날짜가 다르게 출력할 수 있구나 
