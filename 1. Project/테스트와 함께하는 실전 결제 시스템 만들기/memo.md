@@ -419,6 +419,11 @@ Transaction 도메인을 생성
 - TransacationService에서 충전 요청을 멀티스레드로 동시 실행해본다
 
 
+- 패키지 구분 :  `wallet / transaction / common`
+- Snowflake 추가
+- createdAt, updateAt 공통 처리
+
+
 
 멱등키 (자주 쓰인다함, orderId)
 Fixture Monkey 
