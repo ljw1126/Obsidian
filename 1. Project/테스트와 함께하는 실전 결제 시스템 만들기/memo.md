@@ -424,7 +424,98 @@ Transaction 도메인을 생성
 - createdAt, updateAt 공통 처리
 
 
+>[!error] Error creating bean with name 'jpaAuditingHandler': Cannot resolve reference to bean 'jpaMappingContext' while setting constructor argument
+
+@WebMvcTess시 jpaMappingContext 빈이 주입되지 않아 발생
+```java
+@EnableJpaAuditing  // Entity 날짜 처리 관련
+@SpringBootApplication  
+public class SimplePaymentApplication {  
+  
+    public static void main(String[] args) {  
+        SpringApplication.run(SimplePaymentApplication.class, args);  
+    }  
+}
+```
+
+아래와 같이 분리 처리하여 해결 ([참고](https://computerlove.tistory.com/entry/%ED%85%8C%EC%8A%A4%ED%8A%B8-%EC%BD%94%EB%93%9C-%EC%9E%91%EC%84%B1-%EC%A4%91-%EC%98%88%EC%99%B8-%EB%B0%9C%EC%83%9D-1))
+```java
+@EnableJpaAuditing  
+@Configuration  
+public class JpaAuditingConfig {  
+}
+```
+
+---
+## Ch3. 테스트 기반으로 문제 해결하기 
+
+> [!info] 결론적으로 Redis 활용한 락만을 학습하면 된다
+
+### 01. 멱등성 문제 해결하기
+
+**예시**
+- 클릭을 여러 번해서 요청이 여러 번 되는 경우
+- 네트워크 장애로 인한 문제 
+
+> [!info] 멱등키(rid)로 재시도를 실행하는 것으로 문제 해결할 수 있다. 그러나 모든 문제를 해결할 수 없다.
+
+패캠서버 -> 패캠payment 서버 요청시
+- 패캠서버에서 timeout을 1초로 짧게 설정 
+- 패캠payment 서버에서는 Thread.sleep(5000) 설정
+- 테스트
+	- 패캠서버에서 요청시 `read time out` 발생
+	- 그런데 패캠 payment 서버에서는 요청 처리가 완료되어 있음
+	- **중복처리하지 않고 사용자 요청에 멱등하게 처리하는게 중요하다**
+		- 이때는 `orderId`(**멱등키**) 를 요청시 보내다 보니 재요청시 이미 처리된 요청이므로 예외를 반환한다 
+
+### 02. 데이터 무결성 보장하기 with Java (Unit test)
+- 잔액 충전시 orderId를 사용하더라도 문제가 발생할 수 있다
+- `synchronized` 키워드 사용해서 Java에서 작업을 해본다
+	- 이걸한다고 데이터베이스에 동시성 이슈가 발생하기 때문에 
+- walletMap을 서비스에 만들고 여기에다가 통합 테스트를 한다네 
+- `synchronized` 키워드가 붙은 `addBalanceJava(..)` 호출하는 형태로 한다
+	- 순차적으로 실행되기 때문에 속도가 느려질 수 있지만 안정적으로 처리 가능(자바 프로세스 내에서)
+	- <u>굳이 Service에 추가할 필요없이 Fake 클래스 만들어서 주입해가지고 사용하면 되지 않는가??</u>
+- 하지만 `synchronized` 키워드를 사용하더라도 **여러 개의 서버를 띄우는 경우 의미가 없어짐(한계)** -> **데이터베이스의 동시성 이슈 제어가 필요함(MySQL or Redis)**
+
+
+### 03. 데이터 무결성 보장하기 with MySQL (통합 테스트)
+- `비관적 락(레코드 락 점유)`과 `낙관적 락(버전 정보 비교)`이 있다
+- 충전 테스트시 
+	- WalletRepository에서 findByUserId()에 `@Lock(LockModeType.PESSMISTIC_WRITE)` , 비관적 락을 건다
+	- 멀티 스레드로 TransactionService 통해 충전 처리시 비관적 락을 걸었기 때문에 나머지 스레드는 대기하게 되고, 락을 반환하면 그때 부터 순차적으로 처리하여 정상적으로 충전 요청 처리된다
+- Wallet 조회시 비관적 락을 걸었는데, Transaction에 걸 이유는 없지 않나??
+	- Wallet의 락을 반환하기 전까지 다른 스레드는 대기하기 때문이고, orderId 멱등키를 기준으로 또 조회하기 때문에 중복 처리는 되지 않는다
+	- 그러므로 Transaction 테이블에 락을 따로 걸지 않아도 괜찮다
+- 그러나 `isolation level` 문제나 `skew` 문제라는게 있을 수 있다함
+	- 우선 비관적 락을 테이블에 걸었기 때문에 데이터베이스의 부하는 늘어날 뿐 동시성 제어는 되지 않을까..?
+
+> [!tip] 통합 테스트보다는 DBMS 툴로 트랜잭션을 확인해보는게 좋다
+
+
+### 04. 데이터 무결성 보장하기 with Redis (통합 테스트)
+- 레디스를 통해 락을 획득하고, 반환하는 형태로 처리
+- Docker 활용해 레디스 컨테이너 추가 (docker-compose로 활용하자)
+- RedisConfiguration 생성
+- WalletLockService 생성 (이걸 왜하지??)
+	- `walletId` 기준으로 락을 잡는다
+- 트랜잭션 범위보다 레디스 락의 범위가 더 커야한다.
+	- LockTransactionService 를 만든다
+- **강의에서는 직접 RedisTemplate 호출하여 점유하는 방식을 사용했는데 Redission이 좀더 안정적인듯 하다 (비교 해보기 !)**
+
+> [!note] keyword: 락 분할 기법
+
+
+### 05. 락 다시 공부하기 
+
+- 멱등키 사용
+- 동시 요청시 쓰기 되기 전에 읽어 버려서 데이터 무결성 깨짐 (데이터 부정합)
+	- synchronize 사용 - 자바 서버가 여러 개면 의미 없음
+	- 데이터베이스 비관적 락, 낙관적 락 사용 - 데이터베이스 부하 증가
+	- Redis 락 사용
+
 
 멱등키 (자주 쓰인다함, orderId)
 Fixture Monkey 
 멀티 스레드 환경 테스트 방법이.. board-msa 였나?
+JPA에서 비관적 락과 낙관적 락 방법 찾아보자
