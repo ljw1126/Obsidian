@@ -1,5 +1,5 @@
 https://github.com/sproogen/modern-resume-theme?tab=readme-ov-file
-
+https://github.com/sproogen/modern-resume-theme/blob/1.x/README.md
 
 1. zip 파일 다운 받아서 압축 풀기 
 2. `git init`
