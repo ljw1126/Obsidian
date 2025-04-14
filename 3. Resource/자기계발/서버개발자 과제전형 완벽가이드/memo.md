@@ -420,6 +420,7 @@ public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(M
 - REST API 키만 있으면 됨
 
 
+트러블 슈팅 (gradle)
 >[!warning] gradle Task 'wrapper' not found in project 
 - kakao-client 서브 모듈을 만들고 Gradle 새로고침 실행시 발생
 - 루트 프로젝트의 하위 모듈에 포함되지 않고 자체적으로 kakao-client 모듈 sync가 이루어짐

@@ -651,3 +651,57 @@ JPA에서 비관적 락과 낙관적 락 방법 찾아보자
 동시성 제어 (Redission)
 멀티 모듈 구성 
 jacoco, sonarcloud 연동
+
+---
+
+### 트러블 슈팅
+1.멀티 모듈 구성이 spock 테스트가 인식 안되는 이유 
+
+https://blog.ham1.co.uk/2017/01/27/spock-no-tests-found-matching-method/
+
+```java
+class WalletTest extends Specification {  
+    def "Test"() {  // 💩
+        println "hello"
+    }
+```
+
+최소한 when: then: expect가 있어야 한다 .. (40분 넘게 날림)
+
+2.Transaction 모듈에서 통합 테스트 작성하는데 동작이 안됨 .. 
+- `@SpringBootApplication`이 없다보니 @ComponentScan도 안되고 필요한 빈을 추가하지 못함
+- 아래와 같이 Configuration 클래스를 각 모듈 루트에 생성 후 테스트에 설정
+
+```java
+// transaction-api 모듈
+@ComponentScan  
+@EnableAutoConfiguration  
+public class TransactionApiConfiguration {  
+}
+
+
+// wallet-api 모듈
+@ComponentScan  
+@EnableAutoConfiguration  
+public class WalletApiConfiguration {  
+}
+```
+
+
+```java
+@SpringBootTest(classes = [TransactionApiConfiguration.class, WalletApiConfiguration.class])  
+@ActiveProfiles("test")  
+@Transactional  
+class TransactionServiceIntegrationTest extends Specification{  
+    @Autowired  
+    private TransactionService transactionService;  
+  
+    @Autowired  
+    private TransactionRepository transactionRepository;  
+  
+    @Autowired  
+    private WalletRepository walletRepository
+
+	//..
+}
+```
