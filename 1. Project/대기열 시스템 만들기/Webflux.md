@@ -1,8 +1,10 @@
 **Reference**
 - [올리브영 WebClient](https://oliveyoung.tech/2022-11-10/oliveyoung-discovery-premium-webclient/)
-
-
-
+---
+**TODO.** 
+- Webflux와 Reactive Redis란?
+- 대기열 시스템에서 Webflux와 Reactive Redis 사용한 이유
+---
 **트러블슈팅 (미해결)**
 - Mock Server를 만들어서 `/posts?id={{id}}`에 대한 예제 응답 생성
 	- [공식 문서](https://learning.postman.com/docs/design-apis/mock-apis/mock-with-examples/)
@@ -352,5 +354,121 @@ build.gradle 의존성 추가
 implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 ```
 
+코드 레벨
+- RedisConfig 생성해서 ApplicationReadyEvent 통해서 주입이 되었는지 확인해보기 !
+- User 도메인 조회시 캐시에서 우선 조회하고, 없으면 DB 조회 하면서 캐시에 저장하는 로직을 작성
+	- TTL을 줄 수도 있다
+- 그리고 User 정보 Update시 캐시를 삭제 해줌
+- User delete 에서도 캐시를 삭제
 
-RedisConfig 생성해서 ApplicationReadyEvent 통해서 주입이 되었는지 확인해보기 !
+> [!info] 
+> - 런타임 테스트할 경우 컨테이너에 monitor 띄우고 인텔리제이의 http 활용해 요청
+> - Testcontainer 사용해서 테스트 작성 해보기 (TODO)
+
+
+
+```java
+@Slf4j  
+@Configuration  
+@RequiredArgsConstructor  
+public class RedisConfig implements ApplicationListener<ApplicationReadyEvent> {  
+    private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;  
+  
+    @Override  
+    public void onApplicationEvent(ApplicationReadyEvent event) {  
+        reactiveRedisTemplate.opsForValue().get("1")  
+                .doOnSuccess(i -> log.info("Initialize to redis connection : {}", i))  
+                .doOnError((err) -> log.error("Failed to initialize Redis connection", err))  
+                .subscribe();  
+    }
+
+	@Bean  
+	public ReactiveRedisTemplate<String, User> reactiveRedisCustomTemplate(ReactiveRedisConnectionFactory connectionFactory) {  
+	    ObjectMapper objectMapper = new ObjectMapper()  
+	            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)  
+	            .registerModule(new JavaTimeModule())  
+	            .disable(SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS);  
+	  
+	    Jackson2JsonRedisSerializer<User> jsonRedisSerializer = new Jackson2JsonRedisSerializer<>(objectMapper, User.class);  
+	  
+	    RedisSerializationContext<String, User> serializationContext = RedisSerializationContext  
+	            .<String, User>newSerializationContext()  
+	            .key(RedisSerializer.string())  
+	            .value(jsonRedisSerializer)  
+	            .hashKey(RedisSerializer.string())  
+	            .hashValue(jsonRedisSerializer)  
+	            .build();  
+	  
+	    return new ReactiveRedisTemplate<>(connectionFactory, serializationContext);  
+	}
+}
+```
+- Redis에 성공적으로 연결한 경우 `key = 1`요청시 `nil` 결과 반환하기 때문에 doOnSuccess(..)가 실행된다
+
+```text
+2025-05-05T12:21:25.775+09:00  INFO 31433 --- [helloWebflux] [llEventLoop-5-1] c.e.hellowebflux.config.RedisConfig      : Initialize to redis connection : null
+```
+
+
+- 유저 조회/삭제/업데이트에서 레디스 사용하도록 비즈니스 로직 변경
+
+```java
+@Service  
+@RequiredArgsConstructor  
+public class UserService {  
+    private final UserR2dbcRepository userR2dbcRepository;  
+    private final UserRedisRepository userRedisRepository;  
+  
+    public Mono<User> create(String name, String email) {  
+        User user = User.builder().name(name).email(email).build();  
+        return userR2dbcRepository.save(user);  
+    }  
+    public Flux<User> findAll() {  
+        return userR2dbcRepository.findAll();  
+    }  
+    public Mono<User> findById(Long id) {  
+        return userRedisRepository.get(id)  
+                .switchIfEmpty(userR2dbcRepository.findById(id)  
+                        .flatMap(u -> userRedisRepository.set(u, Duration.ofSeconds(30))  
+                                .then(Mono.just(u)))  
+                );    }  
+    public Mono<Void> deleteById(Long id) {  
+        return userR2dbcRepository.deleteById(id)  
+                .then(userRedisRepository.unlink(id))  
+                .then(Mono.empty());  
+    }  
+    public Mono<User> update(Long id, String name, String email) {  
+        return userR2dbcRepository.findById(id)  
+                .flatMap(u -> {  
+                    u.setName(name);  
+                    u.setEmail(email);  
+                    return userR2dbcRepository.save(u);  
+                })                .flatMap(u -> userRedisRepository.unlink(id).then(Mono.just(u)));  
+    }
+}
+```
+
+```java
+@Repository  
+@RequiredArgsConstructor  
+public class UserReactiveRedisRepositoryImpl implements UserRedisRepository{  
+    private static final String USER_KEY = "users:%d";  
+  
+    private final ReactiveRedisTemplate<String, User> reactiveRedisTemplate;  
+  
+    @Override  
+    public Mono<User> get(Long id) {  
+        return reactiveRedisTemplate.opsForValue().get(getUserCacheKey(id));  
+    }  
+    @Override  
+    public Mono<Boolean> set(User user, Duration ttl) {  
+        return reactiveRedisTemplate.opsForValue().set(getUserCacheKey(user.getId()), user, ttl);  
+    }  
+    @Override  
+    public Mono<Long> unlink(Long id) {  
+        return reactiveRedisTemplate.unlink(getUserCacheKey(id));  
+    }  
+    private String getUserCacheKey(Long id) {  
+        return USER_KEY.formatted(id);  
+    }}
+```
