@@ -1,5 +1,6 @@
 **Reference**
 - [올리브영 WebClient](https://oliveyoung.tech/2022-11-10/oliveyoung-discovery-premium-webclient/)
+- [Spring Webflux vs @Async](https://www.youtube.com/watch?v=I9KECZPr5Bo)
 ---
 **TODO.** 
 - Webflux와 Reactive Redis란?

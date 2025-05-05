@@ -134,3 +134,78 @@ Spring Webflux
 ### Blockhound
 - 비동기 어플리케이션에서 블로킹을 검출하는 기능 제공
 - 의존성 추가 필요 
+
+---
+
+**TODO**
+- queue 문자열을 파라미터로 받지 않고, restful 하게 분리하기 
+- 로그인한 사용자만 대기열 등록하도록 수정 
+	- Spring Security + JWT
+- 모놀리식과 Webflux 방식으로 Rest API 성능 비교 해보기 
+	- 간단하게 JSON 응답 요청
+	- RedisTemplate, ReactiveRedisTemplate
+
+### 대기열 등록 API 개발
+
+Spring webflux 서버에서 파라미터를 받는 이유에 대해
+```java
+@RestController  
+@RequiredArgsConstructor  
+@RequestMapping("/api/v1/queue")  
+public class WaitingQueueController {  
+    private final WaitingQueueService waitingQueueService;  
+  
+    @PostMapping  
+    public Mono<WaitingQueueResponse> enqueueUser(
+    @RequestParam(name = "queue", defaultValue = "default") String queue,  
+	@RequestParam(name = "userId") Long userId) {  
+        return waitingQueueService.enqueue(queue, userId)  
+                .map(WaitingQueueResponse::new);  
+    }  
+}
+```
+
+**queue 문자열**
+✅ 가능성 있는 이유
+- 여러 종류의 큐를 운영하기 위한 유연성 때문
+	- 하지만 지금 큐는 `대기열 큐`와 `처리 큐` 두 가지만 있으면 되서 의미가 없어 보인다
+⚠️ 단점
+- 외부에서 queue 이름을 임의로 입력 가능하여 **보안 이슈** 또는 **무의미한 큐 생성** 가능
+✅ 개선 방안
+- 큐의 이름이 고정이라면, RESTFUL하게 주소(리소스)를 고정한다거나 queue 파라미터를 enum으로 제한
+	- 서비스에서 repository에 enum 을 파라미터로 주입하는 방식을 사용하는 것도 유연성에 좋을듯함.
+
+**userId를 직접 받음**
+✅ 가능성 있는 이유
+- 테스트의 편의성을 위해서 `userId`를 사용하는 것으로 추측
+⚠️ 문제점
+- userId를 파라미터로 직접 받기 보다, 인증된 사용자 정보를 가져오는 것이 보안상 안전
+	- spring security 사용해서 jwt 토큰을 발급받아 spring webflux에서 사용하는 형태(?)
+✅ 권장 방식
+- 로그인 후 인증된 유저를 기반으로 처리 
+
+
+```java
+@Service  
+@RequiredArgsConstructor  
+public class WaitingQueueService {  
+    private final RedisRepository redisRepository;  
+  
+    public Mono<Long> enqueueWaitingQueue(final Long userId) {  
+        long unixTimestamp = Instant.now().getEpochSecond();  
+        return redisRepository.addZSet(userId, unixTimestamp)  
+                .filter(i -> i)  // Mono<Boolean> 반환
+                .switchIfEmpty(Mono.error(ALREADY_RESISTER_USER.build()))  
+                .flatMap(i -> redisRepository.zRank(userId))  
+                .map(i -> i >= 0 ? i + 1 : i);  
+    }}
+```
+- filter를 하는 이유는 Sorted Set에 데이터 추가가 되면 boolean을 반환하는데 이미 등록된 유저의 경우 false를 반환하게 된다.
+	- false 인 경우(이미 대기열 등록된 유저) : switchIfEmpty(..) 실행하여 예외 던짐 
+	- true 인 경우 (처음 대기열 등록 유저) : rank 조회하여 반환
+
+
+### 진입 요청 API 개발
+
+1. **대기열 큐**에 있는 유저 중 일정 수(`count`)만큼 뽑아서 **진입허용 큐**에 추가 
+2. 진입이 허용된 상태인지 확인하는 API 필요
