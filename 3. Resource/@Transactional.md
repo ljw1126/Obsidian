@@ -55,6 +55,8 @@ JPA 사용하고 롤백 테스트를 할 경우 repository에서 save()만 호�
 ---
 ### Reference
 - [Spring 트랜잭션은 언제 어떻게 롤백 될까?](https://dkswnkk.tistory.com/760)
+	- Spring 트랜잭션 기본 전략 != 자바 트랜잭션 전략
+	- [자바 공부를 어떻게 하길래, "언체크드 예외 발생시 트랜잭션 롤백?"](https://www.youtube.com/watch?v=_WkMhytqoCc)
 - [트랜잭션의 동시성 문제를 알아보자](https://velog.io/@jeong_hun_hui/트랜잭션의-동시성-문제를-알아보자)
 - [반려생활 - @Transactional 없애려다 오픈소스 라이브러리까지 만든 이야기](https://blog.ban-life.com/transactional-%EC%97%86%EC%95%A0%EB%A0%A4%EB%8B%A4-%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC%EA%B9%8C%EC%A7%80-%EB%A7%8C%EB%93%A0-%EC%9D%B4%EC%95%BC%EA%B8%B0-5426116036bb?gi=2012e27261d9)
 - [기억보단 기록을 - 테스트 데이터 초기화에 @Transactional 사용하는 것에 대한 생각(반대파 입장ㅋㅋ)](https://jojoldu.tistory.com/761)
