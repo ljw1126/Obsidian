@@ -1,4 +1,5 @@
-
+**Redis Gate**
+- [Spring zsets](http://redisgate.kr/redis/clients/spring_zsets.php)
 ### Sorted Sets
 - ordered collection(unique strings)
 	- ex. leader board, rate limit 기능 구현시 적합

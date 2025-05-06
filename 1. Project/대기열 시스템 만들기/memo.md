@@ -449,3 +449,176 @@ class QueueServiceTest {
                 .verifyComplete();  
     }}
 ```
+
+
+### 접속 대기 웹 페이지 개발 
+- `/index` 접속시 대기열 여부를 확인하고 페이지로 이동하도록 한다
+	- web mvc 서버 ➡️ webflux 서버로 통신 
+		- 허용된 사용자인지 확인한다 (PROCEED QUEUE)
+		- 대기열에 있는 사용자인가 ? (WAITING QUEUE)
+			- 대기열에 등록된 사용자라면 순위를 반환한다
+			- 대기열에 등록된 사용자가 아니라면 대기열에 추가하고 순위를 반환한다
+
+
+**website 모듈**
+```java
+@Controller  
+@RequiredArgsConstructor  
+public class HomeController {  
+    private final WaitingQueueService waitingQueueService;  
+  
+    @GetMapping("/index")  
+    public String home(@ModelAttribute(name = "userId") Long userId, Model model) {  
+        QueueStatusResponse response = waitingQueueService.accessibleCheck(userId);  
+        if(response.accessible()) {  
+            return "index";  
+        }  
+        model.addAttribute("rank", response.rank());  
+        return "waiting-room";  
+    }
+}
+```
+
+이때 WebClient 빈을 생성해서 주입받아 사용
+```java
+@Service  
+@RequiredArgsConstructor  
+public class WaitingQueueService {  
+    private final WebClient webClient;  
+  
+    public QueueStatusResponse accessibleCheck(Long userId) {  
+        return webClient.get()  
+                .uri(uriBuilder -> uriBuilder.path("/api/v1/queue/checked").queryParam("userId", userId).build())  
+                .retrieve()  
+                .bodyToMono(QueueStatusResponse.class)  
+                .block();  
+    }  
+}
+```
+
+
+**webflux 모듈**
+```java
+@RestController  
+@RequiredArgsConstructor  
+@RequestMapping("/api/v1")  
+public class QueueController {  
+    private final QueueService queueService;  
+
+	//..
+		
+    @GetMapping("/queue/checked")  
+    public Mono<QueueStatusResponse> checked(@RequestParam("userId") Long userId) {  
+        return queueService.checked(userId)  
+                .map(rank -> new QueueStatusResponse(rank == 0, rank));  
+    }
+}
+```
+
+
+```java
+@Service  
+@RequiredArgsConstructor  
+public class QueueService {  
+    private final RedisRepository redisRepository;  
+  
+    public Mono<Long> enqueueWaitingQueue(Long userId) {  
+        long unixTimestamp = Instant.now().getEpochSecond();  
+        String queue = WAITING_QUEUE.getKey();  
+        return redisRepository.addZSet(queue, userId, unixTimestamp)  
+                .filter(i -> i)  
+                .switchIfEmpty(Mono.error(ALREADY_RESISTER_USER.build()))  
+                .flatMap(i -> redisRepository.zRank(queue, userId))  
+                .map(i -> i >= 0 ? i + 1 : i);  
+    }  
+    public Mono<Long> allow(Long count) {  
+        return redisRepository.popMin(WAITING_QUEUE.getKey(), count)  
+                .flatMap(member -> redisRepository.addZSet(PROCEED_QUEUE.getKey(), Long.parseLong(Objects.requireNonNull(member.getValue())), Instant.now().getEpochSecond()))  
+                .count();  
+    }  
+    public Mono<Boolean> isAllowed(Long userId) {  
+        return redisRepository.zRank(PROCEED_QUEUE.getKey(), userId)  
+                .defaultIfEmpty(-1L)  
+                .map(rank -> rank >= 0);  
+    }  
+    public Mono<Long> checked(Long userId) {  
+        return isAllowed(userId)  
+                .filter(Boolean::booleanValue) // PROCEED QUEUE에 추가된 유저의 경우  
+                .flatMap(allowed -> Mono.just(0L))  
+                .switchIfEmpty(enqueueWaitingQueue(userId)  
+                                .onErrorResume(ex -> redisRepository.zRank(WAITING_QUEUE.getKey(), userId).map(i -> i >= 0 ? i + 1 : i))  
+                ).log();  
+    }
+}
+```
+- PROCEED QUEUE에 추가된 유저인 경우 true를 반환한다. - isAllowed
+	- `flatMap(..)` 통해 **0L**을 반환 
+- PROCEED QUEUE에 없는 경우 
+	- WAITING QUEUE에 추가한다. 
+		- 대기열에 없는 경우 WAITING QUEUE에 순위를 반환하게 된다
+		- 만약 추가되어 있는 경우 예외 발생하여 onErrorResume(..) 실행해서 순위를 조회하여 반환
+
+
+webflux 서버에 요청시 cors 에러 발생하여 아래와 같이 설정했지만 의미 없었음 ..
+```java
+@Configuration  
+@EnableWebFlux  
+public class CorsGlobalConfig implements WebFluxConfigurer {  
+  
+    @Override  
+    public void addCorsMappings(CorsRegistry registry) {  
+        registry.addMapping("/**")  
+                .allowedOrigins("http://localhost:8080")  
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  
+                .allowedHeaders("*")  
+                .allowCredentials(true)  
+                .maxAge(3600);  
+    }
+}
+```
+
+- [Inpa 기술블로그 - CORS ] (https://inpa.tistory.com/entry/WEB-%F0%9F%93%9A-CORS-%F0%9F%92%AF-%EC%A0%95%EB%A6%AC-%ED%95%B4%EA%B2%B0-%EB%B0%A9%EB%B2%95-%F0%9F%91%8F)
+- [Baeldung- spring webflux cors](https://www.baeldung.com/spring-webflux-cors)
+
+
+**트러블슈팅**
+- checked 요청시 userId의 score가 갱신되는 이슈 발생
+- 아래 테스트가 통과되는 이유는 timestamp가 동일했기 때문에 false를 반환 
+	- 만약 timestamp가 다르면 addZSet 호출 시 score가 갱신되어 버린다💩
+
+```java
+@Test  
+void addZSetWhenDuplicated() {  
+    Long userId = 1L;  
+    long timestamp = Instant.now().getEpochSecond();  
+    String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+    StepVerifier.create(redisRepository.addZSet(queue, userId, timestamp))  
+            .expectNext(true)  
+            .verifyComplete();  
+  
+    StepVerifier.create(redisRepository.addZSet(queue, userId, timestamp))  
+            .expectNext(false)  
+            .verifyComplete();  
+}
+```
+
+
+그래서 timestamp를 매번 생성해서 넣었는데도 통과해버림 ㄷㄷ 
+- 임베디드 레디스라서 그런게 아닌가 싶다..
+```java
+@Test  
+void addZSetWhenDuplicated() {  
+    Long userId = 1L;  
+    String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+    StepVerifier.create(redisRepository.addZSet(queue, userId, Instant.now().getEpochSecond()))  
+            .expectNext(true)  
+            .verifyComplete();  
+  
+    StepVerifier.create(redisRepository.addZSet(queue, userId, Instant.now().getEpochSecond()))  
+            .expectNext(false)  
+            .verifyComplete();  
+}
+
+```
