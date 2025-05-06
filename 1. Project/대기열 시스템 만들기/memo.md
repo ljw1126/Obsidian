@@ -144,6 +144,14 @@ Spring Webflux
 - 모놀리식과 Webflux 방식으로 Rest API 성능 비교 해보기 
 	- 간단하게 JSON 응답 요청
 	- RedisTemplate, ReactiveRedisTemplate
+- 대기열 페이지 이동하기 전 사용자 유효성 검사하는 로직이 여러 개로 보인다. 
+	- 허용된 유저인가?
+	- 대기열에 유저가 있는가? 
+		- 있다면 대기열 랭크 반환
+		- 없다면 대기열 추가 후 랭크 반환
+	- 부하 증가시 네트워크 통신 비용이 늘지 않나 싶다..
+		- 개인적인 생각으로 서버를 scale-out한다면 각각 부하 분산도 잘 되서 성능이 향상되지 않을가 싶다. (**PASS**)
+
 
 ### 대기열 등록 API 개발
 
@@ -209,3 +217,235 @@ public class WaitingQueueService {
 
 1. **대기열 큐**에 있는 유저 중 일정 수(`count`)만큼 뽑아서 **진입허용 큐**에 추가 
 2. 진입이 허용된 상태인지 확인하는 API 필요
+
+서비스 renaming
+```java
+@Service  
+@RequiredArgsConstructor  
+public class QueueService {  
+    private final RedisRepository redisRepository;  
+  
+    public Mono<Long> enqueueWaitingQueue(final Long userId) {  
+        long unixTimestamp = Instant.now().getEpochSecond();  
+        String queue = WAITING_QUEUE.getKey();  
+        return redisRepository.addZSet(queue, userId, unixTimestamp)  
+                .filter(i -> i)  
+                .switchIfEmpty(Mono.error(ALREADY_RESISTER_USER.build()))  
+                .flatMap(i -> redisRepository.zRank(queue, userId))  
+                .map(i -> i >= 0 ? i + 1 : i);  
+    }  
+    public Mono<Long> allow(Long count) {  
+        return redisRepository.popMin(WAITING_QUEUE.getKey(), count)  
+                .flatMap(member -> redisRepository.addZSet(PROCEED_QUEUE.getKey(), Long.parseLong(Objects.requireNonNull(member.getValue())), Instant.now().getEpochSecond()))  
+                .count();  
+    }  
+    public Mono<Boolean> isAllowed(Long userId) {  
+        return redisRepository.zRank(PROCEED_QUEUE.getKey(), userId)  
+                .defaultIfEmpty(-1L)  
+                .map(rank -> rank >= 0);  
+    }
+}
+```
+- Queue 이름을 관리하기 어려워 **enum**으로 뽑음
+
+
+
+```java
+@Repository  
+@RequiredArgsConstructor  
+public class RedisRepositoryImpl implements RedisRepository {  
+    private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;  
+  
+    @Override  
+    public Mono<Boolean> addZSet(String queue, Long userId, Long timestamp) {  
+        return reactiveRedisTemplate.opsForZSet()  
+                .add(queue, userId.toString(), timestamp);  
+    }  
+    @Override  
+    public Mono<Long> zRank(String queue, Long userId) {  
+        return reactiveRedisTemplate.opsForZSet()  
+                .rank(queue, userId.toString());  
+    }  
+    @Override  
+    public Flux<ZSetOperations.TypedTuple<String>> popMin(String queue, Long count) {  
+        return reactiveRedisTemplate.opsForZSet().popMin(queue, count);  
+    }}
+```
+
+ReactiveRedisTemplate로 popMin 테스트 
+```java
+@SpringBootTest  
+@Import(EmbeddedRedis.class)  
+@ActiveProfiles("test")  
+public class RedisRepositoryTest {  
+  
+    @Autowired  
+    private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;  
+  
+    private RedisRepositoryImpl redisRepository;  
+  
+    @BeforeEach  
+    void setUp() {  
+        redisRepository = new RedisRepositoryImpl(reactiveRedisTemplate);  
+  
+        ReactiveRedisConnection reactiveConnection = reactiveRedisTemplate.getConnectionFactory().getReactiveConnection();  
+        reactiveConnection.serverCommands().flushAll().subscribe();  
+    }  
+    
+    @Test  
+    void addZSet() {  
+        Long userId = 1L;  
+        long timestamp = Instant.now().getEpochSecond();  
+        String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+        StepVerifier.create(redisRepository.addZSet(queue, userId, timestamp))  
+                .expectNext(true)  
+                .verifyComplete();  
+    }  
+    @Test  
+    void addZSetWhenDuplicated() {  
+        Long userId = 1L;  
+        long timestamp = Instant.now().getEpochSecond();  
+        String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+        StepVerifier.create(redisRepository.addZSet(queue, userId, timestamp))  
+                .expectNext(true)  
+                .verifyComplete();  
+  
+        StepVerifier.create(redisRepository.addZSet(queue, userId, timestamp))  
+                .expectNext(false)  
+                .verifyComplete();  
+    }  
+  
+    @Test  
+    void zRank() {  
+        String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+        StepVerifier.create(redisRepository.addZSet(queue,1L, 100L)  
+                .then(redisRepository.zRank(queue,1L)))  
+                .expectNext(0L)  
+                .verifyComplete();  
+    }  
+    @Test  
+    void zRankByMultiUser() {  
+        String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+        StepVerifier.create(redisRepository.addZSet( queue,1L, 100L)  
+                .then(redisRepository.addZSet(queue,2L, 99L))  
+                .then(redisRepository.zRank( queue,2L)))  
+                .expectNext(0L)  
+                .verifyComplete();  
+    }  
+    @Test  
+    void zRankByNoneUserId() {  
+        String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+        StepVerifier.create(redisRepository.zRank(queue,99L))  
+                .expectComplete()  
+                .verify();  
+    }  
+    @Test  
+    void popMin() {  
+        String queue = QueueManager.WAITING_QUEUE.getKey();  
+  
+        Mono<Boolean> setup = redisRepository.addZSet(queue, 1L, 100L)  
+                .then(redisRepository.addZSet(queue, 2L, 101L))  
+                .then(redisRepository.addZSet(queue, 3L, 103L));  
+  
+        Flux<ZSetOperations.TypedTuple<String>> result = setup.thenMany(redisRepository.popMin(queue, 4L)); // Mono -> Flux  
+  
+        StepVerifier.create(result)  
+                .expectNextMatches(tuple -> tuple.getValue().equalsIgnoreCase("1"))  
+                .expectNextMatches(tuple -> tuple.getValue().equalsIgnoreCase("2"))  
+                .expectNextMatches(tuple -> tuple.getValue().equalsIgnoreCase("3"))  
+                .verifyComplete();  
+    }
+}
+```
+
+
+```java
+@SpringBootTest  
+@Import(EmbeddedRedis.class)  
+@ActiveProfiles("test")  
+class QueueServiceTest {  
+    @Autowired  
+    private QueueService queueService;  
+  
+    @Autowired  
+    private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;  
+  
+    @BeforeEach  
+    void setUp() {  
+        ReactiveRedisConnection reactiveConnection = reactiveRedisTemplate.getConnectionFactory().getReactiveConnection();  
+        reactiveConnection.serverCommands().flushAll().subscribe();  
+    }  
+    @Test  
+    void enqueueWaitingQueue() {  
+        StepVerifier.create(queueService.enqueueWaitingQueue(1L))  
+                .expectNext(1L)  
+                .verifyComplete();  
+  
+        StepVerifier.create(queueService.enqueueWaitingQueue(2L))  
+                .expectNext(2L)  
+                .verifyComplete();  
+    }  
+    @DisplayName("이미 등록된 유저가 재시도하는 경우 예외를 던진다")  
+    @Test  
+    void alreadyEnqueueWaitingQueue() {  
+        StepVerifier.create(queueService.enqueueWaitingQueue(1L))  
+                .expectNext(1L)  
+                .verifyComplete();  
+  
+        StepVerifier.create(queueService.enqueueWaitingQueue(1L))  
+                .expectError(WaitingQueueException.class)  
+                .verify();  
+    }  
+    @DisplayName("대기열 큐에 유저가 없는 경우 0을 반환한다")  
+    @Test  
+    void emptyAllowUser() {  
+        StepVerifier.create(queueService.allow(100L))  
+                .expectNext(0L)  
+                .verifyComplete();  
+    }  
+    @DisplayName("대기열 큐에 허용한 유저 수 만큼 카운팅을 반환한다")  
+    @Test  
+    void allowUser() {  
+        Mono<Long> setup = queueService.enqueueWaitingQueue(1L)  
+                .then(queueService.enqueueWaitingQueue(2L))  
+                .then(queueService.enqueueWaitingQueue(3L))  
+                .then(queueService.enqueueWaitingQueue(4L))  
+                .then(queueService.enqueueWaitingQueue(5L));  
+  
+        StepVerifier.create(setup.then(queueService.allow(3L)))  
+                .expectNext(3L)  
+                .verifyComplete();  
+    }  
+    @DisplayName("허용된 유저가 아니면 false를 반환한다")  
+    @Test  
+    void isNotAllowed() {  
+        StepVerifier.create(queueService.isAllowed(99L))  
+                .expectNext(false)  
+                .verifyComplete();  
+    }  
+    @DisplayName("대기열 큐에서 허용된 후 다른 아이디로 허용 여부 확인하면 false 반환한다")  
+    @Test  
+    void isAllowedOtherUserId() {  
+        StepVerifier.create(queueService.enqueueWaitingQueue(100L)  
+                        .then(queueService.allow(3L))  
+                        .then(queueService.isAllowed(101L)))  
+                .expectNext(false)  
+                .verifyComplete();  
+    }  
+    @DisplayName("대기열 큐에서 허용된 아이디로 여부 확인하면 true 반환한다")  
+    @Test  
+    void isAllowed() {  
+        Long userId = 100L;  
+  
+        StepVerifier.create(queueService.enqueueWaitingQueue(userId)  
+                        .then(queueService.allow(3L))  
+                        .then(queueService.isAllowed(userId)))  
+                .expectNext(true)  
+                .verifyComplete();  
+    }}
+```
