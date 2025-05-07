@@ -607,6 +607,7 @@ void addZSetWhenDuplicated() {
 그래서 timestamp를 매번 생성해서 넣었는데도 통과해버림 ㄷㄷ 
 - 임베디드 레디스라서 그런게 아닌가 싶다..
 ```java
+  
 @Test  
 void addZSetWhenDuplicated() {  
     Long userId = 1L;  
@@ -616,9 +617,49 @@ void addZSetWhenDuplicated() {
             .expectNext(true)  
             .verifyComplete();  
   
-    StepVerifier.create(redisRepository.addZSet(queue, userId, Instant.now().getEpochSecond()))  
-            .expectNext(false)  
-            .verifyComplete();  
+    reactiveRedisTemplate.opsForZSet().score(queue, userId.toString())  
+            .doOnNext(score -> System.out.println("Score1: " + score.toString()))  
+                    .subscribe();  
+  
+StepVerifier.create(redisRepository.addZSet(queue, userId, Instant.now().toEpochMilli()))  
+    .expectNext(false)  
+    .verifyComplete();  
+  
+    reactiveRedisTemplate.opsForZSet().score(queue, userId.toString())  
+            .doOnNext(score -> System.out.println("Score2: " + score.toString()))  
+            .subscribe();  
 }
 
+```
+
+`Instant.now().*`를 다른걸로 하니 갱신이 확인된다 ㄷㄷ
+```text
+Score1: 1.746535934E9
+Score2: 1.746535934746E12
+```
+
+
+sorted set에 데이터 추가시 nx 옵션을 주면 갱신이 안되도록 막을 수 있다. `reactiveRedisTemplate.opsForZSet().add(..)`로는 옵션을 추가할 수 없었기 때문에 아래와 같이 구현체를 찾아서 처리하도록 했다.
+
+```java
+@Repository  
+@RequiredArgsConstructor  
+public class RedisRepositoryImpl implements RedisRepository {  
+    private final ReactiveRedisTemplate<String, String> reactiveRedisTemplate;  
+  
+    @Override  
+    public Mono<Boolean> addZSetIfAbsent(String queue, Long userId, Long timestamp) {  
+        ReactiveZSetCommands.ZAddCommand zAddCommand = ReactiveZSetCommands.ZAddCommand.tuple(Tuple.of(userId.toString().getBytes(), timestamp.doubleValue()))  
+                .nx().to(ByteBuffer.wrap(queue.getBytes()));  
+  
+        return reactiveRedisTemplate.getConnectionFactory()  
+                .getReactiveConnection()  
+                .zSetCommands()  
+                .zAdd(Mono.just(zAddCommand))  
+                .next()  
+                .map(response -> response.getOutput() != null && response.getOutput().intValue() == 1);  // 추가 성공 : 1, 실패 : 0
+    }
+
+	//..
+}
 ```
