@@ -585,6 +585,7 @@ public class CorsGlobalConfig implements WebFluxConfigurer {
 - checked 요청시 userId의 score가 갱신되는 이슈 발생
 - 아래 테스트가 통과되는 이유는 timestamp가 동일했기 때문에 false를 반환 
 	- 만약 timestamp가 다르면 addZSet 호출 시 score가 갱신되어 버린다💩
+	- `Instant.now().getEpochSecond()`가 차이가 없어서 false를 반환한 것이었다.
 
 ```java
 @Test  
@@ -604,8 +605,7 @@ void addZSetWhenDuplicated() {
 ```
 
 
-그래서 timestamp를 매번 생성해서 넣었는데도 통과해버림 ㄷㄷ 
-- 임베디드 레디스라서 그런게 아닌가 싶다..
+그래서 timestamp를 달리 설정했는데, 갱신이 되어버림..
 ```java
   
 @Test  
@@ -662,4 +662,37 @@ public class RedisRepositoryImpl implements RedisRepository {
 
 	//..
 }
+```
+
+
+### 대기열 스케쥴러 개발 
+
+**TODO.**
+- 평균 예상 처리시간(사용자), 대기큐 허용 유저 수, 요청 시간 등 계산
+
+
+
+```java
+
+  private final String USER_QUEUE_WAIT_KEY_FOR_SCAN = "users:queue:*:wait";
+
+  // 어플리케이션 실행 후 5초 뒤 스케쥴링 동작, 그리고 10초 주기로 반복
+  @Scheduled(initialDelay = 5000, fixedDelay = 10000)
+    public void scheduleAllowUser() {
+        if (!scheduling) {
+            log.info("passed scheduling...");
+            return;
+        }
+        log.info("called scheduling...");
+
+        var maxAllowUserCount = 3L;
+        reactiveRedisTemplate.scan(ScanOptions.scanOptions()
+                        .match(USER_QUEUE_WAIT_KEY_FOR_SCAN) // 정규 표현식 필요
+                        .count(100)
+                        .build())
+                .map(key -> key.split(":")[2]) // 큐 이름을 꺼내서 보내면 repository에서 formatted 처리
+                .flatMap(queue -> allowUser(queue, maxAllowUserCount).map(allowed -> Tuples.of(queue, allowed)))
+                .doOnNext(tuple -> log.info("Tried %d and allowed %d members of %s queue".formatted(maxAllowUserCount, tuple.getT2(), tuple.getT1())))
+                .subscribe();
+    }
 ```
