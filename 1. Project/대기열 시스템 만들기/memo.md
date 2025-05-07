@@ -667,10 +667,33 @@ public class RedisRepositoryImpl implements RedisRepository {
 
 ### 대기열 스케쥴러 개발 
 
+스프링 스케쥴러를 사용해서 webflux 서버에서 주기적으로 대기열 큐의 유저를 허용한다
+
+**참고.**
+- [Redis Cli - SCAN](https://redis.io/docs/latest/commands/scan/)
+
+
 **TODO.**
 - 평균 예상 처리시간(사용자), 대기큐 허용 유저 수, 요청 시간 등 계산
 
+application.yml 추가
+```text
+scheduler:  
+  enabled: false  
+  max-allow-user-count: 10
+```
 
+어노테이션 추가
+```java
+@EnableScheduling  
+@SpringBootApplication  
+public class WebfluxApplication {  
+  
+  public static void main(String[] args) {  
+    SpringApplication.run(WebfluxApplication.class, args);  
+  }
+}
+```
 
 ```java
 
@@ -691,8 +714,54 @@ public class RedisRepositoryImpl implements RedisRepository {
                         .count(100)
                         .build())
                 .map(key -> key.split(":")[2]) // 큐 이름을 꺼내서 보내면 repository에서 formatted 처리
-                .flatMap(queue -> allowUser(queue, maxAllowUserCount).map(allowed -> Tuples.of(queue, allowed)))
+                .flatMap(queue -> allowUser(queue, maxAllowUserCount).map(allowed -> Tuples.of(queue, allowed))) // allowed는 카운팅
                 .doOnNext(tuple -> log.info("Tried %d and allowed %d members of %s queue".formatted(maxAllowUserCount, tuple.getT2(), tuple.getT1())))
                 .subscribe();
     }
 ```
+
+
+내가 작성한 로직
+- `wait:queue` 자체를 가져오기 때문에 split 처리 필요하지 ❌
+	- 만약 **큐 이름이 여러 개인 경우 유용**할 것으로 보인다.
+```java
+@Scheduled(initialDelay = 5000, fixedDelay = 10000)  
+public void allowWaitingQueueUser() {  
+    if(!scheduling) {  
+        log.info("passed scheduling...");  
+        return;  
+    }  
+    log.info("process scheduling...");  
+    redisRepository.scan("wait:*", 100L)  
+            .flatMap(queue -> allow(queue, maxAllUserCount).map(allowedCount -> Tuple.of(queue.getBytes(), allowedCount.doubleValue())))  
+            .doOnNext(tuple -> log.info("Tried %d and allowed %d members of %s queue".formatted(maxAllUserCount, tuple.getScore().longValue(), new String(tuple.getValue()))))  
+            .subscribe();  
+}
+```
+
+
+실행시 아래와 같이 스케쥴러가 동작하여 허용하는 것을 확인할 수 있다.
+```shell
+127.0.0.1:6379> monitor
+OK
+1746590496.863138 [0 192.168.16.1:35418] "HELLO" "3"
+1746590496.867637 [0 192.168.16.1:35418] "CLIENT" "SETINFO" "lib-name" "Lettuce"
+1746590496.867647 [0 192.168.16.1:35418] "CLIENT" "SETINFO" "lib-ver" "6.4.2.RELEASE/f4dfb40"
+1746590496.884343 [0 192.168.16.1:35418] "SCAN" "0" "MATCH" "wait:*" "COUNT" "100"
+1746590496.890308 [0 192.168.16.1:35418] "ZPOPMIN" "wait:queue" "3"
+1746590496.897075 [0 192.168.16.1:35418] "ZADD" "proceed:queue" "NX" "1.746590496E9" "102"
+1746590496.897612 [0 192.168.16.1:35418] "ZADD" "proceed:queue" "NX" "1.746590496E9" "103"
+1746590496.898098 [0 192.168.16.1:35418] "ZADD" "proceed:queue" "NX" "1.746590496E9" "104"
+```
+
+
+---
+
+### 대기열 이탈
+
+**절차**
+- 대기열 큐에 있던 유저가 진입 허용되면 `/touch` 호출해서 토큰을 할당 받음
+	- `rank < 1` 인 경우 `/touch`를 클라이언트에서 호출
+- 그리고 **타겟 페이지**(`/index`)로 리다이렉트할 때 쿠키에 담긴 토큰을 통해 검증한다
+
+
