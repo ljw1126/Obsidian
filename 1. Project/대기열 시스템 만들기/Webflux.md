@@ -4,6 +4,8 @@
 	- [Spring @Async](https://www.youtube.com/watch?v=gXWc--qL8GM)
 		- @Async 설정 방법 설명 후에 프록시에 대한 설명이 더 많은거 같음
 - [리액티브 시스템 Reactive Streams 개념 설명](https://www.youtube.com/watch?v=C6Se9jKB5Zc)
+- [우아한 형제 - 가상 스레드](https://techblog.woowahan.com/15398/)
+
 ---
 **TODO.** 
 - Webflux와 Reactive Redis란?

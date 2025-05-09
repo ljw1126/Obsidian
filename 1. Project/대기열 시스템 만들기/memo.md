@@ -771,3 +771,69 @@ OK
 
 > **고민해본 것**
 > 참고로 **JWT 토큰**과 **대기열 토큰**은 목적이 다르다! 그러므로 혼용해서 사용하지 않는 게 맞음. 즉, 대기열 통과 확인용 토큰은 별도로 간단하게 유지하고, 전역 인증이 필요할 땐 정식 JWT를 사용하는 구조가 가장 현실적입니다.
+
+
+SHA-256 사용해서 임의 해쉬 값을 토큰으로 활용
+- 대기열 페이지에서 
+	- HTTP Polling 통해 대기열 순위 조회 (3s 단위)
+	- 대기열 순위가 1 미만인 경우 token 발급 요청 후 `/inedx` 이동
+		- webflux 서버에서 쿠키로 발급된다
+- `/index` 처리하는 컨트롤러에서
+	- webflux 서버에 토큰의 유효성 검사 요청 (Webclient 사용)
+	- 유효한 경우 `index.html` 이동
+	- 유효하지 않은 경우 대기열 추가 후 `waiting-room.html` 이동
+- 토큰 검증에 대한 책임과 대기열 추가(with 순위 조회)에 대한 비즈니스 로직이 분리됨 
+	- 그러다보니 webflux 서버에 controller, service 비즈니스 로직이 간소화됨
+
+
+### 부하 테스트 
+
+- JMeter 사용 
+	- Number of Threads(users) : `1,000`
+	- Ramp-up period (seconds) : `10`
+	- Loop Count : `inf`
+- JMeter 설치시 plugin manager.jar 파일 다운 받아 `/lib/ext`에 저장
+	- plugin manager 통해 필요한 플러그인 추가 생성
+- 데스크탑(ubuntu)에서 
+	- 서버(webmvc + webflux) 실행 + redis (docker)
+	- jmeter 실행
+	- 잡음으로 인해 테스트 성능이 제대로 나오지 않음 
+		- macbook에서 부하 테스트 하도록 분리하여 성능 확인
+
+
+**데스크탑(Ubuntu) IP 주소 확인** 
+```shell
+$ hostname -I | awk '{print $1}'
+```
+
+**데스크탑(Ubuntu) 방화벽 허용** 
+```shell
+$ sudo ufw allow 9090/tcp
+$ sudo ufw reload
+```
+- 9090 포트가 허용되지 않아 노트북 통해 접근이 되지 않음
+- ping이나 브라우저 통해 접속 확인
+
+
+**Redis 컨테이너**
+tmux 활용해 2개 화면으로 분리
+```shell
+$ docker exec -it -uroot {컨테이너명} redis-cli
+
+or 
+
+$ docker exec -it -uroot {컨테이너명} /bin/sh
+$ redis-cli -h localhost -p 6379
+
+# 모니터링 활성화
+$ monitor
+
+# wait:queue와 proceed:queue의 카운팅을 출력을 반복
+$ while [ true ]; do date; redis-cli zcard wait:queue; redis-cli zcard proceed:queue; sleep 1; done;
+```
+
+**서버 실행**
+각 프로젝트의 `/build/lib`로 이동하여 실행
+```shell
+$ java -jar {*.jar} --spring.profiles.active=local
+```
