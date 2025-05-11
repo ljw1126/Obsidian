@@ -68,7 +68,7 @@ Spring MVC의 경우
 - https://www.reactive-streams.org/
 - https://projectreactor.io/
 
-**1. Reatice Stream**
+**1. Reactive Stream**
 - 비동기 스트림 처리 
 - 논블로킹 백프레셔 제공
 - Publisher, Subscriber, Subscription, Processor 로 구성
@@ -837,3 +837,10 @@ $ while [ true ]; do date; redis-cli zcard wait:queue; redis-cli zcard proceed:q
 ```shell
 $ java -jar {*.jar} --spring.profiles.active=local
 ```
+
+---
+
+5/10 TODO
+1. `../checked` API 에서 boolean형 accessible이 필요없어짐
+2. `/touch` 토큰 발급 처리시 유효성 검사를 하지 않고 무조건 발급해주고 있었다.
+3. 스프링 스케쥴러를 webflux에서 분리할 필요가 있어 보임
