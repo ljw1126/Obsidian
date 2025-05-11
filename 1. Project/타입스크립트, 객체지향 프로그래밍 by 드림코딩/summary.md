@@ -595,3 +595,724 @@ console.log(addNumber(1, 2, 3, 4));
 
 }
 ```
+
+---
+
+## 객체 지향 프로그래밍(OOP)
+- 프로그래밍 패러다임 중 하나
+
+> [!info] a programming paradiam based on the concept of "objects" which can contain `data` and `code`
+
+
+**🔄 Imperative and Procedural Programming** (명령과 절차적 프로그래밍)
+- 절차지향적 프로그래밍 단점
+	- 변경에 취약하다 (사이드 이펙트 발생 가능)
+	- 유지보수 및 확장이 어렵다
+- 객체지향 프로그래밍
+	- 서로 관련있는 객체끼리 메시지를 통해 상호작용
+	- 재사용 가능
+	- 장점
+		- Productivity : 생산성을 높여줌
+		- Faster
+		- higher-quality : 높은 퀄리티 
+
+
+✅ **class vs object**
+- `class`
+	- template
+	- declare once
+	- no data in
+- `object`
+	- instance of a class
+	- created many times
+	- data in
+
+### 객체지향 원칙 (4가지)
+**✅ 캡슐화 (Encapsulation)**
+- 서로 관련있는 데이터와 함수를 한 군데에 모음 
+- + 외부로 노출 시킬 필요없는 의존관계를 숨김으로써 클라이언트와의 결합도를 낮추고, 객체의 내부의 상태 변경에 대한 접근 제어를 제공할 수 있다. #리팩터링2판 
+
+**✅ 추상화 (Abstraction)**
+- 내부의 복잡한 기능을 알 필요없이, 외부로 노출된 인터페이스 통해 사용할 수 있도록 함
+
+**✅ 상속 (Inheritance)**
+- `IS-A` 관계
+- 예. animal 클래스를 상속 
+	- dog
+	- cat
+- +자식 클래스는 부모 클래스의 속성과 메서드를 사용할 수 있다.
+	- 단, 이로인해 부모 클래스오의 결합도가 높아지고 부모 클래스의 변경이 자식 클래스로 전파된다
+	- 또한, 자식 클래스에서 부모 클래스의 메서드를 임의로 오버라이딩 하게 되면 캡슐화가 깨질 수 있다
+	- 자바에서는 단일 상속만을 지원하므로 `상속보다는 위임을 사용하라`는 말을 흔히 함
+
+**✅ 다형성 (Polymorphism)**
+- 다양한(poly) 형태(morphism)
+
+
+### 절차 지향적으로 커피 기계 만들기 💩
+```typescript
+{
+	type CoffeeCup = {
+		shots: number;
+		hashMilk: boolean;
+	};
+
+	const BEANS_GRAMM_PER_SHOT:number = 7; // 커피 한잔당 필요한 원두 개수
+	let coffeeBeans: number = 0;
+	function makeCoffee(shots: number):CoffeeCup {
+		if(coffeBeans < shots * BEANS_GRAMM_PER_SHOT) {
+			throw new Error('Not enough coffee beans!🫘');
+		}
+
+		coffeeBeans -= shots * BEANS_GRAMM_PER_SHOT;
+		return {
+			shots: shots,
+			hasMilk: false
+		}
+	};
+}
+
+coffeeBeans = 15;
+const coffee = makeCoffee(2);
+console.log(coffee);
+```
+
+```shell
+// 실행
+$ ts-node {*.ts}
+```
+
+
+### 객체 지향적으로 커피 기계 만들기 💡
+```typescript
+{
+	type CoffeeCup = {
+		shots: number;
+		hashMilk: boolean;
+	};
+
+	class CoffeeMaker {
+		static BEANS_GRAMM_PER_SHOT:number = 7; // class level
+		coffeeBeans: number = 0; // instance(object) level
+
+		constructor(beans:number) {
+			this.coffeeBeans = beans;
+		}
+
+		static makeMachine(beans: number): CoffeeMaker {
+			return new CoffeeMaker(beans);
+		}
+		
+		makeCoffee(shots: number):CoffeeCup {
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+	
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+			return {
+				shots: shots,
+				hasMilk: false
+			}
+		};
+	}	
+}
+
+const maker = new CoffeeMaker(100);
+const coffee = maker.makeCoffee(2);
+console.log(coffee);
+
+
+const staticMaker = CoffeeMaker.makeMachine(10);
+```
+- 클래스는 템플릿이고, 데이터가 없는 상태
+	- 인스턴스는 데이터가 있는 상태
+
+
+### 캡슐화 시켜보기 (to. 커피머신)
+- ex. 고양이가 느끼는 `감정`들은 모두 고양이의 `상태`
+- `CoffeeMaker`를 초기화할 때 음수가 들어올 수 있다
+	- 제약 조건 필요
+	- 특별한 키워드가 없으면 접근제어자가 `public`으로 지정됨
+
+```typescript
+{
+	type CoffeeCup = {
+		shots: number;
+		hashMilk: boolean;
+	};
+
+	class CoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;  // ✨ 접근제어자 수정
+		private coffeeBeans: number = 0; // ✨
+
+		private constructor(beans:number) { // ✨
+			this.coffeeBeans = beans;
+		}
+
+		static makeMachine(beans: number): CoffeeMaker {
+			return new CoffeeMaker(beans);
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+		
+		makeCoffee(shots: number):CoffeeCup {
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+	
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+			return {
+				shots: shots,
+				hasMilk: false
+			}
+		};
+	}	
+}
+
+```
+- 커피 콩을 외부에서 직접 필드에 접근해서 변경할 수 없다 
+- 오로지 팩터리, 생성자, fillConffeeBeans() 를 통해서 상태 변경에 대한 접근 제어를 제공
+	- **캡슐화**💊
+	- 상태 변경되는 곳이 메서드로 제약 되기 때문에 문제 원인 파악이나 유지보수 용이
+
+> [!info] 생성자가 private로 선언되어 있으면 정적 팩터리 메서드 같은게 있지 않나라는 생각으로 유연하게 이어질 수 있구나
+
+
+
+### Abstraction 추상화 
+
+```typescript
+
+{
+	type CoffeeCup = {
+		shots: number;
+		hashMilk: boolean;
+	};
+
+	interface CoffeeMaker { // prefix로 I*를 붙이기도 한다
+		makeCoffee(shots: number): CoffeeCup;
+	}
+
+	class CoffeeMachine implements CoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;
+		private coffeeBeans: number = 0;
+
+		private constructor(beans:number) {
+			this.coffeeBeans = beans;
+		}
+
+		static makeMachine(beans: number): CoffeeMachine {
+			return new CoffeeMachine(beans);
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+
+		private grindBeans(shots:number) {
+			console.log(`grinding beans for ${shots}`);
+			
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+			
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+		}
+
+		private preheat() {
+			console.log('heating up ... 🔥');
+		}
+
+		private extract(shots:number): CoffeeCup {
+			console.log(`Pulling ${shots} shots... ☕️`);
+			return {
+				shots,
+				hasMilk: false
+			}
+		}
+		
+		makeCoffee(shots: number):CoffeeCup {
+			this.grindBeans(shots);
+			this.preheat();
+			return this.extract(shots);
+		};
+	}	
+}
+
+
+const maker:CoffeeMaker = CoffeeMachine.makeMachine(32);
+maker.makeCoffee(2);
+```
+- 추상화는 복잡한 객체 내부 메서드를 노출할 필요없이 인터페이스를 간단하게 만듦으로써 클라이언트가 심플하게 사용할 수 있도록 지원 가능
+	- `makeCoffee(..)`만 호출하면 커피를 만들 수 있다
+- `CoffeeMaker` 인터페이스를 정의
+	- 인터페이스에 없는 함수는 클라이언트가 호출 못함
+	- 인터페이스를 통해 정보 은닉이랑 추상화 제공 가능
+		- 정보 은닉: CoffeeMachine의 메서드 정보 숨김 
+		- 추상화: 커피를 만들기 위해 grindBeans, preheat, extract 호출 및 순서 알 필요없이 인터페이스에 노출된 `makeCoffee`만 호출하면 됨
+			- 단, `makeCoffee`를 구현할 책임이 있다 
+
+
+### Interface, 모든 것의 시작
+- CommercialCoffeeMaker 인터페이스 추가 
+
+```typescript
+
+{
+	type CoffeeCup = {
+		shots: number;
+		hashMilk: boolean;
+	};
+
+	interface CoffeeMaker {
+		makeCoffee(shots: number): CoffeeCup;
+	}
+
+	interface CommercialCoffeeMaker {
+		makeCoffee(shots: number): CoffeeCup;
+		fillCoffeeBeans(beans:number): vodi;
+		clean(): void;
+	}
+
+	class CoffeeMachine implements CoffeeMaker, CommercialCoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;
+		private coffeeBeans: number = 0;
+
+		private constructor(beans:number) {
+			this.coffeeBeans = beans;
+		}
+
+		static makeMachine(beans: number): CoffeeMachine {
+			return new CoffeeMachine(beans);
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+
+		private grindBeans(shots:number) {
+			console.log(`grinding beans for ${shots}`);
+			
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+			
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+		}
+
+		private preheat() {
+			console.log('heating up ... 🔥');
+		}
+
+		private extract(shots:number): CoffeeCup {
+			console.log(`Pulling ${shots} shots... ☕️`);
+			return {
+				shots,
+				hasMilk: false
+			}
+		}
+		
+		makeCoffee(shots: number):CoffeeCup {
+			this.grindBeans(shots);
+			this.preheat();
+			return this.extract(shots);
+		};
+
+		clean(): void {
+			console.log('cleaning...🧼');
+		}
+	}	
+}
+
+
+const maker:CoffeeMaker = CoffeeMachine.makeMachine(32);
+maker.makeCoffee(2);
+
+
+const maker:CommercialCoffeeMaker = CoffeeMachine.makeMachine(32);
+maker.clean(); // 인터페이스에서 제공되는 메서드만 호출 가능
+```
+
+
+```typescript
+{
+	class AmateurUser {
+		constructor(private machine: CoffeeMaker) {}
+		makeCoffee() {
+			const coffee = this.machine.makeCoffee(2);
+			console.log(coffee);
+		}
+	}
+
+
+	class ProBarista {
+		constructor(private machine: CommercialCoffeeMaker) {}
+		makeCoffee() {
+			const coffee = this.machine.makeCoffee(2);
+			console.log(coffee);
+			this.machine.fillCoffeeBeans(45);
+			this.machine.clean();
+		}
+	}
+
+}
+
+
+```
+- 생성자에 인터페이스 규격화해서 기능 제약 가능
+
+### Inheritance, 상속으로 다양한 커피 기계 만들기 
+
+```typescript
+{
+	type CoffeeCup = {
+		shots: number;
+		hashMilk: boolean;
+	};
+
+	interface CoffeeMaker {
+		makeCoffee(shots: number): CoffeeCup;
+	}
+
+	class CoffeeMachine implements CoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;
+		private coffeeBeans: number = 0;
+
+		private constructor(beans:number) {
+			this.coffeeBeans = beans;
+		}
+
+		static makeMachine(beans: number): CoffeeMachine {
+			return new CoffeeMachine(beans);
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+
+		private grindBeans(shots:number) {
+			console.log(`grinding beans for ${shots}`);
+			
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+			
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+		}
+
+		private preheat() {
+			console.log('heating up ... 🔥');
+		}
+
+		private extract(shots:number): CoffeeCup {
+			console.log(`Pulling ${shots} shots... ☕️`);
+			return {
+				shots,
+				hasMilk: false
+			}
+		}
+		
+		makeCoffee(shots: number): CoffeeCup {
+			this.grindBeans(shots);
+			this.preheat();
+			return this.extract(shots);
+		};
+	}	
+
+	// ✅ 상속, Inheritance
+	class CaffeeLatteMachine extends CoffeeMachine {
+		constructor(beans:number, public readyonly serialNumber: string) {
+			super(beans);
+		}
+
+		private steamMilk(): void {
+			console.log('Steaming some milk...');
+		}
+		
+		makeCoffee(shots: number): CoffeeCup {
+			const coffee = super.makeCoffee(shots);
+			this.steamMilk();
+			return {
+				...coffeee.shots,
+				hasMilk: true
+			}
+		};		
+	}
+}
+
+const machine = new CoffeeMachine(23);
+const latteMachine = new CaffeLatteMachine(23, 'SSSS');
+const coffee = latteMachine.makeCoffee(1);
+console.log(coffee);
+console.log(latteMachine.serialNumber);
+
+```
+
+
+### Polymorphism 다형성을 적용한 커피머신
+```typescript
+{
+	type CoffeeCup = {
+		shots: number;
+		hashMilk?: boolean;
+		hasSugar?: boolean; // ? : optional
+	};
+
+	interface CoffeeMaker {
+		makeCoffee(shots: number): CoffeeCup;
+	}
+
+	class CoffeeMachine implements CoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;
+		private coffeeBeans: number = 0;
+
+		private constructor(beans:number) {
+			this.coffeeBeans = beans;
+		}
+
+		static makeMachine(beans: number): CoffeeMachine {
+			return new CoffeeMachine(beans);
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+
+		private grindBeans(shots:number) {
+			console.log(`grinding beans for ${shots}`);
+			
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+			
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+		}
+
+		private preheat() {
+			console.log('heating up ... 🔥');
+		}
+
+		private extract(shots:number): CoffeeCup {
+			console.log(`Pulling ${shots} shots... ☕️`);
+			return {
+				shots,
+				hasMilk: false
+			}
+		}
+		
+		makeCoffee(shots: number): CoffeeCup {
+			this.grindBeans(shots);
+			this.preheat();
+			return this.extract(shots);
+		};
+	}	
+
+	class CaffeeLatteMachine extends CoffeeMachine {
+		constructor(beans:number, public readyonly serialNumber: string) {
+			super(beans);
+		}
+
+		private steamMilk(): void {
+			console.log('Steaming some milk...');
+		}
+		
+		makeCoffee(shots: number): CoffeeCup {
+			const coffee = super.makeCoffee(shots);
+			this.steamMilk();
+			return {
+				...coffeee.shots,
+				hasMilk: true
+			}
+		};		
+	}
+
+	class SweetCoffeeMaker extends CoffeeMachine {
+		makeCoffee(shots:number): CoffeeCup {
+			const coffee = super.makeCoffee(shots);
+			return {
+				...coffee,
+				hasSugar: true
+			}
+		}
+	}
+}
+
+const machines: CoffeeMaker = [
+	new CoffeeMachine(16),
+	new CaffeeLatteMachine(16, '1'),
+	new SweetCoffeeMaker(16),
+	new CoffeeMachine(16),
+	new CaffeLatteMachine(16, '1'),
+	new SweetCoffeeMaker(16)
+];
+
+machines.forEach(machine => {
+	console.log('---------');
+	machine.makeCoffee(1);
+})
+```
+- 다형성을 통해 다양한 인스턴스(같은 인터페이스)에 있는 공통 API를 호출 가능하다
+	- 인터페이스 규격에 대한 세부 내용은 각 클래스별로 다양하게 구현 가능
+	- 클라이언트는 내부 구현에 알 필요없이 인터페이스에 정의된 규약에 따라 호출하면 이용 가능하다 
+
+### 상속의 문제점💩
+- 상속은 수직적으로 관계가 형성된다
+- 상속의 깊이가 깊어질 수록 디버깅이 어려워짐
+- 부모와 자식이 강결합하고 있어서 변경에 취약해짐 
+	- 부모에 추상 메서드나 필드 추가시 자식 클래스에 변경 전파 
+	- 자식 클래스가 부모 클래스 내용을 다 알기 때문에 오버라이딩 잘못해서 캡슐화 깨질 수 있다
+	- 무분별한 상속 남용으로 클래스 폭발 💥
+		- 다중 상속은 지원하지 않음 
+		- 조합을 하려면 결국 클래스가 추가될 수 밖에 없음
+
+### Composition, 위임
+- `Favor Composition over Inheritance`
+	- 상속보다는 위임을 사용해라
+- 상속이 무조건 나쁜건 아니다 
+	- +너무 상속만 사용해서 깊어지면 디버깅도 힘들고 정말 상속이 필요한 경우에 변경이 어려워질 수 있다.
+
+
+```typescript
+{
+
+	// 싸구려 우유 거품기
+	class CheapMilkSteamer {
+		private steamMilk(): void {
+			console.log('Steaming some milk ... 🥛');
+		}
+
+		makeMilk(cup: CoffeeCup): CoffeeCup {
+			this.steamMilk();
+			return {
+				...cup,
+				hasMilk: true
+			}
+		}
+	}
+
+	// 설탕 제조기
+	class AutomaticSugarMixer {
+		private getSugar() {
+			console.log('Getting some sugar from candy 🍬');
+		}
+
+		addSugar(cup: CoffeeCup): CoffeeCup {
+			const sugar = this.getSugar();
+			return {
+				...cup,
+				hasSugar: sugar;
+			}
+		}
+	}
+
+	interface CoffeeMaker {
+		makeCoffee(shots: number): CoffeeCup;
+	}
+
+	class CoffeeMachine implements CoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;
+		private coffeeBeans: number = 0;
+
+		private constructor(beans:number) {
+			this.coffeeBeans = beans;
+		}
+
+		static makeMachine(beans: number): CoffeeMachine {
+			return new CoffeeMachine(beans);
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+
+		private grindBeans(shots:number) {
+			console.log(`grinding beans for ${shots}`);
+			
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+			
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+		}
+
+		private preheat() {
+			console.log('heating up ... 🔥');
+		}
+
+		private extract(shots:number): CoffeeCup {
+			console.log(`Pulling ${shots} shots... ☕️`);
+			return {
+				shots,
+				hasMilk: false
+			}
+		}
+		
+		makeCoffee(shots: number): CoffeeCup {
+			this.grindBeans(shots);
+			this.preheat();
+			return this.extract(shots);
+		};
+	}	
+
+	class CaffeeLatteMachine extends CoffeeMachine {
+		constructor(beans:number, 
+		public readyonly serialNumber: string,
+		private milkFother: CheapMilkSteamer) { // ✅
+			super(beans);
+		}
+
+		private steamMilk(): void {
+			console.log('Steaming some milk...');
+		}
+		
+		makeCoffee(shots: number): CoffeeCup {
+			const coffee = super.makeCoffee(shots);
+			return this.milkFother.makeMilk(coffee); // ✅
+		};		
+	}
+
+	class SweetCoffeeMaker extends CoffeeMachine {
+		constructor(private beans: number, 
+		private sugar: AutomaticSugarMixer) {
+			super(beans);
+		}
+
+		makeCoffee(shots:number): CoffeeCup {
+			const coffee = super.makeCoffee(shots);
+			return sugar.addSugar(coffee); // ✅
+		}
+	}
+
+	class SweetCaffeLatteMachine extends CoffeMachine {
+		constructor(
+			private beans: number,
+			private milk: CheapMilkS
+		) {
+			
+		}
+	}
+
+}
+```
+- `CaffeLatteMachine`
+	- DI 통해 외부에서 객체를 주입하여 사용

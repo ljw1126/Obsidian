@@ -5,6 +5,9 @@
 		- @Async 설정 방법 설명 후에 프록시에 대한 설명이 더 많은거 같음
 - [리액티브 시스템 Reactive Streams 개념 설명](https://www.youtube.com/watch?v=C6Se9jKB5Zc)
 - [우아한 형제 - 가상 스레드](https://techblog.woowahan.com/15398/)
+- [토비의 봄 TV 12회 스프링 리액티브 프로그애밍(8) WebFlux](https://www.youtube.com/watch?v=ScH7NZU_zvk)
+- [토비의 봄 TV 13회 스프링 리액티브 프로그래밍(9) Mono의 동작방식과 block](https://www.youtube.com/watch?v=LK6NRV8tZBM)
+
 
 ---
 **TODO.** 
