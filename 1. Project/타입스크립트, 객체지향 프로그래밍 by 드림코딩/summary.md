@@ -1166,7 +1166,7 @@ const machines: CoffeeMaker = [
 machines.forEach(machine => {
 	console.log('---------');
 	machine.makeCoffee(1);
-})
+});
 ```
 - 다형성을 통해 다양한 인스턴스(같은 인터페이스)에 있는 공통 API를 호출 가능하다
 	- 인터페이스 규격에 대한 세부 내용은 각 클래스별로 다양하게 구현 가능
@@ -1303,12 +1303,21 @@ machines.forEach(machine => {
 		}
 	}
 
+	// ✅
 	class SweetCaffeLatteMachine extends CoffeMachine {
 		constructor(
 			private beans: number,
-			private milk: CheapMilkS
+			private milk: CheapMilkSteamer,
+			private sugar: AutomaticSugarMixer
 		) {
+			super(beans);
+		}
+
+		makeCoffee(shots:number): CoffeeCup {
+			const coffee = super.makeCoffee(shots);
+			const sugarAdded = this.suagr.addSugar(coffee); // ✅
 			
+			return milk.makeMilk(sugarAdded); // ✅
 		}
 	}
 
@@ -1316,3 +1325,225 @@ machines.forEach(machine => {
 ```
 - `CaffeLatteMachine`
 	- DI 통해 외부에서 객체를 주입하여 사용
+	- 코드의 재사용성을 높여줌
+		- 지금 코드의 단점 ➡️ 커플링이 높아짐 (연관관계를 멤버 필드로 가지게 되니깐 변경에 취약해질수도, 추상화에 의존하도록 하자! 하이레벨의존하고, 로우 레벨에 의존하지 않도록)
+
+### 강력한 interface
+- `상속보다 컴포지션을 선호해라`
+	- DI 받는 타입을 인터페이스(고수준) 추상화에 의존하도록 한다💡
+
+```typescript 
+
+{
+
+	interface MilkFrother {
+		makeMilk(cup: CoffeeCup): CoffeeCup;
+	}
+
+	interface SugarProvider {
+		addSugar(cup: CoffeeCup): CoffeeCup;
+	}
+
+
+	// 싸구려 우유 거품기
+	class CheapMilkSteamer implements MilkFrother {
+		private steamMilk(): void {
+			console.log('Steaming some milk ... 🥛');
+		}
+
+		makeMilk(cup: CoffeeCup): CoffeeCup {
+			this.steamMilk();
+			return {
+				...cup,
+				hasMilk: true
+			}
+		}
+	}
+
+	// 설탕 제조기
+	class AutomaticSugarMixer implements SugarProvider {
+		private getSugar() {
+			console.log('Getting some sugar from candy 🍬');
+		}
+
+		addSugar(cup: CoffeeCup): CoffeeCup {
+			const sugar = this.getSugar();
+			return {
+				...cup,
+				hasSugar: sugar;
+			}
+		}
+	}
+
+	// ✅ DI 받는 타입을 인터페이스로 변경, 구현체에 의존하지 않고 추상화에 의존
+	class SweetCaffeLatteMachine extends CoffeMachine {
+		constructor(
+			private beans: number,
+			private milk: MilkFrother, 
+			private sugar: SugarProvider
+		) {
+			super(beans);
+		}
+
+		makeCoffee(shots:number): CoffeeCup {
+			const coffee = super.makeCoffee(shots);
+			const sugarAdded = this.suagr.addSugar(coffee);
+			
+			return milk.makeMilk(sugarAdded); 
+		}
+	}
+
+}
+```
+- `인터페이스 == 규격서`
+- `MilkFrother`, `SuagrProvider` 인터페이스 구현체를 갈아가면서 사용가능
+	- 사용하는 커피 머신 입장에서는 구현체가 무엇인지 알 필요 없이 인터페이스 규격에 따라 호출하여 사용하기만 하면 된다✨
+	- 이름이 복잡한 상속 클래스가 필요없어지고, `CoffeeMachine`  통해서 처리 가능 해짐
+
+```typescript 
+{
+	interface MilkFrother {
+		makeMilk(cup: CoffeeCup): CoffeeCup;
+	}
+
+	interface SugarProvider {
+		addSugar(cup: CoffeeCup): CoffeeCup;
+	}
+
+	// Null Object Pattern
+	class NoMilk implements MilkFrother {
+		makeMilk(cup:CoffeeCup): CoffeeCup {
+			return cup;
+		}
+	}
+
+	// Null Object Pattern
+	class NoSugar implements SugarProvider {
+		addSugar(cup: CoffeeCup): CoffeeCup {
+			return cup;
+		}
+	}
+
+	class CoffeeMachine implements CoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;
+		private coffeeBeans: number = 0;
+
+		private constructor(beans:number,
+			private milk: MilkFrother,
+			private sugar: SugarProvider) {
+			this.coffeeBeans = beans;
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+
+		private grindBeans(shots:number) {
+			console.log(`grinding beans for ${shots}`);
+			
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+			
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+		}
+
+		private preheat() {
+			console.log('heating up ... 🔥');
+		}
+
+		private extract(shots:number): CoffeeCup {
+			console.log(`Pulling ${shots} shots... ☕️`);
+			return {
+				shots,
+				hasMilk: false
+			}
+		}
+		
+		makeCoffee(shots: number): CoffeeCup {
+			this.grindBeans(shots);
+			this.preheat();
+			const coffee this.extract(shots);
+			const sugarAdded = this.suagr.addSugar(coffee);
+			return milk.makeMilk(sugarAdded); 
+		};
+	}	
+
+}
+
+```
+- `Null Object Pattern` 적용
+	- `NoMilk` 클래스
+	- `NoSugar` 클래스
+
+
+> [!info] 오버 엔지니어링 하지 마라 ! 어느정도 중간점을 지키면서 개발하는 것도 필요
+
+
+### Abstract 클래스 사용 예시
+- **추상 클래스**
+- 상속 관계에서 반복되는 필드나 메서드가 있으면 추상 클래스를 만들어서 상속할 수 있다
+	- 추상 클래스는 자체적으로 생성자 초기화할 수 없다 
+	- 자식 클래스에서 super(..)
+
+```typescript 
+{
+	// ✅ abstract 키워드 추가
+	abstract class CoffeeMachine implements CoffeeMaker {
+		private static BEANS_GRAMM_PER_SHOT:number = 7;
+		private coffeeBeans: number = 0;
+
+		private constructor(beans:number) {
+			this.coffeeBeans = beans;
+		}
+
+		fillCoffeeBeans(beans:number) {
+			if(bean < 0) {
+				throw new Error('value of beans should be greater than 0');
+			}
+			this.coffeeBeans = beans;
+		}
+
+		private grindBeans(shots:number) {
+			console.log(`grinding beans for ${shots}`);
+			
+			if(this.coffeBeans < shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT) {
+				throw new Error('Not enough coffee beans!🫘');
+			}
+			
+			this.coffeeBeans -= shots * CoffeeMaker.BEANS_GRAMM_PER_SHOT;
+		}
+
+		private preheat() {
+			console.log('heating up ... 🔥');
+		}
+
+		// ✅ 추상 메서드 선언, 자식 클래스에서 무조건 구현해줘야 함
+		protected abstract extract(shots:number): CoffeeCup;
+		
+		makeCoffee(shots: number): CoffeeCup {
+			this.grindBeans(shots);
+			this.preheat();
+			return this.extract(shots);
+		};
+	}	
+
+
+	class SweetCoffeeMaker extends CoffeeMachine {
+		constructor(beans:number) {
+			super(beans);
+		}
+
+		protected extract(shots:number): CoffeeCup {
+			return {
+				shots,
+				hasSugar: true
+			};
+		}
+	}
+
+}
+```
