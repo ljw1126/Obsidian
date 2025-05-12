@@ -1547,3 +1547,489 @@ machines.forEach(machine => {
 
 }
 ```
+
+---
+
+### 객체지향 챌린지
+- Stack 만들어보기
+
+**단일 연결 리스트**로 구현
+```typescript
+{
+	interface Stack {
+		readonly size: number;
+		push(value: string): void;
+		pop(): string;
+	}
+
+	type StackNode = {
+		readonly value: string; // 불변성 유지 위해 readonly 
+		readonly next?: StackNode; // StackNode | undefined
+	}
+
+	class StackImpl implements Stack {
+		 // _ : 내부에서만 사용하는 값, 동일한 public 변수가 있다는걸 유추 가능
+		private _size: number; // 요소의 개수만 카운팅, 링크드 리스트이기 때문에
+		private head?: StackNode;  // ? : optional
+
+		constructor(private capacity: number) {}
+		
+		get size() {
+			return this._size;
+		}
+
+		push(value: string) {
+			if(this.size === this.capacity) {
+				throw new Error('Stack is full');
+			}
+
+			const node: StackNode = {
+				value,
+				next: this.head
+			};
+
+			this.head = node;
+			this._size += 1;
+		}
+
+		pop(): string {
+			// null == undefined(true), null !== undefined (true)
+			if(this.head == null) {
+				throw new Error('Stack is Empty');
+			}
+			
+			const node = this.head;
+			this.head = node.next;
+			this._size -= 1;
+
+			return node.value;
+		}
+	}
+
+	const stack = new StackImpl(10);
+	stack.push('1');
+	stack.push('2');
+	stack.push('3');
+
+	while(stack.size !== 0) {
+		console.log(stack.pop()); // 3 2 1
+	}
+
+}
+
+```
+
+---
+## 제네릭(Generic)
+
+### 함수에 제네릭 선언
+```typescript
+{
+	function checkNotNull(arg: number | null): number {
+		if(arg == null) {
+			throw new Error('now valid number!');
+		}
+
+		return arg;
+	}
+
+	const result = checkNoNull(123);
+	console.log(result);
+	checkNotNull(null); // throw Error
+
+	// 💩 타입 정보가 없어서 안정성도 줄어듦
+	function checkNotNull(arg: any | null): any {..}
+
+
+	// 💡 제네릭 선언, 함수가 사용될 때 타입 결정된다
+	function checkNotNull<T>(arg: T | null): T {
+		if(arg == null) {
+			throw new Error('now valid number!');
+		}
+
+		return arg;
+	}
+
+
+	const boal:boolean = checkNotNull(true);
+}
+```
+- `number` 타입만 받을 수 있는 상태 💩
+	- 다른 타입도 지원하려면 ?
+
+
+### 클래스에 제네릭 선언
+
+```typescript
+{
+	interface Employee {
+		pay(): void;
+	}
+
+	class FullTimeEmployee implements Employee {
+		pay() {
+			console.log('full time!!');
+		}
+
+		workFullTime() {}
+	}
+
+	class PartTimeEmployee implements Employee {
+		pay() {
+			console.log('part time!!');
+		}
+
+		workPartTime() {}
+	}
+
+	// 세부적인 타입을 인자로 받아서 정말 추상적인 타입으로 다시 리턴하는 함수 💩
+	function payBad(employee: Employee): Employee {
+		employee.pay();
+		return employee;
+	}
+
+	// 💡
+    function pay<T extends Employee>(employee: T): T {
+	    employee.pay();
+	    return employee;
+    }
+
+	const shelly = new FullTimeEmployee();
+	const bob = new PartTimeEmployee();
+	shelly.workFullTime();
+	bob.workPartTime();
+
+	const shellyAfterPay = payBad(shelly);
+	const bobAfterPay = payBad(bob);
+
+	shellyAfterPay.workFullTime(); // ❌ 타입 정보 잃어비림
+	bob.workPartTime(); // ❌, 인터페이스 메서드만 노출
+
+
+	const shellyAfterPay = pay(shelly);
+	const bobAfterPay = pay(bob);
+
+	shellyAfterPay.workFullTime();
+	bob.workPartTime();
+}
+```
+
+
+오브젝트와 키값을 파라미터로 전달되었을 때 타입이 보장되면서 값을 리턴하는 함수 생성
+```typescript
+{
+
+	const obj = {
+		name: 'shelly',
+		age: 20 
+	};
+
+	const obj2 = {
+		animal: '🦔'
+	}
+
+	// K : T 오브젝트에 포함된 키만 허용💡
+	function getValue<T, K extends keyof T>(obj: T, key: K): T[K] {
+		return obj[key];
+	}
+
+	console.log(getValue(obj, 'name'));
+	console.log(getValue(obj, 'age'));
+	console.log(getValue(obj2, 'animal'));
+}
+
+```
+
+### 제네릭 연습
+string 타입만 지원하는 Stack을 제네릭 지원하도록 변경
+```typescript
+{
+	interface Stack<T> {
+		readonly size: number;
+		push(value: T): void;
+		pop(): T;
+	}
+
+	type StackNode<T> = {
+		readonly value: T; // 불변성 유지 위해 readonly 
+		readonly next?: StackNode<T>; // StackNode | undefined
+	}
+
+	class StackImpl<T> implements Stack<T> {
+		 // _ : 내부에서만 사용하는 값, 동일한 public 변수가 있다는걸 유추 가능
+		private _size: number; // 요소의 개수만 카운팅, 링크드 리스트이기 때문에
+		private head?: StackNode<T>;  // ? : optional
+
+		constructor(private capacity: number) {}
+		
+		get size() {
+			return this._size;
+		}
+
+		push(value: T) {
+			if(this.size === this.capacity) {
+				throw new Error('Stack is full');
+			}
+
+			// 타입 추론
+			const node = {
+				value,
+				next: this.head
+			};
+
+			this.head = node;
+			this._size += 1;
+		}
+
+		pop(): T {
+			// null == undefined(true), null !== undefined (true)
+			if(this.head == null) {
+				throw new Error('Stack is Empty');
+			}
+			
+			const node = this.head;
+			this.head = node.next;
+			this._size -= 1;
+
+			return node.value;
+		}
+		
+	}
+
+	const stack = new StackImpl<string>(10);
+	stack.push('1');
+	stack.push('2');
+	stack.push('3');
+
+	while(stack.size !== 0) {
+		console.log(stack.pop()); // 3 2 1
+	}
+
+	const stack = new StackImpl<number>(10);
+	stack.push(123);
+	stack.push(456);
+	stack.push(789);
+
+	while(stack.size !== 0) {
+		console.log(stack.pop()); // 789 456 123
+	}
+}
+```
+
+
+---
+
+## API 읽어보기  (여기부터 조금 어렵네.. 학습 테스트 필요)
+- https://github.com/microsoft/TypeScript/blob/main/src/lib/es5.d.ts
+- `as` : type assertion, 타입이 확실할 때 지정 가능
+- `value is S` : S 타입인지 
+
+```typescript
+class Animal {}
+
+class Cat extends Animal {
+	isCat: boolean = true;
+}
+
+class Dog extends Animal {
+	isDog: boolean = false; 
+}
+
+const animals: Animal[] = [new Cat(), new Cat(), new Dog()];
+function isCat(animal: Animal): animal is Cat {
+	return (animal as Cat).isCat !== undefined;
+}
+
+console.log(animals.every<Cat>(isCat)); // 전부 맞으면 true
+```
+
+### 오픈 소스 프로젝트 활용하기
+- 프로그래밍 언어를 공부한다고 해서 실력이 오르진 않는다 
+- 공식사이트와 API를 잘 활용
+- 잘 작성되어 있는 코드를 보기만 해도 실력 향상 가능
+	- 오픈 소스 프로젝트를 활용💡 (제품에 사용된 걸 보는게 더 좋다)
+	- https://github.com/microsoft/vscode
+		- `common` 디렉터리나 찾아보기
+	- https://github.com/microsoft/TypeScript
+
+
+---
+
+## 에러 처리(Exception Handling)
+- ERROR : expected
+- Exception: unexpected
+	- 반대 아닌가?? 에러는 걸리면 안되는 거고, Exception은 잡거나 던지거나 둘 중 하나
+
+```markdown
+**특정한 경로의 파일을 읽어서 데이터를 보여주는 앱을 예로 들면:**
+
+해당 경로가 존재한다고 100% 확신하고, 데이터를 보여주죠? 여기서 try { 파일 읽기 } catch(error) 는 우리가 100% 존재 한다고 확신했지만, 혹시 만약의 경우를 대비해서, 파일을 읽지 못하는 예외 (exception)이 발생하면 catch에서 에러 처리를 해주죠.
+
+여기서 발생하는 에러는 **예****외 상황**이예요. 앱이 정상적으로 동작하지 않을때 발생할 수 있는 예외상황. 그쵸?
+
+제가 강의에서 언급한 에러는, 앱에서 발생할 수 있는 시스템 적인 메모리 부족이나, 배터리 부족, 보안 에러 등과 같은 **심각한 에러를 (예상하지 못하는, 시스템 적인 에러 등)** 말하는 것이 아니라, **우리 앱에서 발생할 수 있는 예상하는 실패 케이스들을 말한답니다.**
+
+예를 들어, 로그인 실패는 예외 상황 (exception)이 아니라, 앱을 사용하는 use case중 발생할 수 있는 케이스중 하나이기 때문에 exeption으로 처리 하는게 아니라, Error State(LoginFail과 같은)를 만들어서 처리 하자는거죠
+```
+
+
+> JS에서는 Error가 있음 (Java는 Exception)
+
+
+```typescript
+{
+	function move(direction: 'u' | 'd' | 'l' | 'r')
+		swtich(direction) {
+			case 'u':
+				position.y += 1;
+				break;
+			case 'd':
+				position.y -= 1;
+				break;
+			case 'l':
+				postion.x -= 1;
+				break;
+			case 'r':
+				position.x += 1;
+				break; 
+			default:
+				const invalid: never = direction; // ✅
+				throw new Error(`unknown : {invalid}`);	
+		}
+	}
+}
+```
+- 모든 케이스를 다 처리했을때 default에는 `never`가 할당됨
+	- 이때 케이스를 전부 처리하지 않으면 default에 never 변수에서 컴파일 에러 발생
+
+
+### try, catch, finally
+```typescript
+{
+	function readFile(fileName: string): string {
+		if(fileName === 'not exist!💩') {
+			throw new Error(`file not exist ! ${fileName}`);
+		}
+		return 'file contents';
+	}
+
+	function closeFile(fileName: string) {
+		console.log(fileName);
+	}
+
+	const fileName = 'not exist!💩';
+	try {
+		console.log(readFile(fileName));
+	} catch(error) {
+		console.log(`catched`);
+	} finally {
+		closeFile('finally');
+	}
+
+}
+```
+
+
+```typescript
+{
+	class NetworkClient {
+		tryConnect(): void {
+			throw new Error('no network');
+		}
+	}
+
+	class UserService {
+		constructor(private client: NetworkClient){}
+
+		login() {
+			this.client.tryConnect();
+			// login...
+		}
+	}
+
+	class App {
+		constructor(private userService: UserService){}
+
+		run() {
+			try {
+				userService.login();
+			} catch(error) { // any 타입
+				// ..
+			}
+		}
+	}
+
+
+	const app = new App(new UserService(new NetworkClient));
+	app.run(); // 에러 로그 출력 
+}
+```
+- try, catch문은 
+	- `UserService`
+		- 우아하게, 정확하게 처리하지 못한다면 외부로 던지는게 나을 수 있다
+	- `App`
+		- 여기서 의미있는 에러 처리를 가능하다
+
+> ✅ 여기서 처리하는게 의미가 있는가? 우아하게 처리할 수 있는 곳에서 try catch를 선언한다
+
+
+### Error State
+- Error를 catch하면 any 타입이 되서 타입 정보가 잃어버리게 된다
+
+```typescript
+{
+	type NetworkErrorState = {
+		result: 'fail';
+		reason: 'offline' | 'down' | 'timeout';
+	}
+
+	type SuccessState = {
+		result: 'success';
+	}
+	
+	type ResultState = SuccessState | NetworkErrorState;
+
+	class NetworkClient {
+		tryConnect(): ResultState {
+			//
+		}
+	}
+
+	class UserService {
+		constructor(private client: NetworkClient){}
+
+		login() {
+			this.client.tryConnect();
+			// login...
+		}
+	}
+
+	class App {
+		constructor(private userService: UserService){}
+
+		run() {
+			const result = userService.login();
+			// ResultState 타입을 반환하는 걸 알기에 조건문 분기 처리 가능
+		}
+	}
+}
+```
+
+
+**💡 예외와 에러**
+```text
+좋은 질문 이예요 :) 
+
+말씀하신 것처럼 예외(Exception)는 프로그램에서 발생할 수 있는 예외적인 상황에 대해 얘기해요. 파일을 정상적으로 읽어 오지 못했거나, 네트워크에 접속이 안된다던지요.
+
+에러는 시스템 에러, 메모리 에러, 문법 에러 등 예외적인 상황을 포함하는 조금더 포괄적인 것을 말할 수 있을 것 같아요.
+
+제가 말하고 싶은 포인트는 이런 용어 적인 정의보다는, 간혹 개발자 분들이 성공적인 케이스만 (Happy Path 라고 부르지요) 생각해서 프로그램을 작성하고 그 외적인 것들은 다 예외로 간주하는 경우가 많은데요. 그렇게 프로그래밍을 하면 프로그램의 안정성과 사용성이 떨어지고 유지보수도 어려워요.
+
+발생할 수 있는 예외에 대해 무작정 (Try-Catch) 또는 throw new Error() 예외 처리를 하기 보다는, 예상 가능한 예외 상황이라면 제가 영상에서 보여드린 예제처럼 에러 상태를 정의해서 예외 적인 상황이 아니라, 우리가 예상하고 있는 에러 상황(상태)로 간주해서 각기 다른 처리를 해주는것이 좋다고 생각해요 :)
+
+
+// 다른 질문 글에서 
+각각 장단점이 존재 하기 때문에 **이 함수를 사용하는 사람이 알고 싶은것은(return) 무엇인가? 내가 꼭 무엇을 알려줘야 하는가?** 이 질문들에 대답을 찾다보면 어떤 값을 return해 줘야 하는지 좋은 답을 얻을 수 있다고 생각해요 :)
+
+```
