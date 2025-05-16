@@ -841,6 +841,9 @@ $ java -jar {*.jar} --spring.profiles.active=local
 ---
 
 5/10 TODO
-1. `../checked` API 에서 boolean형 accessible이 필요없어짐
-2. `/touch` 토큰 발급 처리시 유효성 검사를 하지 않고 무조건 발급해주고 있었다.
+1. `/touch` 토큰 발급 처리시 유효성 검사를 하지 않고 무조건 발급해주고 있었다. (5/16)✅
+	1. `PROCEED_QUEUE`에 있는지 조회 후 처리
+	2. 없는 경우 **NONE_EXIST_USER** 예외 반환
+2. `../checked` API 에서 boolean형 accessible이 필요 없어짐 (5/16)✅
+	1. DTO 파라미터 삭제 및 renaming
 3. 스프링 스케쥴러를 webflux에서 분리할 필요가 있어 보임
