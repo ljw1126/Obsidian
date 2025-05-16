@@ -32,3 +32,35 @@ git cherry-pick A^..B
 ```shell
 $ git config --global mergetool.keepBackup false
 ```
+
+
+### rebase
+
+**상황**(`250509`)
+- 접속 대기열 시스템의 커밋 이력 정리 중에 **순서가 바뀐 커밋** 발견
+	- `00208e6`가 `9c3e567`보다 먼저 나오길 원함
+
+```text
+* [2025-05-09] [00208e6] | feat: AllowedResponse 레코드 추가 {{leejinwoo}}  (master)
+* [2025-05-09] [9c3e567] | docs: JMeter 파일 및 가이드 문서 추가 {{leejinwoo}} 
+* [2025-05-09] [e7f89c2] | feat: 메인 페이지, 대기열 페이지 수정 {{leejinwoo}} 
+* // 이하 생략
+```
+
+
+`reset --soft` 사용할 수도 있지만, rebase를 통해 하는 방법을 알게 됨
+
+```shell
+$ git rebase -i HEAD~2
+```
+
+편집창에서 순서를 바꿔주면 된다✨
+```text
+// before
+pick 00208e6 커밋 A
+pick 9c3e567 커밋 B
+
+// after
+pick 9c3e567 커밋 B
+pick 00208e6 커밋 A
+```
