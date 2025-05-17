@@ -847,3 +847,8 @@ $ java -jar {*.jar} --spring.profiles.active=local
 2. `../checked` API 에서 boolean형 accessible이 필요 없어짐 (5/16)✅
 	1. DTO 파라미터 삭제 및 renaming
 3. 스프링 스케쥴러를 webflux에서 분리할 필요가 있어 보임
+	1. 💩 redis command timeout 발생 
+	2. lettuce connection factory 따로 생성하여 주입을 해도 안됨
+	3. 오히려 webflux 모듈에서 부하를 독점하고 있다보니 Redis cpu 90% 까지 올라감
+
+LecctuceConnectionConfiguration에서 팩토리 생성한 후 RedisReactiveAutoConfiguration에 주입된다
