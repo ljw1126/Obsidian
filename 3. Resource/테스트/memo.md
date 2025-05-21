@@ -15,3 +15,6 @@
 	- jest, javascript, typescript
 
 
+**백명석 (11번가)**
+- [유튜브 - 레거시 코드에 테스트 추가를 위한 3가지 기법](https://www.youtube.com/watch?v=WApyCGdl31M)
+	- 5depth 정도 되는 if 조건문을 switch 문과 상속을 활용한 다형성으로 리팩터링해간다
