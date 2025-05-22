@@ -4,7 +4,9 @@
 2. [스타트와 링크(실1)](https://www.acmicpc.net/problem/14889)
 3. [시험 감독(브2)](https://www.acmicpc.net/problem/13458)
 4. [연산자 끼워넣기(실1)](https://www.acmicpc.net/problem/13458)
-5. 👋[로봇 청소기(골5)](https://www.acmicpc.net/problem/14503)
+5. 👋[로봇 청소기(골5)](https://www.acmicpc.net/problem/14503)💩
+	1. 문제 지문 정리가 포인트
+	2. BFS로 충분히 풀이 가능한 기본 구현 문제
 6. 👋[톱니바퀴(골5)](https://www.acmicpc.net/problem/14891)
 7. [치킨배달(골5)](https://www.acmicpc.net/problem/15686)
 8. [인구이동(골4)](https://www.acmicpc.net/problem/16234)
