@@ -1,6 +1,7 @@
 궁금한 것
 - 데이터가 한글이 깨지거나, 음수가 나오는데 조정이 가능한가
 	- 양수임을 보장해야 하는데 랜덤값이 음수가 나오니 테스트가 깨진다
+- `시작하기 > 사용자 정의 객체 생성하기` 예제에서 서비스 생성하기 귀찮아 인터페이스 사용했는데 이것도 fixture monkey로 대체 가능한가 ?? Mockito 사용하거나 직접 fake, stub 구현이 더 나은거 같기도 하고..
 
 
 ## 소개
@@ -391,6 +392,129 @@ public class Product {
     Instant createdAt;
 }
 ```
+
+
+```text
+[Test worker] WARN com.navercorp.fixturemonkey.api.introspector.ConstructorPropertiesArbitraryIntrospector - Given type class fixturemonkey.beanvalidation.Product is failed to generate due to the exception. It may be null.
+```
+- lombok.config 추가 후 해결됨
+	- `lombok.anyConstructor.addConstructorProperties=true`
+
+```java
+@Test  
+void test() {  
+    FixtureMonkey fixtureMonkey = FixtureMonkey.builder()  
+            .objectIntrospector(ConstructorPropertiesArbitraryIntrospector.INSTANCE)  
+            .plugin(new JakartaValidationPlugin())  
+            .build();  
+  
+    Product actual = fixtureMonkey.giveMeOne(Product.class);  
+  
+    assertThat(actual).isNotNull();  
+    assertThat(actual.getId()).isGreaterThan(0);  
+    assertThat(actual.getProductName()).isNotBlank();  
+    assertThat(actual.getPrice()).isLessThanOrEqualTo(100000);  
+    assertThat(actual.getOptions().size()).isGreaterThanOrEqualTo(3);  
+    assertThat(actual.getOptions()).allSatisfy(it -> assertThat(it).isNotEmpty());  
+    assertThat(actual.getCreatedAt()).isBefore(Instant.now());  
+}
+```
+
+
+### 사용자 정의 객체 생성하기 
+- 테스트 객체를 커스터마이즈 가능
+
+상품 가격이 1,000원 이상인 경우에만 10% 할인이 적용하는 서비스를 테스트한다고 가정
+```java
+@Value  
+public class Product {  
+    long id;  
+    String productName;  
+    long price;  
+    List<String> options;  
+    Instant createdAt;  
+}
+```
+
+테스트 생성
+```java
+private FixtureMonkey fixtureMonkey;  
+  
+@BeforeEach  
+void setUp() {  
+    fixtureMonkey = FixtureMonkey.builder()  
+            .objectIntrospector(ConstructorPropertiesArbitraryIntrospector.INSTANCE)  
+            .build();  
+}  
+  
+@Test  
+void customizePrice() {  
+    Product product = fixtureMonkey.giveMeBuilder(Product.class)  
+            .set("price", 2000L)  
+            .sample();  
+  
+    DiscountService discountService = product1 -> 200.0;  
+    double discount = discountService.calculateDiscount(product);  
+  
+    assertThat(discount).isEqualTo(200.0);  
+}  
+  
+private interface DiscountService {  
+    double calculateDiscount(Product product);  
+}  
+  
+@Test  
+void testProductWithOptions() {  
+    Product actual = fixtureMonkey.giveMeBuilder(Product.class)  
+            .size("options", 3)  
+            .set("options[1]", "red")  
+            .sample();  
+  
+    assertThat(actual.getOptions()).hasSize(3);  
+    assertThat(actual.getOptions().get(1)).isEqualTo("red");  
+}
+```
+- 서비스가 없어서 간단히 functionalInterface 선언해 람다식으로 처리
+
+### 주의사항과 팁
+1. 필드이름
+	1. 클래스에 정의된 필드 이름을 정확히 사용
+	2. Tip. IDE의 코드 완성 기능을 사용하여 필드 이름 오타 방지 
+	3. Tip. 향상된 코드 완성과 타입 안정성을 위해 [Fixture Monkey Helper](https://plugins.jetbrains.com/plugin/19589-fixture-monkey-helper)를 설치 (Intellij plugin)
+2. 컬렉션 인덱싱
+	1. 리스트 인덱스는 0부터 시작한다는 것을 기억 
+	2. Tip. 특정 인덱스를 설정하기 전에 `size()`를 사용하여 리스트 크기를 먼저 설정하기
+3. 타입 안정성
+	1. 값의 타입을 올바르게 사용해야 함
+	2. Tip. IDE의 타입 힌트를 활용해 올바른 값 타입을 사용하기
+
+
+### Fixture Monkey 사용 전후 비교 
+
+**before**
+```java
+// 특정 옵션을 가진 상품 생성
+List<String> options = new ArrayList<>();
+options.add("option1");
+options.add("red");
+options.add("option3");
+Product product = new Product(1, "테스트 상품", 1000, options, Instant.now());
+
+```
+
+**after**
+```java
+// 같은 결과를 더 적은 코드로 생성
+Product product = fixtureMonkey.giveMeBuilder(Product.class)
+    .size("options", 3)
+    .set("options[1]", "red")
+    .sample();
+```
+
+
+### 초보자를 위한 팁 (읽어보기)
+
+[링크](https://naver.github.io/fixture-monkey/v1-1-0-kor/docs/get-started/tips/)
 
 
 ---
