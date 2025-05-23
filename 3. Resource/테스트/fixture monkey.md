@@ -2,6 +2,7 @@
 - 데이터가 한글이 깨지거나, 음수가 나오는데 조정이 가능한가
 	- 양수임을 보장해야 하는데 랜덤값이 음수가 나오니 테스트가 깨진다
 - `시작하기 > 사용자 정의 객체 생성하기` 예제에서 서비스 생성하기 귀찮아 인터페이스 사용했는데 이것도 fixture monkey로 대체 가능한가 ?? Mockito 사용하거나 직접 fake, stub 구현이 더 나은거 같기도 하고..
+- 인터페이스 구현체를 자체적으로 생성을 못해 `InterfacePlugin.interfaceImplements()` 사용했는데, 메뉴얼에는 마치 구현체 임의로 생성해주는 것처럼 얘기해서 혼란스러움 ([링크](https://naver.github.io/fixture-monkey/v1-1-0-kor/docs/generating-objects/generating-complex-types/#generic-interfaces))
 
 
 ## 소개
@@ -545,18 +546,459 @@ FixtureMonkey fixtureMonkey = FixtureMonkey.builder()
 - `giveMeArbitrary()` : jqwik의 Arbitrary API를 활용한 고급 사용 사례
 
 **✅ giveMeOne**
-
-
+- 특정 타입의 객체 하나가 필요할 때 giveMeOne을 사용
+```java
+private FixtureMonkey fixtureMonkey = FixtureMonkey.builder()  
+        .objectIntrospector(new FailoverIntrospector(  
+        Arrays.asList(ConstructorPropertiesArbitraryIntrospector.INSTANCE,  
+                            BuilderArbitraryIntrospector.INSTANCE,  
+                            FieldReflectionArbitraryIntrospector.INSTANCE,  
+                            BeanArbitraryIntrospector.INSTANCE  
+                            ), false))  
+        .build();  
+  
+@DisplayName("특정 타입의 객체 하나가 필요할 때 giveMeOne 사용")  
+@Test  
+void giveMeOne() {  
+    Product product = fixtureMonkey.giveMeOne(Product.class);  
+  
+    assertThat(product).isNotNull();  
+}  
+  
+@DisplayName("빈 리스트나 임의 길이를 가진 문자열 리스트를 반환")  
+@Test  
+void getMeOne2() {  
+    List<String> strings = fixtureMonkey.giveMeOne(new TypeReference<List<String>>() {});  
+  
+    assertThat(strings).isNotNull();  
+}
+```
 
 **✅ giveMe**
-
+- 동일한 타입의 객체 여러 개가 필요한 경우 giveMe 사용
+- 원하는 개수를 지정해 스트림이나 리스트 형태로 객체를 생성
+```java
+@Test  
+void giveMe() {  
+    Stream<Product> productStream = fixtureMonkey.giveMe(Product.class);  
+  
+    assertThat(productStream).isNotNull();  
+}  
+  
+@DisplayName("인자가 하나면 Stream, 두 개면 List<?> 타입으로 반환한다")  
+@Test  
+void giveMe2() {  
+    Stream<List<String>> stringStream = fixtureMonkey.giveMe(new TypeReference<List<String>>() {});  
+    List<List<String>> lists = fixtureMonkey.giveMe(new TypeReference<List<String>>() {  
+    }, 3);  
+  
+    assertThat(stringStream).isNotNull();  
+    assertThat(lists).isNotNull()  
+            .hasSize(3);  
+  
+    lists.forEach(System.out::println);  
+}
+```
 
 
 **✅ giveMeBuilder**
-
+- 객체의 속성을 세부적으로 조정해야 할 때는 giveMeBuilder를 사용
+- 속성 조정 방법에 대한 자세한 내용은 [객체 커스터마이징 문서](https://naver.github.io/fixture-monkey/v1-1-0-kor/docs/customizing-objects/apis/) 참고 
+- ArbitraryBuilder에서 최종 객체를 얻으려면 `sample()`, `sampleList()`, `sampleStream()`를 사용합니다
+```java
+@Test  
+void giveMeBuilder() {  
+    ArbitraryBuilder<Product> productArbitraryBuilder = fixtureMonkey.giveMeBuilder(Product.class)  
+            .set("productName", "테스트 상품");  
+  
+    Product product = productArbitraryBuilder.sample();  
+  
+    assertThat(product).isNotNull()  
+            .extracting("productName")  
+            .matches(s -> s.equals("테스트 상품"));  
+}  
+  
+@Test  
+void giveMeBuilder2() {  
+    ArbitraryBuilder<Product> productArbitraryBuilder = fixtureMonkey.giveMeBuilder(Product.class)  
+            .set("productName", "깨끗한 세상");  
+  
+    Product product = productArbitraryBuilder.sample();  
+    List<Product> products = productArbitraryBuilder.sampleList(3);  
+  
+    assertThat(product).isNotNull()  
+                    .extracting("productName")  
+                            .matches(s -> s.equals("깨끗한 세상"));  
+    assertThat(products).hasSize(3)  
+            .extracting(Product::getProductName)  
+            .containsOnly("깨끗한 세상");  
+}
+```
 
 
 **✅ giveMeArbitrary**
+- Arbitrary 객체가 직접 필요한 경우 getMeArbitrary() 메서드를 사용
+- 용도를 잘 모르겠다🤔
+	- sample(), sampleStream() 이 있기는 한데 ..
+
+```java
+@Test  
+void giveMeArbitrary() {  
+    Arbitrary<Product> productArbitrary = fixtureMonkey.giveMeArbitrary(Product.class);  
+  
+    Arbitrary<List<String>> strListArbitrary = fixtureMonkey.giveMeArbitrary(new TypeReference<List<String>>() {});  
+  
+    assertThat(productArbitrary).isNotNull();  
+    assertThat(strListArbitrary).isNotNull();  
+}
+
+```
+
+### 복잡한 객체 생성하기
+- [공식 문서](https://naver.github.io/fixture-monkey/v1-1-0-kor/docs/generating-objects/generating-complex-types/)
+
+**✅ 테스트에서 복잡한 타입이 중요한 이유**
+실제 테스트는 다음과 같은 복잡한 객체로 작업하는 경우가 많음
+- 여러 타입 파라미터를 가진 제네릭 타입
+- 트리나 그래프 같은 자기 참조 구조
+- 복잡한 인터페이스 계층 구조
+- sealed 클래스나 추상 클래스
+
+테스트를 위해 이런 타입의 인스턴스를 수동 생성하는 것은 매우 지루하고 오류 발생하기 쉽다💩
+➡️이런 경우 Fixture Monkey가 빛을 발합니다. (**최소한의 코드로 가장 복잡한 타입의 유효한 인스턴스까지 자동 생성 가능**)
+
+**✅ Fixture Monkey가 복잡한 타입을 처리하는 방법**
+- 런타임에 클래스와 인터페이스의 구조를 분석하여 관계와 제약 조건을 이해함
+	- 그런 다음 중첩되고 재귀적인 구조에서도 필요한 모든 필드가 채워진 유효한 인스턴스를 생성
+- 인터페이스의 경우 
+	- 하나의 인터페이스에 여러 구현체가 있으면 사용 가능한 구현체 중 하나를 무작위로 선택하여 생성함
+	- `InterfacePlugin` 설정을 통해 특정 구현체를 명시적으로 지정할 수도 있음 
+
+```java
+// 👋 UserService 인터페이스에 대해 여러 구현체 지정 예시
+FixtureMonkey fixtureMonkey = FixtureMonkey.builder()
+    .plugin(
+        new InterfacePlugin()
+            .interfaceImplements(UserService.class, 
+                List.of(BasicUserService.class, PremiumUserService.class))
+    )
+    .build();
+
+// 지정된 구현체 중 하나가 무작위로 선택됨
+UserService userService = fixtureMonkey.giveMeOne(UserService.class);
+```
+
+
+**✅ Generic Objects ** 
+```java
+private FixtureMonkey fixtureMonkey = FixtureMonkey.create();  
+  
+@Test  
+void genericObject() {  
+    GenericeObject<String> stringGenericeObject = fixtureMonkey.giveMeOne(new TypeReference<GenericeObject<String>>() {});  
+  
+    assertThat(stringGenericeObject).isNotNull();  
+}  
+  
+@Test  
+void genericArrayObject() {  
+    GenericArrayObject<Integer> genericArrayObject = fixtureMonkey.giveMeOne(new TypeReference<GenericArrayObject<Integer>>() {});  
+  
+    assertThat(genericArrayObject).isNotNull();  
+}  
+  
+@Test  
+void twoGenericObject() {  
+    TwoGenericObject<String, Integer> stringIntegerTwoGenericObject = fixtureMonkey.giveMeOne(new TypeReference<TwoGenericObject<String, Integer>>() {  
+    });  
+    assertThat(stringIntegerTwoGenericObject).isNotNull();  
+}  
+  
+private static class GenericeObject<T> {  
+    T foo;  
+  
+    public GenericeObject() {}  
+  
+    public void setFoo(T foo) {  
+        this.foo = foo;  
+    }}  
+  
+private static class GenericArrayObject<T> {  
+    GenericArrayObject<T> foo;  
+  
+    public GenericArrayObject() {}  
+  
+    public void setFoo(GenericArrayObject<T> foo) {  
+        this.foo = foo;  
+    }}  
+  
+private static class TwoGenericObject<T, U> {  
+    T foo;  
+    U bar;  
+  
+    public TwoGenericObject() {}  
+  
+    public void setFoo(T foo) {  
+        this.foo = foo;  
+    }  
+    public void setBar(U bar) {  
+        this.bar = bar;  
+    }}
+
+```
+
+
+**✅ Generic Interfaces** 
+- 예제를 그대로 따라해서 기본 create()로 생성된 Fixture Monkey 사용하면 null이 반환된다.
+- 인터페이스와 구현체를 아래와 같이 지정해야 하는 것으로 생각된다
+```java
+@Test  
+void genericInterface() {  
+    FixtureMonkey customFixtureMonkey = FixtureMonkey.builder()  
+            .plugin(new InterfacePlugin().interfaceImplements(GenericInterface.class, List.of(GenericInterfaceImpl.class)))  
+            .build();  
+  
+    GenericInterface<String> stringGenericInterface = customFixtureMonkey.giveMeOne(new TypeReference<>() {});  
+  
+    assertThat(stringGenericInterface).isNotNull();  
+}
+```
+
+
+
+**✅ SelfReference** 
+자기 참조 타입은 수동으로 생성하기 특히 어렵지만 Fixture Monkey를 사용하면 쉬움
+```java
+@Test  
+void selfReference() {  
+    SelfReference selfReference = fixtureMonkey.giveMeOne(SelfReference.class);  
+  
+    assertThat(selfReference).isNotNull();  
+}  
+  
+public static class SelfReference {  
+    String foo;  
+    SelfReference bar;  
+  
+    public SelfReference() {}  
+  
+    public void setFoo(String foo) {  
+        this.foo = foo;  
+    }  
+    public void setBar(SelfReference bar) {  
+        this.bar = bar;  
+    }}  
+  
+private static class SelfReferenceList {  
+    String foo;  
+    List<SelfReferenceList> bar;  
+  
+    public SelfReferenceList() {}  
+  
+    public void setFoo(String foo) {  
+        this.foo = foo;  
+    }  
+    public void setBar(List<SelfReferenceList> bar) {  
+        this.bar = bar;  
+    }}
+```
+
+컬렉션 예시에서 `defaultArbitraryContainerInfo`가 없어서 테스트 못함 (5/23)
+```java
+// 재귀 깊이를 제어하기 위한 사용자 정의 구성
+FixtureMonkey customFixture = FixtureMonkey.builder()
+    .defaultArbitraryContainerInfo(new ContainerInfo(2, 2)) // 리스트 크기 제어
+    .build();
+    
+SelfReferenceList refList = customFixture.giveMeOne(SelfReferenceList.class);
+```
+
+**✅ Interface** 
+
+```java
+@Test  
+void paymentProcessor() {  
+    FixtureMonkey customFixtureMonkey = FixtureMonkey.builder()  
+            .plugin(new InterfacePlugin().interfaceImplements(PaymentProcessor.class, List.of(CreditCardProcessor.class, BankTransferProcessor.class)))  
+            .build();  
+  
+    PaymentProcessor paymentProcessor = customFixtureMonkey.giveMeOne(PaymentProcessor.class);  
+  
+    assertThat(paymentProcessor).isNotNull();  
+}  
+  
+private interface PaymentProcessor {  
+    void processPayment(double amount);  
+}  
+  
+private static class CreditCardProcessor implements PaymentProcessor {  
+    @Override  
+    public void processPayment(double amount) {  
+        // 신용 카드 결제 처리 로직  
+    }  
+}  
+  
+private static class BankTransferProcessor implements PaymentProcessor {  
+    @Override  
+    public void processPayment(double amount) {  
+        // 계좌 이체 결제 처리 로직  
+    }  
+}
+```
+
+
+아래 예제는 테스트 안했으나 위와 똑같아 보임, Interface 타입의 구현체를 지정해서 임의로 만들어지는 걸로 생각됨
+```java
+public interface Interface {
+   String foo();
+
+   Integer bar();
+}
+
+public interface InheritedInterface extends Interface {
+   String foo();
+}
+
+public interface InheritedInterfaceWithSameNameMethod extends Interface {
+   String foo();
+}
+
+public interface ContainerInterface {
+   List<String> baz();
+
+   Map<String, Integer> qux();
+}
+
+public interface InheritedTwoInterface extends Interface, ContainerInterface {
+}
+```
+
+
+>[!info] Kotlin은 생략 👍
+
+### 객체 생성 방법 지정하기
+
+Fixture Monkey로 객체를 생성하는 기본 방법 (대부분의 경우 충분)
+```java
+// 기본 방식 - 인트로스펙터가 자동으로 객체 생성 방법 결정
+Product product = fixtureMonkey.giveMeOne(Product.class);
+```
+
+하지만 특정 생성자나 팩토리 메서드를 사용하고 싶다면` instaniate() `메서드를 사용 ✨
+```java
+// 특정 생성자 지정
+Product product = fixtureMonkey.giveMeBuilder(Product.class)
+    .instantiate(constructor())
+    .sample();
+
+// 특정 팩토리 메서드 지정
+Product product = fixtureMonkey.giveMeBuilder(Product.class)
+    .instantiate(factoryMethod("create"))
+    .sample();
+```
+
+
+**📋 기본 개념**
+
+**✅ ArbitraryBuilder란?**
+- `ArbitraryBuilder`는 객체 생성 설정을 구성하기 위한 빌더 클래스이다
+```java
+// ArbitraryBuilder 얻기
+ArbitraryBuilder<Product> builder = fixtureMonkey.giveMeBuilder(Product.class);
+```
+
+**✅ instantiate() 메서드란?**
+- `ArbitraryBuilder`에서 객체를 어떻게 생성할지 지정하는 메서드
+- **생성자**나 **팩터리 메서드** 중 하나를 선택 가능 
+	- 세부적으로 파라미터 타입, 파라미터 이름 설정하여 지정 가능
+```java
+// Java에서 생성자 지정
+.instantiate(constructor())
+
+// Java에서 팩토리 메서드 지정
+.instantiate(factoryMethod("methodName"))
+```
+
+>[!info] 기본은 no-args 생성자 + setter 조합을 사용, 특별하게 팩토리 메서드 사용하는 경우 `instantiate()` 메서드로 지정
+
+
+**📋 4. 고급 기능과 주의사항**
+
+**✅ 4.1 필드 vs JavaBeansProperty 선택하기**
+1. `field()` 
+	1. 클래스의 필드 기반으로 속성 생성 
+		1. 장점: 직접 필드에 접근하므로 setter 없어도 됨
+		2. 단점: 캡슐화 우회, 유효성 검사 로직 무시
+2. javaBeansProperty()
+	1. getter/setter 메서드를 기반으로 속성 생성
+		1. 장점: 캡슐화 유지, setter 유효성 검사 로직 활용 
+		2. 단점: setter가 없으면 속성 설정 불가
+
+> `instantiate()`에서 설정하는거구나
+
+**💁‍♂️Tip**
+- setter 메서드에 유효성 검사 로직이 있고 이를 테스트 하고 싶다면 
+	- javaBeansProperty()
+- setter 메서드가 없거나 유효성 검사를 우회하고 싶다면
+	- `field()`
+
+**field 기반 속성 생성** 
+```java
+@Test
+void 필드_기반_속성_생성() {
+    Product product = fixtureMonkey.giveMeBuilder(Product.class)
+        .instantiate(
+            constructor().field()  // 필드 기반 속성 생성
+        )
+        .sample();
+    
+    assertThat(product).isNotNull();
+}
+```
+
+**javaBeansProperty 기반 속성 생성**
+```java
+@Test
+void JavaBeansProperty_기반_속성_생성() {
+    Product product = fixtureMonkey.giveMeBuilder(Product.class)
+        .instantiate(
+            constructor().javaBeansProperty()  // JavaBeansProperty 기반 속성 생성
+        )
+        .sample();
+    
+    assertThat(product).isNotNull();
+}
+```
+
+
+**✅ 4.2 생성자 이후 속성 설정 주의사항**
+- [공식문서](https://naver.github.io/fixture-monkey/v1-1-0-kor/docs/generating-objects/instantiate-methods/#42-%ec%83%9d%ec%84%b1%ec%9e%90-%ec%9d%b4%ed%9b%84-%ec%86%8d%ec%84%b1-%ec%84%a4%ec%a0%95-%ec%a3%bc%ec%9d%98%ec%82%ac%ed%95%ad)
+- 생성자를 지정한 이후에 속성 값을 세팅할 수 있다는 내용
+
+
+**📚 자주 묻는 질문(FAQ)**
+- [공식문서](https://naver.github.io/fixture-monkey/v1-1-0-kor/docs/generating-objects/instantiate-methods/#%EC%9E%90%EC%A3%BC-%EB%AC%BB%EB%8A%94-%EC%A7%88%EB%AC%B8-faq)
+
+> [!info] 대부분의 경우 인트로스펙터만으로 충분하지만, 특별한 생성 로직이 필요할때 instantiate를 사용
+
+
+### 인터페이스 타입 생성하기
+- 기본 예제인데 npe 예외 발생함
+	- `Cannot invoke "fixturemonky.InterfaceTypeObjectTest$StringSupplier.getValue()" because "stringSupplier" is null`
+```java
+@Test  
+void test() {  
+    FixtureMonkey fixtureMonkey = FixtureMonkey.create();  
+  
+    StringSupplier stringSupplier = fixtureMonkey.giveMeOne(StringSupplier.class);  
+  
+    assertThat(stringSupplier.getValue()).isNotNull();  
+}  
+  
+private interface StringSupplier {  
+    String getValue();  
+}
+```
 
 
 
