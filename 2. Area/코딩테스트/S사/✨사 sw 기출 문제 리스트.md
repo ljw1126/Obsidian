@@ -7,7 +7,9 @@
 5. 👋[로봇 청소기(골5)](https://www.acmicpc.net/problem/14503)💩
 	1. 문제 지문 정리가 포인트
 	2. BFS로 충분히 풀이 가능한 기본 구현 문제
-6. 👋[톱니바퀴(골5)](https://www.acmicpc.net/problem/14891)
+6. 👋[톱니바퀴(골5)](https://www.acmicpc.net/problem/14891)🙌
+	1. 구현/시뮬레이션 문제
+	2. 반복문만으로 풀이
 7. [치킨배달(골5)](https://www.acmicpc.net/problem/15686)
 8. [인구이동(골4)](https://www.acmicpc.net/problem/16234)
 9. 👋[컨베이어 벨트 위의 로봇(골5)](https://www.acmicpc.net/problem/20055)
