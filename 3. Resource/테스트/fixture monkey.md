@@ -4,6 +4,9 @@
 - `시작하기 > 사용자 정의 객체 생성하기` 예제에서 서비스 생성하기 귀찮아 인터페이스 사용했는데 이것도 fixture monkey로 대체 가능한가 ?? Mockito 사용하거나 직접 fake, stub 구현이 더 나은거 같기도 하고..
 - 인터페이스 구현체를 자체적으로 생성을 못해 `InterfacePlugin.interfaceImplements()` 사용했는데, 메뉴얼에는 마치 구현체 임의로 생성해주는 것처럼 얘기해서 혼란스러움 ([링크](https://naver.github.io/fixture-monkey/v1-1-0-kor/docs/generating-objects/generating-complex-types/#generic-interfaces))
 
+**📋 Reference**
+- [테스트 객체는 엣지 케이스까지 만들어주는 Fixture Monkey에게 맡기세요](https://deview.kr/data/deview/session/attach/11_%ED%85%8C%EC%8A%A4%ED%8A%B8%20%EA%B0%9D%EC%B2%B4%EB%8A%94%20%EC%97%A3%EC%A7%80%20%EC%BC%80%EC%9D%B4%EC%8A%A4%EA%B9%8C%EC%A7%80%20%EC%B0%BE%EC%95%84%EC%A3%BC%EB%8A%94%20Fixture%20Monkey%EC%97%90%EA%B2%8C%20%EB%A7%A1%EA%B8%B0%EC%84%B8%EC%9A%94.pdf)
+- [공식 문서](https://naver.github.io/fixture-monkey/v1-1-0-kor/)
 
 ## 소개
 
@@ -983,8 +986,10 @@ void JavaBeansProperty_기반_속성_생성() {
 
 
 ### 인터페이스 타입 생성하기
-- 기본 예제인데 npe 예외 발생함
-	- `Cannot invoke "fixturemonky.InterfaceTypeObjectTest$StringSupplier.getValue()" because "stringSupplier" is null`
+
+**접근법1. 익명 구현체**
+기본 예제인데 npe 예외 발생함 💩
+`Cannot invoke "fixturemonky.InterfaceTypeObjectTest$StringSupplier.getValue()" because "stringSupplier" is null`
 ```java
 @Test  
 void test() {  
@@ -1000,7 +1005,101 @@ private interface StringSupplier {
 }
 ```
 
+https://github.com/naver/fixture-monkey/releases/tag/1.0.6
+인터페이스 플러그인에 옵션이 있었네 👋
+```java
+@DisplayName("인터페이스의 익명 구현체를 생성한다")  
+@Test  
+void test() {  
+    FixtureMonkey customFixtureMonkey = FixtureMonkey.builder()  
+            .plugin(new InterfacePlugin().useAnonymousArbitraryIntrospector(true))  
+            .build();  
+  
+    StringSupplier stringSupplier = customFixtureMonkey.giveMeOne(StringSupplier.class);  
+  
+    assertThat(stringSupplier).isNotNull();  
+    assertThat(stringSupplier.getValue()).isNotNull(); // null값일 수 있다
+	assertThat(stringSupplier)
+	  .isNotInstanceOf(DefaultStringSupplier.class);  
+}  
+  
+public interface StringSupplier {  
+    String getValue();  
+}  
+  
+private static class DefaultStringSupplier implements StringSupplier {  
+    private final String value;  
+  
+    @ConstructorProperties("value ")  
+    public DefaultStringSupplier(String value) {  
+        this.value = value;  
+    }  
+    @Override  
+    public String getValue() {  
+        return value;  
+    }
+}
+```
 
+일반 클래스와 마찬가지로 속성 값을 지정할 수 있다
+```java
+@Test  
+void anonymousObject2() {  
+    FixtureMonkey customFixtureMonkey = FixtureMonkey.builder()  
+            .plugin(new InterfacePlugin().useAnonymousArbitraryIntrospector(true))  
+            .build();  
+  
+    StringSupplier stringSupplier = customFixtureMonkey.giveMeBuilder(StringSupplier.class)  
+            .set("value", "test")  
+            .sample();  
+  
+    assertThat(stringSupplier.getValue()).isEqualTo("test");  
+}
+```
+
+
+**접근법2. 특정 구현체 사용**
+```java
+@Test  
+void implementationObject() {  
+    FixtureMonkey fixtureMonkey = FixtureMonkey.builder()  
+            .objectIntrospector(ConstructorPropertiesArbitraryIntrospector.INSTANCE)  
+            .plugin(new InterfacePlugin().interfaceImplements(StringSupplier.class, List.of(DefaultStringSupplier.class)))  
+            .build();  
+  
+    StringSupplier stringSupplier = fixtureMonkey.giveMeOne(StringSupplier.class);  
+  
+    assertThat(stringSupplier).isNotNull()  
+            .isInstanceOf(DefaultStringSupplier.class);  
+}
+
+```
+
+
+**✅ 제네릭 인터페이스**
+- 접근 방식은 비슷함
+- 단, 타입 파라미터의 유무에 따라 Fixture Monkey의 동작이 달라질 수 있음
+
+
+**타입 파라미터 없이 생성하는 경우**
+- 공식문서에 기본적으로 `String`이라고 하지만 **Object** or **null** 을 리턴함
+```java
+
+@DisplayName("타입 파라미터 없는 제네릭 인터페이스는 기본적으로 Object 타입을 사용한다")  
+@Test  
+void genericInterface() {  
+    FixtureMonkey fixtureMonkey = FixtureMonkey.builder()  
+            .plugin(new InterfacePlugin().useAnonymousArbitraryIntrospector(true))  
+            .build();  
+  
+    ObjectValueSupplier<?> result = fixtureMonkey.giveMeOne(ObjectValueSupplier.class);  
+  
+  
+    assertThat(result).isNotNull();  
+    assertThat(result.getValue()).isInstanceOf(Object.class); // null 반환할 수도 있음  
+}
+
+```
 
 ### 인트로스펙터
 - `인트로스펙터(Introspector)`는 테스트 객체를 생성하는 방법을 결정하는 도구
