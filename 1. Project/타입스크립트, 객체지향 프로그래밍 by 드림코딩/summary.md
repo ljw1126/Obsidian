@@ -3,6 +3,9 @@
 - 단위 테스트의 기술
 - 멀티패러다임 프로그래밍
 
+참고.
+- [랜덤 이미지 제공 사이트]([https://picsum.photos/](https://picsum.photos/))
+
 ### 타입스크립트란?
 - Statically Typed (정적으로 결정되는 타입)
 - compile errors
@@ -2031,5 +2034,666 @@ console.log(animals.every<Cat>(isCat)); // 전부 맞으면 true
 
 // 다른 질문 글에서 
 각각 장단점이 존재 하기 때문에 **이 함수를 사용하는 사람이 알고 싶은것은(return) 무엇인가? 내가 꼭 무엇을 알려줘야 하는가?** 이 질문들에 대답을 찾다보면 어떤 값을 return해 줘야 하는지 좋은 답을 얻을 수 있다고 생각해요 :)
+
+```
+
+
+---
+
+## 타입스크립트의 핵심
+### Type Alias와 interface 중에 뭘 써야 할까 (기술 측면)
+- 두 개의 차이점을 인지하고 사용해야 함
+
+**구현 차이 살펴보기**
+```typescript
+type PositionType = {
+	x: number;
+	y: number;
+}
+
+interface PositionInterface {
+	x: number;
+	y: number;
+}
+```
+
+
+```typescript 
+// object
+const obj1: PositionType {
+	x: 1, 
+	y: 1
+}
+
+const obj1: PositionInterface {
+	x: 1, 
+	y: 1
+}
+
+
+// class
+class Pos1 implements PositionType {
+	x: number;
+	y: number;
+}
+
+class Pos2 implements PositionInterface {
+	x: number;
+	y: number;
+}
+
+
+// Extends 가능
+interface ZPositionInterface extends PositionInterface {
+	z: number;
+}
+
+// inter secation
+type ZPositionType = PositionType & { z: number };
+
+
+```
+
+`interface`에서만 가능한 것들
+```typescript
+// only interfaces can be merged 👀 (최신 문서 찾아보기)
+interface PositionInterface {
+	x: number;
+	y: number;
+}
+
+interface PositionInterface {
+	z: number;
+}
+
+const obj: PositionInterface {
+	x: 1, 
+	y: 1,
+	z: 1
+}
+```
+
+
+`type`만 가능한 것들
+```typescript 
+type Person = {
+	name: string,
+	age: number
+}
+
+type Name = Person['name']; // string type이 된다
+type NumberType = number;
+type Direction = 'left' | 'right'; // union type 
+
+```
+
+
+### Type Alias와 interface 중에 뭘 써야 할까 (개념 측면)
+
+`interface`
+- 특정한 **규격사항** 정의
+- API는 서로 간의 소통을 위한 약속
+
+```typescript
+interface CoffeeMaker {
+	coffeeBeans: number;
+	makeCoffee: (shots: number) => Coffee;
+}
+
+class CoffeeMachine implements CoffeeMaker {
+	coffeeBeans: number;
+	makeCoffee(shots: number) {
+		return {};
+	}
+}
+```
+
+
+`types`
+- 어떠한 데이터를 담을지 타입을 결정
+- 구현 목적이 아니라 **데이터를 담을 목적**이라면 인터페이스보다 타입이 적절
+	- dto, record 느낌이네👀
+
+```typescript 
+type Position = {
+	x: number;
+	y: number;
+}
+
+const pos: Position = { x: 0, y: 0 };
+printPosition(pos);
+```
+
+### Utility Type이란
+- 타입스크립트에서는 type을 변환(transform)하는게 가능하다
+- 제공되는 유틸리티 타입을 사용할 수 도 있지만 원리를 이해하고 사용하는게 중요
+
+### Index Type
+9-2-index.ts
+```typescript
+{
+	const obj = {
+		name: 'tester'
+	}
+
+	obj.name; // tester
+	obj['name']; // tester
+
+	type Animal = {
+		name: string;
+		age: number;
+		gender: 'male' | 'female';
+	}
+
+	type Name = Animal['name']; // string 타입으로 결정
+	const text:Name = 'temp';
+
+	type Gender = Animal['gender']; // 'male' | 'female'
+
+	type Keys = keyof Animal; // 'name' | 'age' | 'gender', 문자열만
+	const key: keys = 'gender';
+
+	type Person = {
+		name: string;
+		gender: Animal['gender'];
+	};
+	const person: Person = {
+		name: 'tester',
+		gender: 'male'
+	};
+	
+}
+```
+- type도 인덱스 기반으로 결정 가능
+	- 인덱스로 키값을 호출하면 키의 타입이 할당된다는 거네
+	- 위에 Person 예제를 보면 키의 값이 할당되네
+
+
+### Mapped Type
+- 기존 타입을 다른 타입으로 맵핑하는 타입이라는듯
+- 재사용성이 높다
+
+9-3-map.ts
+```typescript 
+type Video = {
+	title: string;
+	author: string;
+	descrition: string;
+}
+
+// 💩
+type VideoOptional = {
+	title?: string;
+	author?: string;
+	descrition?: string;
+}
+
+// ✨
+type Optional<T> = {
+	[P in keyof T]?: T[P] // for...in과 비슷
+};
+type VidoeOptional = Optional<Video>;
+
+
+type Animal = {
+	name: string;
+	age: number;
+}
+const animal: Optional<Animal> = {
+	name: 'dog';
+}
+
+// 읽기 전용
+type ReadOnly<T> = {
+	readonly [P in keyof T]: T[P];
+}
+
+```
+- Video가 변경되면 VideoOptional도 변경이 일어나야함 (코드의 변경 발생, 불편함)
+- type안에서 `[]`기호 사용하면 for...in 처럼 key 조회할 수 있다
+
+
+```typescript 
+{
+	// null을 허용함
+	type Nullable<T> = {
+		[P in keyof T]: T[P] | null;
+	}
+
+	const obj: Nullable<Video> = {
+		title: 'hi',
+		author: null
+	}
+
+
+	type Proxy<T> = {
+		get(): T;
+		set(value: T): void;
+	}
+
+	type Proxify<T> = {
+		[P in keyof T]: Proxy<T[P]>;
+	}
+}
+```
+
+
+임의 예제 
+```typescript 
+{
+	type ProxyWrapper = <T>(value: T) => Proxy<T>
+
+	const wrappedProxy: ProxyWrapper = (value: T) => {
+		let _v = value;
+		return {
+			get: () => _v,
+			set:(value: T) => { _v = value }
+		}
+	}
+
+	const videoProxy: Proxyfy<Video> {
+		title: wrapperProxy('영상 제목'),
+		author: wrapperProxy('영상 제작자'),
+		description: wrapperProxy('영상 설명'),
+	}
+
+	// 속성별로 getter, setter 호출 가능
+}
+```
+
+### Conditional Type
+- 조건으로 타입을 결정 가능하네
+
+9-4-condition.ts
+```typescript
+type Check<T> = T extends string? boolean : number;
+
+type Type = Check<string>; // string을 상속하기 때문에 boolean 타입이 됨
+
+// 공식 예제
+type TypeName<T> = T extends string
+	? 'string'
+	: T extends number
+	? 'number'
+	: T extends boolean
+	? 'boolean'
+	: T extends undefined
+	? 'undefined'
+	? T extends Function
+	? 'function'
+	: 'object';
+
+type T0 = TypeName<string>; // string
+type T1 = TypeName<'a'>; // string
+type T2 = TypeName<() => void>; // function
+```
+
+### ReadOnly 
+- 속성의 불변성을 보장하도록 Readonly 타입을 지원
+- 공식 문서를 보면 **유틸 클래스** 통해 미리 정의된 `type`  지원
+	- 많이 사용하는 것들 위주로 설명
+
+9-5-readonly.ts
+```typescript 
+{
+	type Todo = {
+		title: string;
+		description: string;
+	}
+
+	function display(todo: Readonly<Todo>) {
+		//..
+	}
+}
+```
+
+
+### Partial Type
+- 기존 타입 중에 부분적으로 허용하고 싶은 경우 사용 
+
+9-6-partial.ts
+```typescript
+{
+	type Todo = {
+		title: string;
+		description: string;
+		label: string;
+		priority: 'high' | 'low';
+	}
+
+	function updateTodo(todo: Todo, fieldsToUpdate: Partial<Todo>): Todo {
+		return { ...todo, ...fieldsToUpdate };	
+	}
+
+	const todo: Todo = {
+		title: 'learn ts',
+		description: 'study hard',
+		label: 'study',
+		priority: 'high'
+	};
+
+	const updated = updateTodo(todo, { priority: 'low'});
+	console.log(updated);
+}
+```
+- `Partial<Todo>` 
+	- Todo의 속성만 
+### Pick Type
+- 기존에 있는 타입에서 원하는 것만 골라서 제한된 타입을 재정의할 때 사용
+
+9-7-pick.ts
+
+```typescript
+{
+	type Video = {
+		id: string;
+		title: string;
+		url: string;
+		data: string;
+	}
+
+	function getVideo(id: string): Video {
+		return {
+			// 전체 속성 주저리주저리
+		}
+	}
+
+	// 제한된 속성만 뽑아서 사용, Video 타입에 있는 키 중 선택
+	type VideoMetadata = Pick<Video, 'id' | 'title'>;
+
+	function getVideoMetadata(id: string): VideoMetadata {
+		return {
+			id: id,
+			title: 'title'
+		};
+	}
+
+	
+}
+```
+
+### Omit Type
+- pick과 반대로 원하는 것을 제외 가능
+
+```typescript
+{
+	type Video = {
+		id: string;
+		title: string;
+		url: string;
+		data: string;
+	}
+
+	function getVideo(id: string): Video {
+		return {
+			// 전체 속성 주저리주저리
+		}
+	}
+
+	// Pick과 반대, 원하는 속성을 제외 처리
+	// 이때 두번째 타입에 any를 받아서 없는 속성도 받음 (의미는 없음)
+	// 문서에 제니릭 해석해보기
+	type VideoMetadata = Omit<Video, 'url' | 'data'>;
+
+	function getVideoMetadata(id: string): VideoMetadata {
+		return {
+			id: id,
+			title: 'title'
+		};
+	}
+		
+}
+```
+
+### Record ? 
+- 두 타입을 묶을 때 사용 
+- 이때 앞에 타입이 키가 되고, 뒤에 타입이 키의 value 타입이 된다
+
+9-9-record.ts
+```typescript 
+{
+	type PageInfo = {
+		title: string;
+	}
+	type Page = 'home' | 'about' | 'contact';
+
+	// Page를 키로 삼고, PageInfo를 value로 삼음
+	const nav: Record<Page, PageInfo> = {
+		home: {title: 'home'},
+		about: {title: 'about'},
+		contact: {title: 'contact'}
+	}
+}
+```
+
+
+### 기타
+- 지금까지 유틸리티 타입을 살펴봄
+	- 이외에도 많은 유틸리티 타입이 많음 
+	- ReturnType, Cap.. 등등
+
+
+---
+
+## JavaScript 정리
+
+### 프로토타입 (Prototype) 
+- **TS** = superset of JavaScript
+- ES6
+	- class-like
+- JS
+	- proto-based
+
+> 자바스크립트의 프로토타입은 상속을 위해서 사용
+
+
+**Prototype-based programming**
+- a style of OOP
+	- behavior reuse (inheritance)
+- be resuing existing objects
+	- that serve as prototype
+
+**데모**
+`10-1-proto.js`
+```javascript
+const x = {}
+const y = {}
+
+console.log(x);
+console.log(y);
+
+console.log(x.__proto__ === y.__proto___); // true
+
+
+const array = [];
+console.log(array); // __proto__ : Array(0) 오브젝트
+
+```
+- js의 모든 오브젝트는 `__proto__` 오브젝트를 상속한다
+	- 콘솔에서 살펴보면 상속되는 메서드는 모두 사용 가능
+- Array 프로토 안에는 Object 프토로를 가지고 있다
+	- array ➡️ Array ➡️ Object
+
+
+```javascript
+
+function CoffeeMachine(beans) {
+	this.beans = beans;
+
+	// Instance member level
+	/*
+	this.makeCoffee = shots => {
+		console.log('making...');
+	};
+	*/
+}
+
+// Prototype member level
+CoffeeMachine.prototype.makeCoffee = () => {
+	console.log('making...');
+}
+
+const machine1 = new CoffeeMachine(10);
+const machine2 = new CoffeeMachine(20);
+
+console.log(machine1);
+console.log(machine2);
+
+
+
+function LatteMachine(milk) {
+	this.milk = milk;
+}
+
+// 👀 라떼머신 ➡️ 커피머신 ➡️ 오브젝트
+LatteMachine.prototype = Object.create(CoffeeMachine.prototype);
+
+const latteMachine = new LatteMachine(123);
+console.log(latteMachine);
+latteMachine.makeCoffee(); // 커피머신 상속했으므로 
+```
+- 콘소 출력을 보면서 proto 타입이 어디 있는지 확인
+- 공통적으로 Object 프로토 상속
+- machine ➡️ CoffeeMachine ➡️ Object
+### This
+- 생성된 객체 그 자신을 뜻함
+- 하지만 JS의 경우 호출한 문맥에 따라 동적으로 달라짐
+
+10-2-this.js
+```javascript
+console.log(this); // 브라우저에서 확인 시 Window 객체
+
+function simpleFunc() {
+	console.log(this); // Window 객체 출력
+}
+simpleFunc();
+
+
+class Counter {
+	count = 0;
+	increase = function() {
+		console.log(this); // Counter
+	};
+}
+
+const counter = new Counter();
+counter.increase();
+
+const caller = counter.increase;
+caller(); // undefined, 할당되면서 this 정보 잃어버림
+
+
+```
+
+개발자 도구에서 선언한 함수는 글로벌 객체 통해 호출 가능 
+```text
+function hello() { console.log('hello'); }
+
+window.hello();
+hello
+
+// 상수/변수는 글로벌(window) 객체에서 접근 못함
+const name = 'tester';
+name
+tester
+```
+- `var`로 선언하는 변수는 글로벌 객체에서 접근 가능 💩
+	- 호이스팅 문제 💩
+
+```javascript
+class Bob {}
+const bob = new Bob();
+bob.run = counter.increase;
+bob.run(); // this에 Bob 출력됨
+
+
+// this 정보를 잃지 않으려면 bind 사용
+const counter = new Counter();
+counter.increase();
+const caller = counter.increase.bind(counter);
+caller(); // this에 Counter 출력 
+
+```
+
+> this 정보를 다른 곳에 할당하는 순간 정보를 잃어 버릴 수 있다
+> js에서 this는 부르는 문맥에 따라 달라질 수 있다
+
+
+```javascript
+class Counter {
+	count = 0;
+	increase = function() {
+		console.log(this); // Counter
+	};
+}
+
+// arrow function을 사용하면 bind 호출하지 않고도 문맥 유지
+class Counter {
+	count = 0;
+	increase = () => {
+		console.log(this); // Counter
+	};
+}
+
+```
+###  모듈
+- 한 파일안에 작성되어 있는 코드를 모듈이라 한다
+	- 분산되어 작성하는 경우 window/global에 등록된다
+	- 이로인해 다른 파일에 add 함수가 있으면 충돌날 수 있다 
+- 모듈을 통해 그 파일 내부로 스코프를 한정 가능
+	- 기본적으로 다른 파일에 접근 불가하지만 export, import 활용해 협력 가능하다
+``
+
+```html
+//..
+<script src=""/>
+<script src=""/>
+
+```
+
+10-3-module1.js
+```javascript 
+function add(a, b) {
+	return a + b;
+}
+```
+
+10-3-module2.js
+```javascript
+add(1, 2);
+```
+
+> 글로벌 스코프로 등록되어 add() 호출됨
+
+
+
+module로 타입을 지정하면 해당 파일내에 스코프를 정의함
+- 한 파일 내에 default는 하나만
+- import 할때 default는 중괄호 필요없지만 다른거는 중괄호 필요👀
+
+```html
+//..
+<script type = "module" src=""/>
+<script type = "module" src=""/>
+
+```
+
+10-3-module1.js
+```javascript 
+export default function add(a, b) {
+	return a + b;
+}
+
+export function print() {
+	console.log('print');
+}
+```
+
+10-3-module2.js
+```javascript
+import add, {print as printMessage} from './10-3-module1.js'
+add(1, 2);
+
+
 
 ```
