@@ -2636,12 +2636,16 @@ class Counter {
 }
 
 ```
-###  모듈
+###  모듈✨
 - 한 파일안에 작성되어 있는 코드를 모듈이라 한다
 	- 분산되어 작성하는 경우 window/global에 등록된다
 	- 이로인해 다른 파일에 add 함수가 있으면 충돌날 수 있다 
 - 모듈을 통해 그 파일 내부로 스코프를 한정 가능
 	- 기본적으로 다른 파일에 접근 불가하지만 export, import 활용해 협력 가능하다
+- 모듈을 사용함으로써
+	- 파일 간에 중복 이름으로 인한 충돌 방지
+	- 모듈 간에 스코프 제한되어 모듈성과 재사용성 높여준다
+		- 글로블 스코프로 등록되지 않음
 ``
 
 ```html
@@ -2687,13 +2691,25 @@ export default function add(a, b) {
 export function print() {
 	console.log('print');
 }
+
+export const number = 10;
 ```
 
 10-3-module2.js
 ```javascript
 import add, {print as printMessage} from './10-3-module1.js'
 add(1, 2);
-
+printMessage();
 
 
 ```
+
+아래와 같이 전체 별칭을 지정하여 사용 가능
+```javascript
+import * as calculator from './10-3-module1.js'
+console.log(calculator.add(1, 2));
+calculator.print();
+calculator.number;
+```
+
+
