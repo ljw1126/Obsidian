@@ -1,4 +1,6 @@
 - [백준 기출문제 모음](https://www.acmicpc.net/workbook/view/1152)
+- 반례 찾기(250610) : `https://testcase.ac/problems/{문제번호}`
+
 
 👋 : 풀이 경험 없음 
 💩 : 직접 풀이 실패
@@ -49,7 +51,13 @@
 			4. `남: 2 -> 1, 1 -> 5, 5 -> 6, 6 -> 2` (3,4 그대로)
 14. 👋[테트로미노(골4)](https://www.acmicpc.net/problem/14500)💩
 	1. 답은 구해지나 시간 초과 발생 
-	2. 
+	2. 나의 풀이
+		1. 
+	3. 풀이 방법1 (완전 탐색)
+		1.  
+	4. 풀이 방법2 (dfs, 백트래킹)
+	5. 풀이 방법3 (가지치기 추가)
+		1. 볼 필요 없는거 early return
 15. [연구소(골4)](https://www.acmicpc.net/problem/14502)
 16. [감시(골3)](https://www.acmicpc.net/problem/15683)
 17. 👋[드래곤 커브(골3)](https://www.acmicpc.net/problem/15685)
