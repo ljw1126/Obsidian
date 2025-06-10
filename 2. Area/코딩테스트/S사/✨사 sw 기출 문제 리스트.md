@@ -1,5 +1,7 @@
-👋 : 풀이 경험 없음 
+- [백준 기출문제 모음](https://www.acmicpc.net/workbook/view/1152)
 
+👋 : 풀이 경험 없음 
+💩 : 직접 풀이 실패
 1. [퇴사(실3)](https://www.acmicpc.net/problem/14501)
 2. [스타트와 링크(실1)](https://www.acmicpc.net/problem/14889)
 3. [시험 감독(브2)](https://www.acmicpc.net/problem/13458)
@@ -45,7 +47,9 @@
 			2. `서: 1 -> 4, 4 -> 6, 6 -> 3, 3 -> 1` (2,5 그대로)
 			3. `북: 1 -> 2, 2 -> 6, 6 -> 5, 5 -> 1` (3,4 그대로)
 			4. `남: 2 -> 1, 1 -> 5, 5 -> 6, 6 -> 2` (3,4 그대로)
-14. 👋[테트로미노(골4)](https://www.acmicpc.net/problem/14500)
+14. 👋[테트로미노(골4)](https://www.acmicpc.net/problem/14500)💩
+	1. 답은 구해지나 시간 초과 발생 
+	2. 
 15. [연구소(골4)](https://www.acmicpc.net/problem/14502)
 16. [감시(골3)](https://www.acmicpc.net/problem/15683)
 17. 👋[드래곤 커브(골3)](https://www.acmicpc.net/problem/15685)
