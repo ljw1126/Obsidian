@@ -122,7 +122,17 @@
 			2. 변수가 많이 필요 ..
 22. 👋[나무 재테크(골3)](https://www.acmicpc.net/problem/16235)
 23. [아기상어(골3)](https://www.acmicpc.net/problem/16236)
-24. 👋[연구소3(골3)](https://www.acmicpc.net/problem/17142)
+24. 👋[연구소3(골3)](https://www.acmicpc.net/problem/17142)🙌
+	1. 직접 풀이 (1시간 30분)
+	2. 구현 / 백트래킹 / 시뮬레이션 / BFS
+	3. 절차 
+		1. 초기화시 **바이러스**와 **빈칸**의 개수를 따로 기록한다
+		2. `m` 개 만큼의 바이러스를 선택한다 (브루트포스, 백트래킹)
+		3. bfs로 확산한다 
+			1. 이때 바이러스가 비활성화 바이러스(2)에 도달하면 활성화상태가 된다
+			2. 여기서 실수한게 `0(빈칸)` 인 경우에만 남은 빈칸의 개수를 뺴줘야 하는데 조건 누락하여 삽질 🪏
+		4. 조금 깔끔하게 한다면 `남은 빈칸 개수`를 차감할 때 `남은 빈칸 == 0` 인 경우 바로 `dist[dx][dy]` 리턴해도 되는구나 ➡️ 오래동안 바이러스가 퍼지니깐
+		5. 그리고 못찾는 경우 최대는 `n * n`을 반환하면 된다
 25. 👋[게리맨더링2(골3)](https://www.acmicpc.net/problem/17779)
 26. 👋[마법사 상어와 토네이도(골3)](https://www.acmicpc.net/problem/20057)💩
 	1. 달팽이 탬플릿 문제 ➡️ 시작점에서 종료점까지 회전하는 것 부터 실패 ..
@@ -160,9 +170,9 @@
 40. 👋[낚시왕(골1)](https://www.acmicpc.net/problem/17143)
 41. 👋[마법사 상어와 블리자드(골1)](https://www.acmicpc.net/problem/21611)
 42. 👋[마법사 상어와 복제(골1)](https://www.acmicpc.net/problem/23290)
-43. 👋[큐빙(플5)](https://www.acmicpc.net/problem/5373)
-44. 👋[온풍기 안녕! (플5)](https://www.acmicpc.net/problem/23289)
-45. 👋[어항 정리(플5)](https://www.acmicpc.net/problem/23291)
+43. 👋[큐빙(플레5)](https://www.acmicpc.net/problem/5373)
+44. 👋[온풍기 안녕! (플레5)](https://www.acmicpc.net/problem/23289)
+45. 👋[어항 정리(플레5)](https://www.acmicpc.net/problem/23291)
 
 
 > 이외에 코드 트리 문제 링크 15개가 주어지는데 회원가입 해도 확인이 되지 않음
