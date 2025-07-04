@@ -67,6 +67,18 @@
 > - `spring-retry` 추가해서 낙관적 락만 사용하는 걸로 최종 결정 후 리팩터링 
 
 
+낙관적락 테스트시 beforeEach에서 데이터 초기화하면 바로 OptimisticLockingFailureException 발생  > beforeEach를 빼면 정상 실행은 되나 재시도 로직이 없어 전체 1000개 실패 
+
+retry를 포함할 경우 41초 걸리나 1000개 모두 성공 
+
+1000개 넣는데 
+비관적 락1(update) 300ms
+비관적 락2(select for update) 1156ms
+낙관적 락 (재시도x) 테스트 실패..
+
+
+
+
 **TODO.**
 - `userId`를 컨트롤러에서 path로 받는데 스프링 시큐리티나 그런걸로 주입받아 사용하는게 좋을듯함 
 	- 정책 : 로그인한 사용자에 한해서 `좋아요/좋아요 해제` 가능
