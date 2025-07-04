@@ -305,5 +305,235 @@ class ArticleLikeServiceTest {
 ```
 
 
+**낙관적 락(retry x)**
+- @Version을 사용하니 controller 통합 테스트에서 @Transactional 없으면 테스트 실패함 
+- ArticleLikeCount에 **@Version private Long version** 만 선언하고 팩토리에서 초기화 하지 않기 !!
+	- 💩 default null로 version 필드 초기화되고, null이 아니면 update 발생해 테스트시 충돌로 인해 비정상 종료됨
+
+```java
+@ActiveProfiles("test")  
+@AutoConfigureMockMvc  
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)  
+@Transactional  // 이거 추가 안해주면 Primary key 충돌 나서 unlike 제외하고 모두 실패
+class ArticleLikeControllerTest {  
+    @Autowired  
+    private MockMvc mockMvc;  
+  
+    @Autowired  
+    private ObjectMapper objectMapper;  
+  
+    @Autowired  
+    private PlatformTransactionManager transactionManager;  
+  
+    @Autowired  
+    private ArticleLikeRepository articleLikeRepository;  
+  
+    @Autowired  
+    private ArticleLikeCountRepository articleLikeCountRepository;  
+  
+    @BeforeEach  
+    void setUp() {  
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);  
+        tx.executeWithoutResult(status -> {  
+            articleLikeRepository.save(ArticleLike.of(1L, 1L, 1L));  
+            articleLikeCountRepository.save(ArticleLikeCount.of(1L, 1L));  
+        });    }  
+    @Test  
+    void read() throws Exception {  
+        mockMvc.perform(get("/v1/article-like/article/{articleId}/user/{userId}", 1L, 1L))  
+                .andExpectAll(status().isOk(),  
+                        jsonPath("$.articleId").value(1L),  
+                        jsonPath("$.userId").value(1L)  
+                );    }  
+    @Test  
+    void like() throws Exception {  
+        mockMvc.perform(post("/v1/article-like/article/{articleId}/user/{userId}", 1L, 2L))  
+                .andExpect(status().isCreated());  
+  
+        ArticleLikeCount articleLikeCount = articleLikeCountRepository.findById(1L).get();  
+        assertThat(articleLikeCount.getLikeCount()).isEqualTo(2L);  
+    }  
+    
+    @Test  
+    void unlike() throws Exception {  
+        mockMvc.perform(delete("/v1/article-like/article/{articleId}/user/{userId}", 1L, 1L))  
+                .andExpect(status().isNoContent());  
+  
+        ArticleLikeCount articleLikeCount = articleLikeCountRepository.findById(1L).get();  
+        assertThat(articleLikeCount.getLikeCount()).isEqualTo(0L);  
+    }  
+    
+    @Test  
+    void count() throws Exception {  
+        MvcResult mvcResult = mockMvc.perform(get("/v1/article-like/article/{articleId}/count", 1L))  
+                .andExpect(status().isOk())  
+                .andReturn();  
+  
+        MockHttpServletResponse response = mvcResult.getResponse();  
+        String contentAsString = response.getContentAsString();  
+        Long result = objectMapper.readValue(contentAsString, Long.class);  
+  
+        assertThat(result).isEqualTo(1L);  
+    }}
+```
+
+**서비스 테스트**
+- 재시도가 없으므로 낙관적 락이 실패하는 경우가 생겨 매번 결과 예측 불가 
+- success : 201, failure : 799, 실행 시간 : 447ms, 카운트 : 201
+```java
+@ActiveProfiles("test")  
+@SpringBootTest  
+class ArticleLikeServiceTest {  
+  
+    @Autowired  
+    private ArticleLikeService articleLikeService;  
+  
+    @Autowired  
+    private ArticleLikeCountRepository articleLikeCountRepository;  
+  
+    @Autowired  
+    private PlatformTransactionManager transactionManager;  
+  
+    @BeforeEach  
+    void setUp() {  
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);  
+        tx.executeWithoutResult(status -> {  
+            articleLikeCountRepository.save(ArticleLikeCount.of(1L, 0L));  
+        });    
+	}  
+	
+    @Test  
+    void likeWithoutRetry() throws InterruptedException {  
+        int threadCount = 1000;  
+        ExecutorService executorService = Executors.newFixedThreadPool(10);  
+  
+        List<Callable<Void>> tasks = new ArrayList<>();  
+        for (int i = 2; i <= threadCount + 1; i++) {  
+            long userId = i;  
+            tasks.add(() -> {  
+                articleLikeService.like(1L, userId);  
+                return null;  
+            });        }  
+        long start = System.currentTimeMillis();  
+  
+        List<Future<Void>> futures = executorService.invokeAll(tasks);  
+  
+        AtomicInteger success = new AtomicInteger();  
+        AtomicInteger failure = new AtomicInteger();  
+  
+        for (Future<Void> f : futures) {  
+            try {  
+                f.get();  
+                success.incrementAndGet();  
+            } catch (ExecutionException e) {  
+                failure.incrementAndGet();  
+            }        }  
+        long end = System.currentTimeMillis();  
+  
+        System.out.println("success : " + success.get() + ", failure : " + failure.get());  
+        System.out.println((end - start) + "ms");  
+  
+        ArticleLikeCount articleLikeCount = articleLikeCountRepository.findById(1L).get();  
+        System.out.println(articleLikeCount.getLikeCount());  
+    }
+}
+```
+
+**낙관적 락2(재시도 o)**
+- build.gradle에 추가
+```text
+implementation 'org.springframework.retry:spring-retry'
+implementation 'org.springframework.boot:spring-boot-starter-aop'
+```
+
+- `@EnableRetry`를 LikeApplication 클래스에 추가
+- 어노테이션 기반으로 서비스 로직에 선언 
+
+```java
+@Service  
+@RequiredArgsConstructor  
+@Transactional  
+public class ArticleLikeService {  
+    private final Snowflake snowflake = new Snowflake();  
+  
+    private final ArticleLikeRepository articleLikeRepository;  
+    private final ArticleLikeCountRepository articleLikeCountRepository;  
+  
+    @Transactional(readOnly = true)  
+    public ArticleLikeResponse read(Long articleId, Long userId) {  
+        return articleLikeRepository.findByArticleIdAndUserId(articleId, userId)  
+                .map(ArticleLikeResponse::from)  
+                .orElseThrow();  
+    }  
+    @Retryable(  
+            retryFor = {ObjectOptimisticLockingFailureException.class, StaleObjectStateException.class},  
+            maxAttempts = 3,  
+            backoff = @Backoff(delay = 100) // 100ms 간격 재시도  
+    )  
+    public void like(Long articleId, Long userId) {  
+        articleLikeRepository.save(ArticleLike.of(snowflake.nextId(), articleId, userId));  
+  
+        ArticleLikeCount articleLikeCount = articleLikeCountRepository.findById(articleId)  
+                .orElseGet(() -> ArticleLikeCount.of(articleId, 0L));  
+  
+        articleLikeCount.increase();  
+        articleLikeCountRepository.save(articleLikeCount);  
+    }  
+    @Retryable(  
+            retryFor = {ObjectOptimisticLockingFailureException.class},  
+            maxAttempts = 3,  
+            backoff = @Backoff(delay = 100) // 100ms 간격 재시도  
+    )  
+    public void unlike(Long articleId, Long userId) {  
+        articleLikeRepository.findByArticleIdAndUserId(articleId, userId)  
+                .ifPresent(articleLike -> {  
+                    articleLikeRepository.delete(articleLike);  
+                    ArticleLikeCount articleLikeCount = articleLikeCountRepository.findById(articleId).orElseThrow();  
+                    articleLikeCount.decrease();  
+                });    }  
+    @Transactional(readOnly = true)  
+    public Long count(Long articleId) {  
+        return articleLikeCountRepository.findById(articleId)  
+                .map(ArticleLikeCount::getLikeCount)  
+                .orElse(0L);  
+    }}
+```
+
+- 테스트 코드는 그대로, 마찬가지로 낙관적 락이 실패하는 경우가 있음
+	- success : 963, failure : 37, 실행시간: 1222ms, 카운터 : 963
+- 대규모 서비스가 아니라면 **비관적 락(select for update..)** 만으로 충분하다고 판단됨
+
+✅ 커밋 이력 정리
+히스토리를 아래와 같이 기록, revert로 이력을 남기고 최종적으로 비관적 락(select for update)르 사용
+- 낙관적 락 + retry
+- 낙관적 락 + retry x
+- 비관적 락 (select for update)
+- 비관적 락 (update)
+
+```shell
+$ git log --oneline
+
+23ddfb2 (HEAD -> article-like) refactor: optimistic lock + retry
+7852c11 add spring-aop, retry dependency
+4733bc7 refactor: @Version 낙관적 락 적용 (재시도 x)
+21cbb87 refactor: select..for update 비관적 락 사용
+e1666f6 create application-test.yml
+5c24c87 create ArticleLikeController
+
+$ git revert 23ddfb2 7852c11 4733bc7
+
+$ git log --oneline
+ec80657 (HEAD -> article-like) Revert "refactor: @Version 낙관적 락 적용 (재시도 x)"
+aa6c31e Revert "add spring-aop, retry dependency"
+811758c Revert "refactor: optimistic lock + retry"
+23ddfb2 refactor: optimistic lock + retry
+7852c11 add spring-aop, retry dependency
+4733bc7 refactor: @Version 낙관적 락 적용 (재시도 x)
+21cbb87 refactor: select..for update 비관적 락 사용
+e1666f6 create application-test.yml
+5c24c87 create ArticleLikeController
+```
+
+
 ## 조회수
 
