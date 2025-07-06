@@ -546,3 +546,15 @@ e1666f6 create application-test.yml
 **고려할 부분. 서버 재시작시**
 - 조회수 데이터가 Redis 캐시에 없어서 데이터 부정합 발생 
 	- 지연 로딩이나 서버 시작 시 일괄 초기화
+
+
+**추가**
+- 임베디드 레디스 사용 
+	- `testImplementation 'com.github.codemonstur:embedded-redis:1.0.0'`
+	- 2024.03.26까지 release 발행
+	- https://github.com/codemonstur/embedded-redis
+- redis connection factory로 lettuce 사용
+	- 기억보단 기록을 기술 블로그 참고
+- redis container가 종료되어 있는데 실행되는 이유
+- redis 서버 재시작시 조회 캐시가 없는데 이 경우는 어떻게?
+
