@@ -40,6 +40,8 @@
 
 > **비관적 락(pessmistic lock)**, **낙관적 락(optimistick lock)** 방식을 둘 다 사용해 봄
 
+<img src="./image/article_like_erd.png"/>
+
 | 기능     | REST 표현                | HTTP 메서드 | 설명                   |
 | ------ | ---------------------- | -------- | -------------------- |
 | 좋아요    | `/articles/{id}/likes` | `POST`   | 좋아요 추가 (Like 리소스 생성) |
@@ -537,11 +539,16 @@ e1666f6 create application-test.yml
 
 ## 조회수
 
+<img src="./image/article_view_count_erd.png"/>
 
 **절차** 
 - redis에 게시글 조회수를 카운팅한다 
 - 게시글 조회수가 `1000`(=BATCH_SIZE) 단위로 올라가면 DB에 백업한다 
 - 이때 조회수 어뷰징을 위해 redis 분산락을 사용한다 (ttl = 10분)
+
+
+<img src="./image/article_view_flow.png"/>
+
 
 **고려할 부분. 서버 재시작시**
 - 조회수 데이터가 Redis 캐시에 없어서 데이터 부정합 발생 
@@ -556,5 +563,17 @@ e1666f6 create application-test.yml
 - redis connection factory로 lettuce 사용
 	- 기억보단 기록을 기술 블로그 참고
 - redis container가 종료되어 있는데 실행되는 이유
-- redis 서버 재시작시 조회 캐시가 없는데 이 경우는 어떻게?
+- redis 서버 재시작시 조회 캐시가 없는데 이 경우는 어떻게? (by Chat-GPT)
+	- 지연(Lazy) 초기화 전략
+	- 서버 시작시 일괄 초기화 (`@EventListener(ApplicationReadyEvent.class)`)
+		- top N 게시글에 대해서만 
+	- Redis AOF/RDB 설정으로 복원 
+		- AOF : Append Only File
+		- RDB : Snapshotting
+
+참고 
+- [조회수를 rdb에만 저장하고 있는 서비스에 redis 도입 질문](https://www.inflearn.com/community/questions/1550681/%EC%A1%B0%ED%9A%8C%EC%88%98%EB%A5%BC-rdb%EC%97%90%EB%A7%8C-%EC%A0%80%EC%9E%A5%ED%95%98%EA%B3%A0-%EC%9E%88%EB%8A%94-%EC%84%9C%EB%B9%84%EC%8A%A4%EC%97%90%EC%84%9C-redis-%EB%8F%84%EC%9E%85-%EA%B4%80%EB%A0%A8%ED%95%B4%EC%84%9C-%EC%A7%88%EB%AC%B8%EC%9E%85%EB%8B%88%EB%8B%A4)
+- [조회수 redis 장애시 fallback 관련해서 질문](https://www.inflearn.com/community/questions/1620809/%EC%A1%B0%ED%9A%8C%EC%88%98-redis-%EC%9E%A5%EC%95%A0%EC%8B%9C-fallback-%EA%B4%80%EB%A0%A8%ED%95%B4%EC%84%9C-%EC%A7%88%EB%AC%B8)
+
+
 
