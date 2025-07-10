@@ -536,8 +536,8 @@ e1666f6 create application-test.yml
 5c24c87 create ArticleLikeController
 ```
 
-
-## 조회수
+---
+## 5. 조회수
 
 <img src="./image/article_view_count_erd.png"/>
 
@@ -575,5 +575,216 @@ e1666f6 create application-test.yml
 - [조회수를 rdb에만 저장하고 있는 서비스에 redis 도입 질문](https://www.inflearn.com/community/questions/1550681/%EC%A1%B0%ED%9A%8C%EC%88%98%EB%A5%BC-rdb%EC%97%90%EB%A7%8C-%EC%A0%80%EC%9E%A5%ED%95%98%EA%B3%A0-%EC%9E%88%EB%8A%94-%EC%84%9C%EB%B9%84%EC%8A%A4%EC%97%90%EC%84%9C-redis-%EB%8F%84%EC%9E%85-%EA%B4%80%EB%A0%A8%ED%95%B4%EC%84%9C-%EC%A7%88%EB%AC%B8%EC%9E%85%EB%8B%88%EB%8B%A4)
 - [조회수 redis 장애시 fallback 관련해서 질문](https://www.inflearn.com/community/questions/1620809/%EC%A1%B0%ED%9A%8C%EC%88%98-redis-%EC%9E%A5%EC%95%A0%EC%8B%9C-fallback-%EA%B4%80%EB%A0%A8%ED%95%B4%EC%84%9C-%EC%A7%88%EB%AC%B8)
 
+
+---
+
+## 6. 인기글 
+
+> kafka 활용
+- consumer는 `hot-article`에 위치
+	- producer는 각 서비스 모듈마다 위치해야 하는건가?
+
+
+**Kafka Cluster**
+- Message Broker에서 Consumer한테 push하는게 아니라, Consumer가 Message Broker에서 데이터를 pull 해온다 
+	- 이를 통해 Consumer는 자신의 처리량에 따라서 조절 가능
+- 즉, Producer가 데이터를 생산(publish)하면, Consumer는 데이터를 구독(subscribe)해서 가져옴
+	- **pub/sub 패턴**
+
+**Kafka Broker ?**
+- Kafka에서 데이터를 중개 및 처리해주는 애플리케이션 실행 단위
+- Producer는 Broker에 데이터를 생산하고, Consumer는 Broker에서 데이터를 소비 
+
+
+**Topic**
+- Kafka는 데이터를 구분하기 위해 **topic 단위**를 사용
+	- topic : Kafka에서 생산 및 소비되는 데이터를 **논리적으로 구분하는 단위**
+	- Producer는 topic 단위로 이벤트를 생산 및 전송
+	- Consumer는 topic 단위로 이벤트를 구독 및 소비 
+
+> Q) 🤔 만약 처리해야 할 데이터가 늘어난다면?
+> A) 여러 대의 Kafka Brocker를 연결하여 Cluster를 이루게 하고 처리량을 늘려볼 수 있다
+- topic은 논리적인 구분 단위라서, 여러 Broker에서 병렬 처리함으로써 처리량을 늘릴 수 있다
+- `Broker > topic > partition`
+
+partition으로 분산하여 처리할 때 순서가 중요하다면 ? 
+- Producer는 topic에 생산되는 이벤트에 대해 직접 partition을 지정할 수도 있다
+- partition을 지정하지 않는다면 라운드 로빈 방식으로 적절히 분산할 수도 있다
+- 즉, **순서 보장이 필요한 이벤트들에 대해서는 동일한 partition으로 보내준다**
+
+특정 kafka에 장애가 발생한다면?
+- replication factor = 3 설정을 한다면, 각 partition의 데이터는 3개로 복제된다. 
+	- leader에 데이터를 쓰면, follower로 데이터가 복제된다 
+	- 각 복제본은 kafka에서 여러 broker 간에 균등하게 분산해준다
+- Broker2가 장애 발생하더라도 partition 2의 데이터가 broker1,2에 복제되어 있음 
+	- 이때 복제로 인한 비용 발생 
+- Producer의 **acks** 설정으로 제어 가능 (선택지를 제공한다는 거네)
+	- `acks = 0` : Broker에 데이터 전달되었는지 확인하지 x, 매우 빠르지만 데이터 유실 가능
+	- `acks = 1` : leader에 전달되면 성공, follower 전달 안되면 장애 시에 유실 가능성 있으나, acks = 0 보다 안전  (리더에 전달되는지만 확인한다는 듯🤔)
+	- `acks = 2` : leader와 모든 follower(min.insync.replicas 만큼)에 데이터 기록되면 성공, 가장 안전하지만, 지연될 수 있다.
+
+
+**min.insync.replicas**
+- 데이터 전송 성공으로 간주하기  위해 최소 몇 개의 ISR이 있어야 하는지 설정 
+
+**ISR(In-Sync Replicas)**
+- leader의 데이터가 복제본으로 동기화되어 있는 follower들을 의미, `acks = all` 설정일 때 함께 동작
+
+> 만약 acks = all, min.insync.replicas = 2, replication factor = 3 설정인 경우 
+- 각 partition은 3개로 복제되어야 하지만, Producer는 2개의 데이터만 확실하게 쓰면 성공 응답을 받는다.
+- 이때 2개(min.insync.replicas)의 복제는 동기적으로 확인 
+- 3개 (replication factor)는 비동기적으로 확인 
+
+
+**kafka의 데이터 관리**
+- `broker > topic > partition` 단위
+- Kafka는 순서가 보장된 데이터 로그를 각 topic의 partition 단위로 Broker의 디스크에 저장한다 
+- 그리고 각 데이터는 고유한 offset을 가지고 있다 
+- Consumer는 offset을 기반으로 데이터를 읽어갈 수 있다. 
+- 여러 Consumer가 한 `{topic, partition}`을 읽어 처리한다면 offset은 어떻게 관리?
+	- 따로 관리해야 한다.  => Offset은 **Consumer Group 단위**로 관리된다
+- ✅ 여러 Consumer가 동일한 Consumer Group이라면, 각 topic의 각 partiton에 대해 동일한 offset을 공유한다 
+
+<img src="./image/kafka-1.png"/>
+
+> Q) 그렇다면 Broker, Topic, Partition, Consumer Group, Offset 등의 정보(메타데이터)는 누가 관리?
+> A) Zookeeper는 Kafka에서 사용되는 메타 데이터를 관리 => Zookeeper가 늘어나면 복잡도 증가 
+- `Kafka 2.8` 이후부터 메타 데이터 관리에 대해 Kafka Broker 자체적으로 관리할 수 있게 됨 👍
+- KRaft 모드로 Zookeeper 의존성 제거하여, 구조가 더 간단해짐 
+- 로컬 개발 환경에서는 KRaft 모드에서 Broker 1대로만 처리해 볼 예정 
+
+
+<img src="./image/kafka-2.png"/>
+- `hot-article`과 `article-read` 모듈은 서로다른 consumer group이라서 offset 따로 관리됨
+	- 같은 consumer group인 경우 offset 공유
+
+**📚 개념 정리**
+- Producer
+	- Kafka로 데이터를 보내는 클라이언트
+	- 데이터를 생산 및 전송
+	- Topic 단위로 데이터 전송 
+- Consumer
+	- Kafka에서 데이터를 읽는 클라이언트
+	- 데이터를 소비 및 처리 
+	- Topic 단위로 구독하여 데이터 처리
+- Broker
+	- Kafka에서 데이터를 중개 및 처리해주는 애플리케이션 실행 단위  
+	- Producer와 Consumer 사이에서 데이터를 주고 받는 역할 
+- Kafka Cluster
+	- 여러 개의 Broker가 모여서 하나의 분산형 시스템을 구성한 것 
+	- 대규모 데이터에 대해 고성능, 안정성, 확장성, 고가용성 등 지원 
+		- 데이터의 복제, 분산 처리, 장애 복구 등 
+- Topic
+	- 데이터가 구분되는 논리적인 단위 
+		- article-topic : 게시글 이벤트용
+		- comment-topic : 댓글 이베느트 
+- Partition
+	- Topic이 분산되는 단위 
+	- 각 Topic은 여러 개의 Partiton으로 분산 저장 및 병렬 처리됨 
+	- 각 Partition 내에서 데이터가 순차적으로 기록되므로, Partition 간에는 순서가 보장되지 않는다
+	- Partition은 여러 Broker에 분산되어 Cluster의 확장성을 높인다 
+- Offset
+	- 각 데이터에 대해 고유한 위치 
+		- 데이터는 각 Topic의 Partition 단위로 순차적으로 기록되고, 기록된 데이터는 offset을 가진다 
+	- Consumer Grouop은 각 그룹이 처리한 Offset을 관리한다 
+		- 데이터를 어디까지 읽었는지 
+- Consumer Group
+	- 각 Topic의 Partition 단위로 Offset을 관리한다 
+		- Consumer Group은 여러개가 될 수 있다 
+			- 인기글 서비스용, 조회 최적화 서비스용
+	- 같은 Consumer Group 내에 Consumer들은 데이터를 중복해서 읽지 않을 수 있따 
+		- offset을 공유하므로 
+	- Consumer Group 별로 데이터를 병렬로 처리할 수 있다
+
+
+### kafka 셋팅 (by docker)
+
+```shell
+> docker run -d --name board-kafka -p 9092:9092 apache/kafka:3.8.0
+> docker exec --workdir /opt/kafka/bin/ -it board-kafka sh 
+
+# 토픽 생성 (article, comment, like, view)
+
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-article --replication factor 1 --partitions 3
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-comment --replication factor 1 --partitions 3
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-like --replication factor 1 --partitions 3
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-view --replication factor 1 --partitions 3
+
+```
+
+
+### 인기글 consumer 설계 
+
+>Consumer : 인기글 서비스 해당
+   Producer : 게시글/댓글/좋아요/조회수 서비스 해당
+
+- 일 단위로 상위 10건 인기글 설정
+- 매일 오전 1시 업데이트
+- 좋아요 수(3), 댓글 수(2), 조회수(1) 기반 가중치 두어 점수 게산 
+- 최근 7일간 인기글 내역 조회 
+
+가정
+- 매일 게시글 새성 트래픽이 수백~수천만건 이상
+
+먼저 배치 처리를 고려 가능 
+- 1시간만에 처리하기에는 시간이 촉박할 수 있다
+- 인기글 선정을 위해 1시간 만에 각 서비스(like, view, comment)에 무수히 많은 데이터 요청이 필요
+	- 인기글 작업으로 인해 타 서비스 부하 증가 
+- 그래서 시간적인 제약, 개발 복잡성, 노출 시간 정책 등에 따라서 배치 처리에는 한계가 생길 수 있다
+
+**스트림 처리(Stream Processing)**
+- 스트림?
+	- 연속적인 데이터 흐름
+	- 실시간으로 발생하는 로그, 센거 감지, 주식 거래 데이터 등과 같이 연속적으로 들어오는 데이터 
+- 스트림 처리 
+	- 스트림을 처리하는 것
+	- 연속적으로 들어오는 실시간 데이터를 처리하는 방식
+- <u> 인기글 선정을 위해 스트림 처리 애플리케이션을 구축해본다 </u>
+	- 게시글 생성/수정/삭제 이벤트
+	- 댓글 생성/삭제 이벤트
+	- 좋아요 생성/삭제 이벤트
+	- 조회수 집계 이벤트 
+- 절차 
+	- 1. 인기글 선정에 필요한 이벤트를 스트림으로 받는다 
+	- 2. 실시간으로 각 게시글의 점수를 계산한다.
+	- 3. 실시간으로 상위 10건의 인기글 목록을 만든다 
+	- 4. Client는 인기글 목록을 조회한다
+- 인기글 데이터는 7일간 데이터 내역만 저장하면 되기 때문에 **Redis** 활용 
+	- sorted set과 ttl 사용해 인기글 관리 ✅
+
+
+**방법1. API**
+- 게시글/좋아요/조회수/댓글 서비스의 데이터 변경이 생길 경우 
+	- 인기글 서비스 API를 이용해 이벤트 전송 
+- 장점
+	- 간단한 구현 
+- 단점
+	- 타 서비스에 직접적 의존하게 되어 시스템간 결합도 증가 
+	- 서버 부하 전파 및 장애 전파로 인해 데이터 유실 등의 위험이 높다
+
+**방법2. Message Broker**✨
+- 게시글/좋아요/조회수/댓글 서비스의 데이터 변경이 생길 경우 
+	- 메시지 브로커(kafka)로 이벤트 전송하고, 인기글 서비스에서 이벤트를 가져와 처리한다
+- 장점
+	- 메시지 브로커를 의존하여 시스템간 결합도 감소 (간접적인 의존성)
+	- 대규모 데이터를 안전하게 처리 가능
+- 단점
+	- 구현 복잡도 증가 
+
+> 이벤트를 주고 받으며 마이크로 서비스 간에 통신하는 아키텍처를 Event Driven Architecture라고 한다
+
+
+Redis sorted set 사용 
+- 키는 날짜 사용 (YYYYMMDD)
+- data는 article_id와 score는 점수 계산하여 반영
+- 250101 데이터를 사전 작업해두면 클라이언트는 250101 데이터를 조회 (실제 날짜는 250102)
+- 최근 7일가지 관리 및 조회하기 때문에 **ttl**을 활용
+
+인기글 서비스에서 점수 계산을 하기 위해 각 서비스에 요청하게 되면 결합도가 증가하게 된다!
+- kafka로 이벤트를 생산할 때 각 서비스가 필요한 정보를 전달한다 
+- 따라서, 점수 계산에 필요한 데이터를 실시간으로 각 서비스에 다시 요청하지 않고, 인기글 서비스가 자체적인 데이터를 가지도록 한다. 
+- 이러한 데이터는 하루만 보관하면 되므로, 용량이 크진 않지만 접근이 빠르고 휘발성을 가지는 Redis를 사용해본다 
+
+> 🤔그러고보니 게시글/좋아요/조회수/댓글에 대한 정보가 비동기적으로 오기 때문에 어딘가에는 저장되어 있어야 하긴 함 
 
 
