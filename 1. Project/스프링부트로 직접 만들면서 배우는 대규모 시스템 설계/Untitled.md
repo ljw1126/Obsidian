@@ -679,7 +679,7 @@ partition으로 분산하여 처리할 때 순서가 중요하다면 ?
 		- article-topic : 게시글 이벤트용
 		- comment-topic : 댓글 이베느트 
 - Partition
-	- Topic이 분산되는 단위 
+	- Topic이 분산되는 단위 (**Queue** 에 해당🤔)
 	- 각 Topic은 여러 개의 Partiton으로 분산 저장 및 병렬 처리됨 
 	- 각 Partition 내에서 데이터가 순차적으로 기록되므로, Partition 간에는 순서가 보장되지 않는다
 	- Partition은 여러 Broker에 분산되어 Cluster의 확장성을 높인다 
@@ -705,17 +705,32 @@ partition으로 분산하여 처리할 때 순서가 중요하다면 ?
 
 # 토픽 생성 (article, comment, like, view)
 
-$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-article --replication factor 1 --partitions 3
-$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-comment --replication factor 1 --partitions 3
-$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-like --replication factor 1 --partitions 3
-$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-view --replication factor 1 --partitions 3
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-article --replication-factor 1 --partitions 3
+Created topic board-article.
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-comment --replication-factor 1 --partitions 3
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-like --replication-factor 1 --partitions 3
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --create --topic board-view --replication-factor 1 --partitions 3
+
+## 기타
+# 토픽 확인 
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --list
+
+# 특정 토픽 상세 
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic board-article
+
+# 소비자 그룹 확인
+$ ./kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+# 특정 소비자 그룹의 오프셋 확인 
+$ ./kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-consumer-group
+
 
 ```
 
 
 ### 인기글 consumer 설계 
 
->Consumer : 인기글 서비스 해당
+> Consumer : 인기글 서비스 해당
    Producer : 게시글/댓글/좋아요/조회수 서비스 해당
 
 - 일 단위로 상위 10건 인기글 설정
