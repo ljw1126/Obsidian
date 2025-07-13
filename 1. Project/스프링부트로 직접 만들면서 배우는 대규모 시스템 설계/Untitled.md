@@ -800,6 +800,238 @@ Redis sorted set 사용
 - 따라서, 점수 계산에 필요한 데이터를 실시간으로 각 서비스에 다시 요청하지 않고, 인기글 서비스가 자체적인 데이터를 가지도록 한다. 
 - 이러한 데이터는 하루만 보관하면 되므로, 용량이 크진 않지만 접근이 빠르고 휘발성을 가지는 Redis를 사용해본다 
 
-> 🤔그러고보니 게시글/좋아요/조회수/댓글에 대한 정보가 비동기적으로 오기 때문에 어딘가에는 저장되어 있어야 하긴 함 
+> 🤔그러고보니 게시글/좋아요/조회수/댓글에 대한 정보가 비동기적으로 오기 때문에 어딘가에는 저장되어 있어야 하긴 함 ➡️ kafka 메시지를 polling 하고, 인기글에 대한 정보는 redis에 저장해서 이벤트마다 연산
 
 
+
+**인기글(7/10)**
+- `common:data-serializer` 모듈 생성
+	- 카프카 메시지 직렬화, 역직렬화 담당 
+- `common:event` 모듈 생성 
+	- payload 패키지에 종류별로 선언 
+- `hot-article` 
+	- 인기글 모듈 
+	- kafka 메시지 consumer 
+	- 이벤트별로 HotArticleService에서 분기 처리 
+	- Redis에 데이터를 저장 
+	- 인기글에 대한 articleId를 저장하기 때문에 ArticleClient 통해서 article 서버에 읽기 요청한다 
+
+```java
+// 인기글을 redis에 저장할때
+public void add(Long articleId, LocalDateTime dateTime, Long score, Long limit, Duration ttl) {
+	redisTemplate.executePipelined((RedisCallback<?>)  action -> {
+	    StringRedisConnection connection = (StringRedisConnection) action;
+	    String key = generateKey(dateTime);
+	    connection.zAdd(key, score, String.valueOf(articleId));
+	    connection.zRemRange(key, 0, - limit - 1); // 상위 항목을 유지하고, score가 낮은 항목부터 삭제
+	    connection.expire(key, ttl.toSeconds());
+	    return null;
+	});
+}
+```
+
+> sorted set은 score 기준으로 오름차순 정렬이 기본 
+> 마지막 데이터부터 -1, -2, -3 
+
+삭제 명령: zRemRange(key, 0, -limit - 1) >> ZREMRANGEBYRANK 호출하는 듯?
+- 상위 10개 인기 게시글을 남기고 삭제 (날짜별 key로 구분)
+- 오름차순 기준으로 index 0부터 index (total_size - 11)까지 삭제
+- 가장 낮은 score를 가진 항목부터 삭제해서 limit만큼만 유지
+- 0 : 첫번째 (가장 낮은 score, 기본 오름차순)
+- `-1` : 마지막 (가장 높은 score)
+- 만약 redis에 20개가 있을때 
+  - `-1`은 20에 해당, `-2`는 19번 인덱스에 해당 
+- 💡 자, 그럼 zRemRange(key, 0, -11)의 의미는?
+	- 시작 인덱스: 0 → 가장 낮은 score부터 시작
+	- 종료 인덱스: -11 → 위 예시에서는 index 9까지 포함
+	- 즉, index 0 ~ 9 (가장 낮은 score 10개)를 삭제하게 됩니다.
+	- 결과적으로 상위 10개(가장 높은 score 10개)만 남기는 동작입니다.
+- 만약에 redis에 9개 게시글이 있다면 zRemRange(key, 0, -11)은
+	-  현재 인덱스 범위는 0 ~ 8 (총 9개)
+	- `-1`은 8번째 요소 (가장 높은 score)
+	- `-11`은 존재하지 않음 → Redis는 이를 내부적으로 start > end 로 간주 (아무것도 삭제 안함 !)
+
+> 📌 즉, 안전하게 상위 limit개만 유지하려는 목적으로 설계된 로직입니다.
+
+
+**트러블슈팅**
+- reverseRange를 하면 Set\<String\>으로 value만 받아오고 reverseRangeWithScore를 하면 Tuple 형태로 value와 score를 가져온다
+-  opsZSet에서 key와 value가 동일하면 업데이트가 되버린다. >> articleId가 value인데 1L로 고정해서 테스트해버리니 redis에 데이터 하나뿐이었음 
+- `@DataRedisTest`의 경우 CrudRepository 인터페이스를 상속받은 repository 인터페이스에 대해서 의존성을 주입해준다  ➡️ 현재 일반 클래스에 @Repository를 붙인 컴포넌트 빈인데 그러다보니 @DataRedisTest 실행시 의존성 주입이 되지 않아 no qualify bean 예외가 출력됨 
+
+
+**7/11**
+- repository 생성 ➡️ 전부 StringRedisTemplate 사용
+	- ArticleCommentCountRepository
+	- ArticeLikeCountRepository
+	- ArticleViewCountRepository
+	- ArticleViewCountRepository
+	- ArticleCreatedTimeRepository
+- 매번 다른 서버에 요청하면 부하가 증가하기 때문에 hot-article 모듈에서 redis에 저장하여 인기글 비즈니스 로직 처리
+
+
+> Q) ArticleCreatedTimeRepository 을 article 모듈에서 처리해야 하는게 아닐까?
+> A) 인기글을 위한 비즈니스 책임, 역할을 hot-article 모듈에서 가지는게 자연스러워보인다
+
+
+섹션 6-47
+- utils 패키지 생성, TimeCalculatorUtils 생성 
+  - 자정까지 남은 시간을 계산하는 헬퍼 메서드 추가 
+- **HotArticleService 생성 
+  - kafka를 통해 이벤트를 주입받아 비즈니스 로직을 수행한다 
+- HotArticleScoreUpdater, HotArticleScoreCalculator 생성
+- EventHandler 인터페이스 정의 
+  - 이벤트 핸들러 구현체 생성 (**7개** 😂)
+
+섹션 6-48
+- controller 와 kafka consumer 생성 
+- controller에서는 날짜 기준으로 데이터 조회 호출 
+- consumer는 kafka를 구독해서 polling하여 처리
+  - common:event에 topic 정보가 다 있으니깐 설정하기 유용하네 
+  
+
+**HotArticleScoreCalculator 생성**
+- 좋아요 , 댓글 수, 조회수를 redis에서 조회해 계산한 score를 반환
+- Mockito 테스트 적합*
+
+**HotArticleScoreUpdater 생성** 
+- Event, EventHandler 타입을 매개변수로 받는다
+
+**EventHandler 구현체 생성** (7개)
+- ArticleUnlikedEventHandler 호출시 handle에서 똑같이 createOrUpdate를 호출하는데 
+  (내생각에는) 이미 감소된 like count를 전달해서 반영하는 듯함?
+
+```java
+@Override
+public void handle(Event<ArticleUnlikedEventPayload> event) {
+	ArticleUnlikedEventPayload payload = event.getPayload();
+	articleLikeCountRepository.createOrUpdate(..);
+}
+```
+
+
+**Repository**
+- 임베디드 레디스 테스트 수행 
+
+
+**HotArticleService에서**
+```java
+@Service
+@RequiredArgsConstructor
+public class HotArticleService {
+    private final ArticleClient articleClient;
+    private final List<EventHandler<EventPayload>> eventHandlers; // ?
+    private final HotArticleScoreUpdater hotArticleScoreUpdater;
+    private final HotArticleListRepository hotArticleListRepository;
+	
+     //..
+}
+```
+- 스프링에서 빈 주입해줄 때 해당 타입의 빈을 전부 컬렉션에 담아 생성자 초기화 해준다!
+
+
+**Controller**
+- WebMvcTest를 수행 
+
+
+**ArticleClient**
+- 인기글 조회시 사용  (Redis에서 ids 조회)
+- RestClient로 article 서버에 요청 
+- `@RestClientTest` 사용하기 위해서는 RestClient.Builder를 주입받아 사용하는 빈 클래스에 한해 테스트 가능 (Spring Boot 3.2부터 지원하는 걸로 알려진듯)
+
+> Annotation for a Spring rest client test that focuses only on beans that use RestTemplateBuilder or RestClient. Builder.
+
+
+```java
+// before
+@Component
+public class ArticleClient {
+    private final RestClient restClient;
+
+    @Value("${endpoints.board-article-service.url}")
+    private String articleServiceUrl; // 테스트 시점에 null이라서 restful api 주소만 비교하게 됨
+
+    public ArticleClient(RestClient.Builder builder) {
+        this.restClient = builder.baseUrl(articleServiceUrl).build();
+    }
+
+    //..
+}
+
+
+// after
+@Component
+public class ArticleClient {
+    private final RestClient restClient;
+
+    public ArticleClient(RestClient.Builder builder, @Value("${endpoints.board-article-service.url}") String articleServiceUrl) {
+        this.restClient = builder.baseUrl(articleServiceUrl).build(); // 생성자 초기화시 주입받음
+    }
+```
+
+
+**트러블슈팅**
+- Repository 테스트하려는 Kafka 로그가 신경쓰임 
+- @EnableAutoConfiguration exclude는 AutoConfiguration 대상 (META-INF)에 등록된 거만 제외가능 !
+	- kafkaConfig, HotArticle..EventConsumer는 그냥 컴포넌트 빈이라 대상이 안됨 
+- `@MockitoBean`처리하여 해결 
+
+```java
+@MockitoBean
+private KafkaConfig kafkaConfig;
+
+@MockitoBean
+private HotArticleEventConsumer hotArticleEventConsumer;
+```
+
+
+**Kafka Consumer 테스트**
+- Mockito 방식과 EmbeddedKafka 방식 둘 다 테스트 
+- 문제)`@EmbeddedKafka` 테스트시 어쩌다가 성공하거나 실패하는 경우가 발생함 
+- 해결)`auto-offset-reset=earliest` 
+	- 메시지를 보내고 어느 offset부터 consumer가 소비할지 지정하지 않다보니 카프카 초기화시점이랑 메시지 보낸 시점 그리고 polling 하는 시점이 꼬여서 메시지를 가져오지 못한 것으로 판단됨
+
+```text
+server:
+  port: 9004
+spring:
+  application:
+    name: article-hot-service
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: board-hot-article-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      auto-offset-reset: earliest        /// 이거 유무에 따라 임베디드 테스트 성공 실패 나눠짐
+    properties:
+      spring.json.trusted.packages: '*'
+endpoints:
+  board-article-service:
+    url: http://127.0.0.1:9000
+```
+
+| 원인                            | 설명                                   |
+| ----------------------------- | ------------------------------------ |
+| `auto-offset-reset: latest`   | 테스트 중 이미 발행된 메시지를 소비하지 않음            |
+| `auto-offset-reset: earliest` | 발행된 메시지를 전부 소비하므로 테스트 성공             |
+| `consumerFactory` 직접 등록 시     | 명시적으로 `earliest`를 지정했다면 메시지를 잘 받았을 것 |
+
+auto.offset.reset는 카프카 컨슈머를 다루는데 있어 아주 중요한 부분입니다.  해당 옵션이 가질 수 있는 값은 다음과 같습니다.
+- `earliest` : 마지막 커밋 기록이 없을 경우, 가장 예전(낮은 번호 오프셋) 레코드부터 처리 
+- `latest` : 마지막 커밋 기록이 없을 경우, 가장 최근(높은 번호 오프셋) 레코드부터 처리
+- `none` : 커밋 기록이 없을 경우 throws Exception
+
+
+
+> Q)`@ActiveProfiles("test")`를 했는데 application.yml이 주입되는 이유?
+> A)테스트 실행시 기본적으로 application.yml을 먼저 읽고, application-test.yml 오버라이딩함 
+
+
+
+<img src="./image/hot-article-event.png"/>
