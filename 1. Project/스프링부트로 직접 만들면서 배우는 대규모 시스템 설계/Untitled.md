@@ -582,120 +582,9 @@ e1666f6 create application-test.yml
 
 > kafka 활용
 - consumer는 `hot-article`에 위치
-	- producer는 각 서비스 모듈마다 위치해야 하는건가?
-
-
-**Kafka Cluster**
-- Message Broker에서 Consumer한테 push하는게 아니라, Consumer가 Message Broker에서 데이터를 pull 해온다 
-	- 이를 통해 Consumer는 자신의 처리량에 따라서 조절 가능
-- 즉, Producer가 데이터를 생산(publish)하면, Consumer는 데이터를 구독(subscribe)해서 가져옴
-	- **pub/sub 패턴**
-
-**Kafka Broker ?**
-- Kafka에서 데이터를 중개 및 처리해주는 애플리케이션 실행 단위
-- Producer는 Broker에 데이터를 생산하고, Consumer는 Broker에서 데이터를 소비 
-
-
-**Topic**
-- Kafka는 데이터를 구분하기 위해 **topic 단위**를 사용
-	- topic : Kafka에서 생산 및 소비되는 데이터를 **논리적으로 구분하는 단위**
-	- Producer는 topic 단위로 이벤트를 생산 및 전송
-	- Consumer는 topic 단위로 이벤트를 구독 및 소비 
-
-> Q) 🤔 만약 처리해야 할 데이터가 늘어난다면?
-> A) 여러 대의 Kafka Brocker를 연결하여 Cluster를 이루게 하고 처리량을 늘려볼 수 있다
-- topic은 논리적인 구분 단위라서, 여러 Broker에서 병렬 처리함으로써 처리량을 늘릴 수 있다
-- `Broker > topic > partition`
-
-partition으로 분산하여 처리할 때 순서가 중요하다면 ? 
-- Producer는 topic에 생산되는 이벤트에 대해 직접 partition을 지정할 수도 있다
-- partition을 지정하지 않는다면 라운드 로빈 방식으로 적절히 분산할 수도 있다
-- 즉, **순서 보장이 필요한 이벤트들에 대해서는 동일한 partition으로 보내준다**
-
-특정 kafka에 장애가 발생한다면?
-- replication factor = 3 설정을 한다면, 각 partition의 데이터는 3개로 복제된다. 
-	- leader에 데이터를 쓰면, follower로 데이터가 복제된다 
-	- 각 복제본은 kafka에서 여러 broker 간에 균등하게 분산해준다
-- Broker2가 장애 발생하더라도 partition 2의 데이터가 broker1,2에 복제되어 있음 
-	- 이때 복제로 인한 비용 발생 
-- Producer의 **acks** 설정으로 제어 가능 (선택지를 제공한다는 거네)
-	- `acks = 0` : Broker에 데이터 전달되었는지 확인하지 x, 매우 빠르지만 데이터 유실 가능
-	- `acks = 1` : leader에 전달되면 성공, follower 전달 안되면 장애 시에 유실 가능성 있으나, acks = 0 보다 안전  (리더에 전달되는지만 확인한다는 듯🤔)
-	- `acks = 2` : leader와 모든 follower(min.insync.replicas 만큼)에 데이터 기록되면 성공, 가장 안전하지만, 지연될 수 있다.
-
-
-**min.insync.replicas**
-- 데이터 전송 성공으로 간주하기  위해 최소 몇 개의 ISR이 있어야 하는지 설정 
-
-**ISR(In-Sync Replicas)**
-- leader의 데이터가 복제본으로 동기화되어 있는 follower들을 의미, `acks = all` 설정일 때 함께 동작
-
-> 만약 acks = all, min.insync.replicas = 2, replication factor = 3 설정인 경우 
-- 각 partition은 3개로 복제되어야 하지만, Producer는 2개의 데이터만 확실하게 쓰면 성공 응답을 받는다.
-- 이때 2개(min.insync.replicas)의 복제는 동기적으로 확인 
-- 3개 (replication factor)는 비동기적으로 확인 
-
-
-**kafka의 데이터 관리**
-- `broker > topic > partition` 단위
-- Kafka는 순서가 보장된 데이터 로그를 각 topic의 partition 단위로 Broker의 디스크에 저장한다 
-- 그리고 각 데이터는 고유한 offset을 가지고 있다 
-- Consumer는 offset을 기반으로 데이터를 읽어갈 수 있다. 
-- 여러 Consumer가 한 `{topic, partition}`을 읽어 처리한다면 offset은 어떻게 관리?
-	- 따로 관리해야 한다.  => Offset은 **Consumer Group 단위**로 관리된다
-- ✅ 여러 Consumer가 동일한 Consumer Group이라면, 각 topic의 각 partiton에 대해 동일한 offset을 공유한다 
-
-<img src="./image/kafka-1.png"/>
-
-> Q) 그렇다면 Broker, Topic, Partition, Consumer Group, Offset 등의 정보(메타데이터)는 누가 관리?
-> A) Zookeeper는 Kafka에서 사용되는 메타 데이터를 관리 => Zookeeper가 늘어나면 복잡도 증가 
-- `Kafka 2.8` 이후부터 메타 데이터 관리에 대해 Kafka Broker 자체적으로 관리할 수 있게 됨 👍
-- KRaft 모드로 Zookeeper 의존성 제거하여, 구조가 더 간단해짐 
-- 로컬 개발 환경에서는 KRaft 모드에서 Broker 1대로만 처리해 볼 예정 
-
-
-<img src="./image/kafka-2.png"/>
-- `hot-article`과 `article-read` 모듈은 서로다른 consumer group이라서 offset 따로 관리됨
-	- 같은 consumer group인 경우 offset 공유
-
-**📚 개념 정리**
-- Producer
-	- Kafka로 데이터를 보내는 클라이언트
-	- 데이터를 생산 및 전송
-	- Topic 단위로 데이터 전송 
-- Consumer
-	- Kafka에서 데이터를 읽는 클라이언트
-	- 데이터를 소비 및 처리 
-	- Topic 단위로 구독하여 데이터 처리
-- Broker
-	- Kafka에서 데이터를 중개 및 처리해주는 애플리케이션 실행 단위  
-	- Producer와 Consumer 사이에서 데이터를 주고 받는 역할 
-- Kafka Cluster
-	- 여러 개의 Broker가 모여서 하나의 분산형 시스템을 구성한 것 
-	- 대규모 데이터에 대해 고성능, 안정성, 확장성, 고가용성 등 지원 
-		- 데이터의 복제, 분산 처리, 장애 복구 등 
-- Topic
-	- 데이터가 구분되는 논리적인 단위 
-		- article-topic : 게시글 이벤트용
-		- comment-topic : 댓글 이베느트 
-- Partition
-	- Topic이 분산되는 단위 (**Queue** 에 해당🤔)
-	- 각 Topic은 여러 개의 Partiton으로 분산 저장 및 병렬 처리됨 
-	- 각 Partition 내에서 데이터가 순차적으로 기록되므로, Partition 간에는 순서가 보장되지 않는다
-	- Partition은 여러 Broker에 분산되어 Cluster의 확장성을 높인다 
-- Offset
-	- 각 데이터에 대해 고유한 위치 
-		- 데이터는 각 Topic의 Partition 단위로 순차적으로 기록되고, 기록된 데이터는 offset을 가진다 
-	- Consumer Grouop은 각 그룹이 처리한 Offset을 관리한다 
-		- 데이터를 어디까지 읽었는지 
-- Consumer Group
-	- 각 Topic의 Partition 단위로 Offset을 관리한다 
-		- Consumer Group은 여러개가 될 수 있다 
-			- 인기글 서비스용, 조회 최적화 서비스용
-	- 같은 Consumer Group 내에 Consumer들은 데이터를 중복해서 읽지 않을 수 있따 
-		- offset을 공유하므로 
-	- Consumer Group 별로 데이터를 병렬로 처리할 수 있다
-
+	- producer는 각 서비스 모듈마다 위치해야 하는건가? 
+		- `:common:outbox-message-relay` 에서 kafka 메시지 발송 책임
+		- article, view, like, comment 모듈에서는 해당 모듈 주입받아 메시지 전달하여 발송
 
 ### kafka 셋팅 (by docker)
 
@@ -727,311 +616,24 @@ $ ./kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --grou
 
 ```
 
+### outbox 테이블 설계 
+- article, view, like, comment 데이터베이스에 각각 outbox 테이블 생성해야 함
+	- 자기 메시지만 관리함
+- 각 서버가 scale-out하는 경우 shard 분배를 통해 메시지 중복 처리 및 충돌 방지 
+	- redis 통해 운영 서버 관리 및 AssignedShard 클래스 통해 샤드 분배
+
+```sql
+
+
+```
+
+
 
 ### 인기글 consumer 설계 
-
-> Consumer : 인기글 서비스 해당
-   Producer : 게시글/댓글/좋아요/조회수 서비스 해당
-
-- 일 단위로 상위 10건 인기글 설정
-- 매일 오전 1시 업데이트
-- 좋아요 수(3), 댓글 수(2), 조회수(1) 기반 가중치 두어 점수 게산 
-- 최근 7일간 인기글 내역 조회 
-
-가정
-- 매일 게시글 새성 트래픽이 수백~수천만건 이상
-
-먼저 배치 처리를 고려 가능 
-- 1시간만에 처리하기에는 시간이 촉박할 수 있다
-- 인기글 선정을 위해 1시간 만에 각 서비스(like, view, comment)에 무수히 많은 데이터 요청이 필요
-	- 인기글 작업으로 인해 타 서비스 부하 증가 
-- 그래서 시간적인 제약, 개발 복잡성, 노출 시간 정책 등에 따라서 배치 처리에는 한계가 생길 수 있다
-
-**스트림 처리(Stream Processing)**
-- 스트림?
-	- 연속적인 데이터 흐름
-	- 실시간으로 발생하는 로그, 센거 감지, 주식 거래 데이터 등과 같이 연속적으로 들어오는 데이터 
-- 스트림 처리 
-	- 스트림을 처리하는 것
-	- 연속적으로 들어오는 실시간 데이터를 처리하는 방식
-- <u> 인기글 선정을 위해 스트림 처리 애플리케이션을 구축해본다 </u>
-	- 게시글 생성/수정/삭제 이벤트
-	- 댓글 생성/삭제 이벤트
-	- 좋아요 생성/삭제 이벤트
-	- 조회수 집계 이벤트 
-- 절차 
-	- 1. 인기글 선정에 필요한 이벤트를 스트림으로 받는다 
-	- 2. 실시간으로 각 게시글의 점수를 계산한다.
-	- 3. 실시간으로 상위 10건의 인기글 목록을 만든다 
-	- 4. Client는 인기글 목록을 조회한다
-- 인기글 데이터는 7일간 데이터 내역만 저장하면 되기 때문에 **Redis** 활용 
-	- sorted set과 ttl 사용해 인기글 관리 ✅
-
-
-**방법1. API**
-- 게시글/좋아요/조회수/댓글 서비스의 데이터 변경이 생길 경우 
-	- 인기글 서비스 API를 이용해 이벤트 전송 
-- 장점
-	- 간단한 구현 
-- 단점
-	- 타 서비스에 직접적 의존하게 되어 시스템간 결합도 증가 
-	- 서버 부하 전파 및 장애 전파로 인해 데이터 유실 등의 위험이 높다
-
-**방법2. Message Broker**✨
-- 게시글/좋아요/조회수/댓글 서비스의 데이터 변경이 생길 경우 
-	- 메시지 브로커(kafka)로 이벤트 전송하고, 인기글 서비스에서 이벤트를 가져와 처리한다
-- 장점
-	- 메시지 브로커를 의존하여 시스템간 결합도 감소 (간접적인 의존성)
-	- 대규모 데이터를 안전하게 처리 가능
-- 단점
-	- 구현 복잡도 증가 
-
-> 이벤트를 주고 받으며 마이크로 서비스 간에 통신하는 아키텍처를 Event Driven Architecture라고 한다
-
-
-Redis sorted set 사용 
-- 키는 날짜 사용 (YYYYMMDD)
-- data는 article_id와 score는 점수 계산하여 반영
-- 250101 데이터를 사전 작업해두면 클라이언트는 250101 데이터를 조회 (실제 날짜는 250102)
-- 최근 7일가지 관리 및 조회하기 때문에 **ttl**을 활용
-
-인기글 서비스에서 점수 계산을 하기 위해 각 서비스에 요청하게 되면 결합도가 증가하게 된다!
-- kafka로 이벤트를 생산할 때 각 서비스가 필요한 정보를 전달한다 
-- 따라서, 점수 계산에 필요한 데이터를 실시간으로 각 서비스에 다시 요청하지 않고, 인기글 서비스가 자체적인 데이터를 가지도록 한다. 
-- 이러한 데이터는 하루만 보관하면 되므로, 용량이 크진 않지만 접근이 빠르고 휘발성을 가지는 Redis를 사용해본다 
-
-> 🤔그러고보니 게시글/좋아요/조회수/댓글에 대한 정보가 비동기적으로 오기 때문에 어딘가에는 저장되어 있어야 하긴 함 ➡️ kafka 메시지를 polling 하고, 인기글에 대한 정보는 redis에 저장해서 이벤트마다 연산
-
-
-
-**인기글(7/10)**
-- `common:data-serializer` 모듈 생성
-	- 카프카 메시지 직렬화, 역직렬화 담당 
-- `common:event` 모듈 생성 
-	- payload 패키지에 종류별로 선언 
-- `hot-article` 
-	- 인기글 모듈 
-	- kafka 메시지 consumer 
-	- 이벤트별로 HotArticleService에서 분기 처리 
-	- Redis에 데이터를 저장 
-	- 인기글에 대한 articleId를 저장하기 때문에 ArticleClient 통해서 article 서버에 읽기 요청한다 
-
-```java
-// 인기글을 redis에 저장할때
-public void add(Long articleId, LocalDateTime dateTime, Long score, Long limit, Duration ttl) {
-	redisTemplate.executePipelined((RedisCallback<?>)  action -> {
-	    StringRedisConnection connection = (StringRedisConnection) action;
-	    String key = generateKey(dateTime);
-	    connection.zAdd(key, score, String.valueOf(articleId));
-	    connection.zRemRange(key, 0, - limit - 1); // 상위 항목을 유지하고, score가 낮은 항목부터 삭제
-	    connection.expire(key, ttl.toSeconds());
-	    return null;
-	});
-}
-```
-
-> sorted set은 score 기준으로 오름차순 정렬이 기본 
-> 마지막 데이터부터 -1, -2, -3 
-
-삭제 명령: zRemRange(key, 0, -limit - 1) >> ZREMRANGEBYRANK 호출하는 듯?
-- 상위 10개 인기 게시글을 남기고 삭제 (날짜별 key로 구분)
-- 오름차순 기준으로 index 0부터 index (total_size - 11)까지 삭제
-- 가장 낮은 score를 가진 항목부터 삭제해서 limit만큼만 유지
-- 0 : 첫번째 (가장 낮은 score, 기본 오름차순)
-- `-1` : 마지막 (가장 높은 score)
-- 만약 redis에 20개가 있을때 
-  - `-1`은 20에 해당, `-2`는 19번 인덱스에 해당 
-- 💡 자, 그럼 zRemRange(key, 0, -11)의 의미는?
-	- 시작 인덱스: 0 → 가장 낮은 score부터 시작
-	- 종료 인덱스: -11 → 위 예시에서는 index 9까지 포함
-	- 즉, index 0 ~ 9 (가장 낮은 score 10개)를 삭제하게 됩니다.
-	- 결과적으로 상위 10개(가장 높은 score 10개)만 남기는 동작입니다.
-- 만약에 redis에 9개 게시글이 있다면 zRemRange(key, 0, -11)은
-	-  현재 인덱스 범위는 0 ~ 8 (총 9개)
-	- `-1`은 8번째 요소 (가장 높은 score)
-	- `-11`은 존재하지 않음 → Redis는 이를 내부적으로 start > end 로 간주 (아무것도 삭제 안함 !)
-
-> 📌 즉, 안전하게 상위 limit개만 유지하려는 목적으로 설계된 로직입니다.
-
-
-**트러블슈팅**
-- reverseRange를 하면 Set\<String\>으로 value만 받아오고 reverseRangeWithScore를 하면 Tuple 형태로 value와 score를 가져온다
--  opsZSet에서 key와 value가 동일하면 업데이트가 되버린다. >> articleId가 value인데 1L로 고정해서 테스트해버리니 redis에 데이터 하나뿐이었음 
-- `@DataRedisTest`의 경우 CrudRepository 인터페이스를 상속받은 repository 인터페이스에 대해서 의존성을 주입해준다  ➡️ 현재 일반 클래스에 @Repository를 붙인 컴포넌트 빈인데 그러다보니 @DataRedisTest 실행시 의존성 주입이 되지 않아 no qualify bean 예외가 출력됨 
-
-
-**7/11**
-- repository 생성 ➡️ 전부 StringRedisTemplate 사용
-	- ArticleCommentCountRepository
-	- ArticeLikeCountRepository
-	- ArticleViewCountRepository
-	- ArticleViewCountRepository
-	- ArticleCreatedTimeRepository
-- 매번 다른 서버에 요청하면 부하가 증가하기 때문에 hot-article 모듈에서 redis에 저장하여 인기글 비즈니스 로직 처리
-
-
-> Q) ArticleCreatedTimeRepository 을 article 모듈에서 처리해야 하는게 아닐까?
-> A) 인기글을 위한 비즈니스 책임, 역할을 hot-article 모듈에서 가지는게 자연스러워보인다
-
-
-섹션 6-47
-- utils 패키지 생성, TimeCalculatorUtils 생성 
-  - 자정까지 남은 시간을 계산하는 헬퍼 메서드 추가 
-- **HotArticleService 생성 
-  - kafka를 통해 이벤트를 주입받아 비즈니스 로직을 수행한다 
-- HotArticleScoreUpdater, HotArticleScoreCalculator 생성
-- EventHandler 인터페이스 정의 
-  - 이벤트 핸들러 구현체 생성 (**7개** 😂)
-
-섹션 6-48
-- controller 와 kafka consumer 생성 
-- controller에서는 날짜 기준으로 데이터 조회 호출 
-- consumer는 kafka를 구독해서 polling하여 처리
-  - common:event에 topic 정보가 다 있으니깐 설정하기 유용하네 
-  
-
-**HotArticleScoreCalculator 생성**
-- 좋아요 , 댓글 수, 조회수를 redis에서 조회해 계산한 score를 반환
-- Mockito 테스트 적합*
-
-**HotArticleScoreUpdater 생성** 
-- Event, EventHandler 타입을 매개변수로 받는다
-
-**EventHandler 구현체 생성** (7개)
-- ArticleUnlikedEventHandler 호출시 handle에서 똑같이 createOrUpdate를 호출하는데 
-  (내생각에는) 이미 감소된 like count를 전달해서 반영하는 듯함?
-
-```java
-@Override
-public void handle(Event<ArticleUnlikedEventPayload> event) {
-	ArticleUnlikedEventPayload payload = event.getPayload();
-	articleLikeCountRepository.createOrUpdate(..);
-}
-```
-
-
-**Repository**
-- 임베디드 레디스 테스트 수행 
-
-
-**HotArticleService에서**
-```java
-@Service
-@RequiredArgsConstructor
-public class HotArticleService {
-    private final ArticleClient articleClient;
-    private final List<EventHandler<EventPayload>> eventHandlers; // ?
-    private final HotArticleScoreUpdater hotArticleScoreUpdater;
-    private final HotArticleListRepository hotArticleListRepository;
-	
-     //..
-}
-```
-- 스프링에서 빈 주입해줄 때 해당 타입의 빈을 전부 컬렉션에 담아 생성자 초기화 해준다!
-
-
-**Controller**
-- WebMvcTest를 수행 
-
-
-**ArticleClient**
-- 인기글 조회시 사용  (Redis에서 ids 조회)
-- RestClient로 article 서버에 요청 
-- `@RestClientTest` 사용하기 위해서는 RestClient.Builder를 주입받아 사용하는 빈 클래스에 한해 테스트 가능 (Spring Boot 3.2부터 지원하는 걸로 알려진듯)
-
-> Annotation for a Spring rest client test that focuses only on beans that use RestTemplateBuilder or RestClient. Builder.
-
-
-```java
-// before
-@Component
-public class ArticleClient {
-    private final RestClient restClient;
-
-    @Value("${endpoints.board-article-service.url}")
-    private String articleServiceUrl; // 테스트 시점에 null이라서 restful api 주소만 비교하게 됨
-
-    public ArticleClient(RestClient.Builder builder) {
-        this.restClient = builder.baseUrl(articleServiceUrl).build();
-    }
-
-    //..
-}
-
-
-// after
-@Component
-public class ArticleClient {
-    private final RestClient restClient;
-
-    public ArticleClient(RestClient.Builder builder, @Value("${endpoints.board-article-service.url}") String articleServiceUrl) {
-        this.restClient = builder.baseUrl(articleServiceUrl).build(); // 생성자 초기화시 주입받음
-    }
-```
-
-
-**트러블슈팅**
-- Repository 테스트하려는 Kafka 로그가 신경쓰임 
-- @EnableAutoConfiguration exclude는 AutoConfiguration 대상 (META-INF)에 등록된 거만 제외가능 !
-	- kafkaConfig, HotArticle..EventConsumer는 그냥 컴포넌트 빈이라 대상이 안됨 
-- `@MockitoBean`처리하여 해결 
-
-```java
-@MockitoBean
-private KafkaConfig kafkaConfig;
-
-@MockitoBean
-private HotArticleEventConsumer hotArticleEventConsumer;
-```
-
-
-**Kafka Consumer 테스트**
-- Mockito 방식과 EmbeddedKafka 방식 둘 다 테스트 
-- 문제)`@EmbeddedKafka` 테스트시 어쩌다가 성공하거나 실패하는 경우가 발생함 
-- 해결)`auto-offset-reset=earliest` 
-	- 메시지를 보내고 어느 offset부터 consumer가 소비할지 지정하지 않다보니 카프카 초기화시점이랑 메시지 보낸 시점 그리고 polling 하는 시점이 꼬여서 메시지를 가져오지 못한 것으로 판단됨
-
-```text
-server:
-  port: 9004
-spring:
-  application:
-    name: article-hot-service
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: board-hot-article-service
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      enable-auto-commit: false
-      auto-offset-reset: earliest        /// 이거 유무에 따라 임베디드 테스트 성공 실패 나눠짐
-    properties:
-      spring.json.trusted.packages: '*'
-endpoints:
-  board-article-service:
-    url: http://127.0.0.1:9000
-```
-
-| 원인                            | 설명                                   |
-| ----------------------------- | ------------------------------------ |
-| `auto-offset-reset: latest`   | 테스트 중 이미 발행된 메시지를 소비하지 않음            |
-| `auto-offset-reset: earliest` | 발행된 메시지를 전부 소비하므로 테스트 성공             |
-| `consumerFactory` 직접 등록 시     | 명시적으로 `earliest`를 지정했다면 메시지를 잘 받았을 것 |
-
-auto.offset.reset는 카프카 컨슈머를 다루는데 있어 아주 중요한 부분입니다.  해당 옵션이 가질 수 있는 값은 다음과 같습니다.
-- `earliest` : 마지막 커밋 기록이 없을 경우, 가장 예전(낮은 번호 오프셋) 레코드부터 처리 
-- `latest` : 마지막 커밋 기록이 없을 경우, 가장 최근(높은 번호 오프셋) 레코드부터 처리
-- `none` : 커밋 기록이 없을 경우 throws Exception
-
-
-
-> Q)`@ActiveProfiles("test")`를 했는데 application.yml이 주입되는 이유?
-> A)테스트 실행시 기본적으로 application.yml을 먼저 읽고, application-test.yml 오버라이딩함 
-
+- kafka 메시지를 polling해서 처리
+- redis sorted set 에 데이터 저장 
+	- 게시글 생성/삭제
+	- 좋아요, 댓글수, 조회수에 대한 가중치 계산 및 인기글 목록
 
 
 <img src="./image/hot-article-event.png"/>
@@ -1039,6 +641,21 @@ auto.offset.reset는 카프카 컨슈머를 다루는데 있어 아주 중요한
 > 책임 연쇄 패턴은 또 다른 내용이네, 체이닝 방식으로 핸들러를 연속해서 처리 
 > https://inpa.tistory.com/entry/GOF-%F0%9F%92%A0-Chain-Of-Responsibility-%ED%8C%A8%ED%84%B4-%EC%99%84%EB%B2%BD-%EB%A7%88%EC%8A%A4%ED%84%B0%ED%95%98%EA%B8%B0#%EC%B1%85%EC%9E%84_%EC%97%B0%EC%87%84_%ED%8C%A8%ED%84%B4_%EA%B5%AC%EC%A1%B0
 
+
+### 전체 flow
+- article, comment, article-like, article-view 모듈에서 :common:outbox-message-relay 의존
+- request 요청시 이벤트발송에 대한 책임을 OutboxPublisher에서 위임
+- 정상적인 경우 
+	- outbox 테이블에 메시지 저장 
+	- kafka 메시지 발송 
+	- (1초후) outbox 메시지 삭제
+- kafka 서버 다운 된 경우 
+	- outbox 테이블에 메시지가 저장된 상태
+	- 스케쥴러 통해 운영 중인 프로세스 확인 
+		- 이때 redis에 각 모듈 그룹 단위로 해서 프로세스 정보를 관리함 
+		- article 1, 2 서버가 올라가 있으면 각 서버에 스케쥴러가 실행됨 
+		- redis 조회해서 각 서버가 담당할 shard 계산 
+		- outbox 테이블에서 미처리된 메시지(shard) 가져와 재발송 후 삭제
 
 <img src="./image/hot-article-flow.png"/>
 
