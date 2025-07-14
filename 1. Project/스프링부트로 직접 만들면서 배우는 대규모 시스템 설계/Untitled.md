@@ -1038,3 +1038,9 @@ auto.offset.reset는 카프카 컨슈머를 다루는데 있어 아주 중요한
 
 > 책임 연쇄 패턴은 또 다른 내용이네, 체이닝 방식으로 핸들러를 연속해서 처리 
 > https://inpa.tistory.com/entry/GOF-%F0%9F%92%A0-Chain-Of-Responsibility-%ED%8C%A8%ED%84%B4-%EC%99%84%EB%B2%BD-%EB%A7%88%EC%8A%A4%ED%84%B0%ED%95%98%EA%B8%B0#%EC%B1%85%EC%9E%84_%EC%97%B0%EC%87%84_%ED%8C%A8%ED%84%B4_%EA%B5%AC%EC%A1%B0
+
+
+<img src="./image/hot-article-flow.png"/>
+
+- 참고로 `ArticleUpdatedEventPayload` 사용하지 않음 
+	- `HotArticleService`에서도 핸들러 조회시 ArticleUpdatedEventHandler 빈이 없기 때문에 null 반환되어 안전하게 return 처리됨 
