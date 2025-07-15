@@ -623,7 +623,18 @@ $ ./kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --grou
 	- redis 통해 운영 서버 관리 및 AssignedShard 클래스 통해 샤드 분배
 
 ```sql
-
+-- 인기글  
+-- article, article_view, article_like, comment DB에 각각 테이블과 인덱스 생성해준다  
+create table outbox (  
+    outbox_id bigint not null primary key,  
+    shard_key bigint not null,  
+    event_type varchar(100) not null,  
+    payload varchar(5000) not null,  
+    created_at datetime not null  
+);  
+  
+-- 생성 10초 이후 조건 조회를 위한 인덱스  
+create index idx_shard_key_created_at on outbox(shard_key asc, created_at asc);
 
 ```
 
@@ -661,3 +672,29 @@ $ ./kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --grou
 
 - 참고로 `ArticleUpdatedEventPayload` 사용하지 않음 
 	- `HotArticleService`에서도 핸들러 조회시 ArticleUpdatedEventHandler 빈이 없기 때문에 null 반환되어 안전하게 return 처리됨 
+
+**트러블슈팅 기록(7/14)**
+- 1. 전체 서버 실행 후 인기 게시글 e2e 테스트 실행 
+	- 테스트 파일은 `hot-article`모듈의 api 테스트 패키지에 있음 
+	- article / comment / view / like 서버에 직접 데이터 생성 후 인기글 확인 
+	- 이때 RestClient 사용해 각 서버에 생성 요청을 했는데 comment / view / like 서버에 전송되지 않음 
+		- RestClient 사용시 `retrieve()` 에서 끝내면 안되고 뒤에 하나더 붙여야 함  (**해결✨**)
+		- RestClient가 WebClient를 wrapper하고 있어 비동기로 동작한다고 함
+		- 자세한건 나중에 더 알아보기
+- 2. article / comment / view / like 모듈에 outbox-message-relay 모듈 추가 후 테스트 전체 실패
+	- redis, kafka에 대한 접속 정보가 application-test.yml에 없었음 (추가하여 해결)
+	- 그리고 OutboxPublisher나 kafka producer는 article / comment / view / like 모듈의 관심사가 아니라서 @MocktioBean 처리나 config exclude 설정하여 **해결✨**
+
+설정이 먹히는 이유가 outbox-message-relay 모듈에 META-INF/spring 경로에 자동구성 설정 정보를 해두었기 때문에 exclude 정상 동작함
+```text
+spring:
+	autoconfigure:
+		exclude: com.example.outboxmessagerelay.MessageRelayConfig
+```
+
+- 3. HotArticleService에서 인기글 비즈니스 로직이 동작하지 않는 이슈 
+	- redis에 인기글 조회해도 데이터가 없음 
+	- 제네릭 타입이 맞지 않아 컨테이너 초기화시 빈 주입이 되지 않은 것으로 확인
+	- before : `private final List<EventHandler<EventPayload>> eventHandlers;`
+	- after : `private final List<EventHandler> eventHandlers` (**해결**✨)
+
