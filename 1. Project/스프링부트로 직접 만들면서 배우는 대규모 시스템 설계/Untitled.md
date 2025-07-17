@@ -620,7 +620,7 @@ $ ./kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --grou
 - article, view, like, comment 데이터베이스에 각각 outbox 테이블 생성해야 함
 	- 자기 메시지만 관리함
 - 각 서버가 scale-out하는 경우 shard 분배를 통해 메시지 중복 처리 및 충돌 방지 
-	- redis 통해 운영 서버 관리 및 AssignedShard 클래스 통해 샤드 분배
+	- redis 통해 운영 서버 관리 및 AssignedShard 클래스 통해 샤드 분배 (**아래 flow 이미지 참고**)
 
 ```sql
 -- 인기글  
@@ -638,6 +638,7 @@ create index idx_shard_key_created_at on outbox(shard_key asc, created_at asc);
 
 ```
 
+<img src="./image/outbox-erd.png"/>
 
 
 ### 인기글 consumer 설계 
@@ -654,6 +655,8 @@ create index idx_shard_key_created_at on outbox(shard_key asc, created_at asc);
 
 
 ### 전체 flow
+
+**Producer**
 - article, comment, article-like, article-view 모듈에서 :common:outbox-message-relay 의존
 - request 요청시 이벤트발송에 대한 책임을 OutboxPublisher에서 위임
 - 정상적인 경우 
@@ -668,10 +671,26 @@ create index idx_shard_key_created_at on outbox(shard_key asc, created_at asc);
 		- redis 조회해서 각 서버가 담당할 shard 계산 
 		- outbox 테이블에서 미처리된 메시지(shard) 가져와 재발송 후 삭제
 
+**Consumer**
+- `hot-article` 서버에서는
+	- 이벤트를 구독하여 인기글 관련 데이터를 Redis에 저장한다
+	- 금일 생성된 게시글의 데이터를 Redis에 저장/삭제/조회한다 (`article`)
+	- 금일 처리된 인기글 정보는 다음날 인기글 목록으로 제공된다
+		- 20250715 게시글을 가공한 후 20250716에는 하루전 날 인기글 정보 제공
+	- 인기글 점수를 계산하기 위해 Redis에 데이터를 저장한다
+		- comment, article-like, article-view 모듈에서 이벤트 발송
+		- 좋아요 수, 댓글 수, 조회 수에 가중치를 두어 계산
+		- Sorted Set에 인기글을 limit 개수만큼 유지한다 
+	- 인기글 조회시 redis에서 인기글의 articleId 목록을 조회하고 ArticleClient 통해서 조회 후 응답
+- hot-article은 comment, article-like, article-view, article 모듈을 모른다.
+	- 단지 Kafka에 의존하고 있고, 메시지를 구독하여 인기글 비즈니스를 처리하는 역할, 책임을 가진다
+	- 반대편 모듈도 마찬가지로 hot-article을 모르고, 인기글 비즈니스에도 관심없고 메시지를 발송할 뿐이다. 
+	- 이를 통해 서버(모듈)간 결합도를 낮추고, 확장성 가지게 됨
+
 <img src="./image/hot-article-flow.png"/>
 
-- 참고로 `ArticleUpdatedEventPayload` 사용하지 않음 
-	- `HotArticleService`에서도 핸들러 조회시 ArticleUpdatedEventHandler 빈이 없기 때문에 null 반환되어 안전하게 return 처리됨 
+- 참고로 인기글에서는 `ArticleUpdatedEventPayload` 사용하지 않음 
+	- `HotArticleService`에서도 핸들러 조회시 ArticleUpdatedEventHandler 빈이 없기 때문에 null 반환되어 안전하게 return 처리됨 ➡️ `article-read` 모듈에서 ARTICLE_UPDATED 이벤트 활용함
 
 **트러블슈팅 기록(7/14)**
 - 1. 전체 서버 실행 후 인기 게시글 e2e 테스트 실행 
@@ -697,4 +716,20 @@ spring:
 	- 제네릭 타입이 맞지 않아 컨테이너 초기화시 빈 주입이 되지 않은 것으로 확인
 	- before : `private final List<EventHandler<EventPayload>> eventHandlers;`
 	- after : `private final List<EventHandler> eventHandlers` (**해결**✨)
+
+
+---
+
+## 7. 조회 최적화 (CQRS, Request Collapsing)
+
+**요약**
+- CQRS 분리
+	- `article-read` 모듈에서는 kafka 의존 
+		- 다른 모듈에서 이벤트 전송하면 이를 구독하여 Redis에 데이터를 저장 
+		- 최대 1000개 최신글을 Redis 캐싱하고 없는 경우 직접 DB 조회하여 반환
+	- 게시글 단건 조회, 게시글 목록 조회(페이징, 무한 스크롤) 기능 구현
+- 게시글 조회수 캐싱 
+	- 변경이 빨리 일어나고 , ttl이 짧다보니 멀티 스레드 환경에서 RestClient 요청이 여러번 발생하게 됨 
+	- 한번만 요청하고 갱신할 수 있도록 논리/물리 ttl과 분산락을 활용 (Request Collapsing 기법 적용)
+
 
