@@ -733,3 +733,60 @@ spring:
 	- 한번만 요청하고 갱신할 수 있도록 논리/물리 ttl과 분산락을 활용 (Request Collapsing 기법 적용)
 
 
+**페이징 목록 조회**
+- `readAllArticleIds(boardId, page, pageSize)` 
+	- `articleIdListRepository` 통해 먼저 Redis에 조회하고, 없으면 `articleClient` 통해 목록 요청 
+- `readAll(List<Long> articleIds)` 
+	- `articleQueryModelRepository` 통해 Redis 조회하고, articleId에 해당하는 ariticleQueryModel이 없으면 fetch(..) 요청 
+	- `fetch(..)` 의 경우 articleClient 통해 요청 후 ArticleQueryModel을 Redis 저장 후 반환
+- `articleCount(boardId)`
+	- 게시판에 게시글 수를 Redis에서 조회하고, 없으면 실서버 요청 후 Redis 캐싱
+
+```java
+public class ArticleReadService {
+
+	public ArticleReadPageResponse readAll(Long boardId, Long page, Long pageSize) {  
+    return ArticleReadPageResponse.of(  
+            readAll(readAllArticleIds(boardId, page, pageSize)),  
+            articleCount(boardId)  
+    );}  
+  
+	private List<ArticleReadResponse> readAll(List<Long> articleIds) {  
+	    Map<Long, ArticleQueryModel> articleQueryModelMap = articleQueryModelRepository.readAll(articleIds);  
+	    return articleIds.stream()  
+	            .map(articleId -> articleQueryModelMap.containsKey(articleId) ? articleQueryModelMap.get(articleId) : fetch(articleId).orElse(null))  
+	            .filter(Objects::nonNull)  
+	            .map(articleQueryModel -> ArticleReadResponse.of(articleQueryModel, viewClient.count(articleQueryModel.getArticleId())))  
+	            .toList();  
+	}  
+	  
+	private List<Long> readAllArticleIds(Long boardId, Long page, Long pageSize) {  
+	    List<Long> articleIds = articleIdListRepository.readAll(boardId, (page - 1) * pageSize, pageSize);  
+	    if(pageSize == articleIds.size()) {  
+	        log.info("[ArticleReadService.readAllArticleIds] return redis data");  
+	        return articleIds;  
+	    }  
+	    log.info("[ArticleReadService.readAllArticleIds] return origin data");  
+	    return articleClient.readAll(boardId, page, pageSize)  
+	            .getArticles()  
+	            .stream()  
+	            .map(ArticleClient.ArticleResponse::getArticleId)  
+	            .toList();  
+	}  
+	  
+	private Long articleCount(Long boardId) {  
+	    Long result = boardArticleCountRepository.read(boardId);  
+	    if(result != null) {  
+	        log.info("[ArticleReadService.articleCount] return redis data");  
+	        return result;  
+	    }  
+	    log.info("[ArticleReadService.articleCount] return origin data");  
+	    Long articleCount = articleClient.count(boardId);  
+	    boardArticleCountRepository.save(boardId, articleCount);  
+	    return articleCount;  
+	}
+
+}
+```
+- 현실적으로 서비스를 mock 테스트하기 힘들어 통합 테스트로 `*Client` 만 @MockitoBean 처리하여 테스트함 
+- 
