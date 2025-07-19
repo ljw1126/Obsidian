@@ -730,7 +730,8 @@ spring:
 	- 게시글 단건 조회, 게시글 목록 조회(페이징, 무한 스크롤) 기능 구현
 - 게시글 조회수 캐싱 
 	- 변경이 빨리 일어나고 , ttl이 짧다보니 멀티 스레드 환경에서 RestClient 요청이 여러번 발생하게 됨 
-	- 한번만 요청하고 갱신할 수 있도록 논리/물리 ttl과 분산락을 활용 (Request Collapsing 기법 적용)
+	- 한번만 요청하고 갱신할 수 있도록 논리/물리 ttl과 분산락 활용  (`논리 ttl < 물리 ttl`)
+	- Request Collapsing 기법 적용
 
 
 **페이징 목록 조회**
@@ -788,5 +789,208 @@ public class ArticleReadService {
 
 }
 ```
-- 현실적으로 서비스를 mock 테스트하기 힘들어 통합 테스트로 `*Client` 만 @MockitoBean 처리하여 테스트함 
+- 현실적으로 서비스를 mock 테스트하기 힘들어 **통합 테스트**로 `*Client` 만 @MockitoBean 처리하여 테스트함 (250719)
+
+
+### ViewCount 캐싱 관련 
+- article-read에서 게시글 조회시 ViewCount를 view 서버에 조회하는 형태로 구현
+	- view count는 실시간 정확도가 중요하지 않으므로 빡시게 할 필요는 없음
+- `ViewClient.count(..)` 호출시 Redis에 캐싱을 하도록 했으나, 멀티 스레드 요청시 view 서버와 redis의 부하가 증가하게 됨 (여러 번 RestClient 요청이 가니)
+- `Request Collapsing` 기법을 적용하여 멀티스레드 환경에서 RestClient 요청이 여러번 가지 않도록 함 
+	- 논리 TTL < 물리 TTL 
+	- 논리 TTL이 만료되었으면 RestClient 요청하고, 그 사이 다른 스레드는 물리 TTL이 살아 있으니 캐싱 데이터를 반환한다.
+
+> 강의에서는 Redis Config를 정의했지만, 나는 하지 않음..
+> RedisCacheManager Config설정 후 @Cacheable 달아서 Redis에 짧게 캐싱 되도록 하는 건데 
+> Requet Collapsing 전 단계라서 안함
+
+
+**spring-aop 의존성 추가**
+```text
+implementation 'org.springframework.boot:spring-boot-starter-aop'
+```
+
+`@OptimizedCacheable` 애노테이션 선언
+```java
+@Retention(RetentionPolicy.RUNTIME)  
+@Target(ElementType.METHOD)  
+public @interface OptimizedCacheable {  
+    String type();  
+    long ttlSeconds();  
+}
+```
+
+
+ViewClient에 애노테이션 추가
+```java
+@Slf4j  
+@Component  
+public class ViewClient {  
+    private final RestClient restClient;  
+  
+    public ViewClient(RestClient.Builder builder, @Value("${endpoints.board-view-service.url}") String baseUrl) {  
+        log.info("[ViewClient] baseUrl = {}", baseUrl);  
+        this.restClient = builder.baseUrl(baseUrl).build();  
+    }  
+
+	// 부착
+    @OptimizedCacheable(type = "articleViewCount", ttlSeconds = 1)  
+    public Long count(Long articleId) {  
+        try {  
+            return restClient.get()  
+                    .uri("/v1/article_view/article/{articleId}/count", articleId)  
+                    .retrieve()  
+                    .body(Long.class);  
+        } catch (Exception e) {  
+            log.error("[ViewClient.count] articleId = {}", articleId, e);  
+            return 0L;  
+        }    
+	}
+}
+```
+
+
+**OptimizedCacheAspect 모듈 선언**
+```java
+@Aspect  
+@Component  
+@RequiredArgsConstructor  
+public class OptimizedCacheAspect {  
+    private final OptimizedCacheManager optimizedCacheManager;  
+  
+    @Around("@annotation(OptimizedCacheable)")  
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {  
+        OptimizedCacheable cacheable = findAnnotation(joinPoint);  
+        return optimizedCacheManager.process(  
+            cacheable.type(),  // 애노테이션 정보
+            cacheable.ttlSeconds(),  // 애노테이션 정보
+            joinPoint.getArgs(),  // ViewClint count(..) 파라미터
+            findReturnType(joinPoint),  // ViewClint count(..)의 리턴 타입
+            joinPoint::proceed   // 원본 메소드 호출 ViewClint count(..)
+        );  
+    }  
+    private OptimizedCacheable findAnnotation(ProceedingJoinPoint joinPoint) {  
+        Signature signature = joinPoint.getSignature();  
+        MethodSignature methodSignature = (MethodSignature) signature;  
+        return methodSignature.getMethod().getAnnotation(OptimizedCacheable.class);  
+    }  
+    
+    private Class<?> findReturnType(ProceedingJoinPoint joinPoint) {  
+        Signature signature = joinPoint.getSignature();  
+        MethodSignature methodSignature = (MethodSignature) signature;  
+        return methodSignature.getReturnType();  
+    }}
+```
+- `joinPoint::proceed` 에 파라미터가 전달되어 원본 메서드 실행된다. 
+	- ViewClient.count(1L)
+	- () -> joinPoint.proceed(joinPoint.getArgs())
+
+
+**🔍 왜 args를 명시적으로 넘기지 않아도 되는가?**
+`ProceedingJoinPoint.proceed()`는 다음 두 가지 오버로드를 가집니다:
+
+```java
+Object proceed() throws Throwable              // 현재 args 그대로 호출 
+Object proceed(Object[] args) throws Throwable // 새로운 args로 호출
+```
+- `proceed()`는 원래 메서드의 파라미터를 그대로 사용합니다.
+- `proceed(Object[] args)`는 새로운 파라미터를 사용해 메서드를 호출합니다.
+	- 임의로 aop에서 가공해서 넘겨줄 수 있다는거다
+
+따라서 `joinPoint::proceed`는 단순히 "현재의 파라미터 그대로 메서드를 실행하겠다"는 의미고, 프록시된 실제 메서드(`ViewClient.count(Long articleId)`)에 인자들이 알아서 전달됩니다.
+
+
+
+```java
+@Slf4j  
+@Component  
+@RequiredArgsConstructor  
+public class OptimizedCacheManager {  
+    private static final String DELIMITER = "::";  
+  
+    private final StringRedisTemplate redisTemplate;  
+    private final OptimizedCacheLockProvider optimizedCacheLockProvider;  
+  
+    public Object process(String type, long ttlSeconds, Object[] args, Class<?> returnType,  
+                          OptimizedCacheOriginDataSupplier<?> supplier) throws Throwable {  
+        String key = generateKey(type, args);  
+  
+        String cachedData = redisTemplate.opsForValue().get(key);  
+        if(cachedData == null) { // 만료되거나 최초이거나  
+            log.info("no cached data");  
+            return refresh(supplier, key, ttlSeconds); // RestClient 호출  
+        }  
+  
+        OptimizedCache optimizedCache = DataSerializer.deserialize(cachedData, OptimizedCache.class);  
+        if(optimizedCache == null) {  
+            log.info("no optimizedCache then refresh");  
+            return refresh(supplier, key, ttlSeconds);  
+        }  
+        // logical ttl not expired  
+        if(!optimizedCache.isExpiredData()) {  
+            log.info("logical ttl not expired then cached data");  
+            return optimizedCache.parseData(returnType); // then return cached data  
+        }  
+  
+        // logical ttl expired & do not have distributed lock  
+        if(!optimizedCacheLockProvider.lock(key)) {  
+            log.info("logical ttl expired & do not have distributed lock then cached data");  
+            return optimizedCache.parseData(returnType); // then return cached data  
+        }  
+  
+        log.info("lock acquired fail");  
+        try {  
+            return refresh(supplier, key, ttlSeconds); // refresh cache data  
+        } finally {  
+            optimizedCacheLockProvider.unlock(key);  
+        }    
+	}  
+        
+    private Object refresh(OptimizedCacheOriginDataSupplier<?> supplier, String key, long ttlSeconds) throws Throwable {  
+        Object originData = supplier.get();  
+  
+        OptimizedCacheTTL optimizedCacheTTL = OptimizedCacheTTL.of(ttlSeconds);  
+        OptimizedCache optimizedCache = OptimizedCache.of(originData, optimizedCacheTTL.getLogicalTTl());  
+  
+        redisTemplate.opsForValue()  
+                .set(key, DataSerializer.serialize(optimizedCache), optimizedCacheTTL.getPhysicalTTl());  
+  
+        return originData;  
+    }  
+    
+    private String generateKey(String prefix, Object[] args) {  
+        return prefix + DELIMITER +  
+                Arrays.stream(args)  
+                        .map(String::valueOf)  
+                        .collect(joining(DELIMITER));  
+    }
+}
+```
+- **절차** 
+	- 1. 캐시 데이터가 없으면 
+		- `refresh` 메서드 실행 
+		- `ViewClient.count(..)` 호출 + 캐싱 후 반환
+	- 2. OptimizedCache == null 인 경우
+		- 마찬가지로 `refresh` 메서드 실행 
+		- `ViewClient.count(..)` 호출 + 캐싱 후 반환
+			- 혹여나 비즈니스 로직 실수로 인해 누락할 수 있으니 null 체크 하는듯
+	- 3. `!optimizedCache.isExpiredData()`
+		- **논리적 ttl이 만료되지 않은 경우** 캐싱 데이터에서 조회수를 반환
+	- 4. `!optimizedCacheLockProvider.lock(key)`
+		- 논리적 ttl이 만료되었고, 락을 획득하지 못한 경우
+		- 아직 물리적 ttl이 살아있다 판단하여 캐싱 데이터에서 조회수를 반환 
+	- 5. 분산락을 획득한 경우 
+		- `refresh` 메서드 실행하여 캐시 갱신
+		- lock을 반환
+- 이때 **논리적 TTL < 물리적 TTL** 보장
+- `OptimizedCacheLockProvider`에서 락 획득/해제 관리
+
+> 이를 통해 멀티스레드 환경에서 ViewClient 여러 번 요청하는 것을 방지하고 캐싱을 반환하는 동안 락을 획득한 스레드만 원본 데이터 요청해 재갱신
+
+
+<img src="./image/request-collapsing-sequence.png"/>
+- 멀티 스레드 환경에서 logical TTL이 만료되었을 때 
+	- 첫번째 스레드가 락을 획득해 refresh 한다 
+	- 두번째 스레드는 락을 획득 실패하고, physical TTL은 살아있는 상태라서 캐시 데이터를 반환한다
+- 이를 통해 멀티스레드 환경에서 RestClient 요청을 줄일 수 있다
 
