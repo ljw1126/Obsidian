@@ -789,4 +789,4 @@ public class ArticleReadService {
 }
 ```
 - 현실적으로 서비스를 mock 테스트하기 힘들어 통합 테스트로 `*Client` 만 @MockitoBean 처리하여 테스트함 
-- 
+
