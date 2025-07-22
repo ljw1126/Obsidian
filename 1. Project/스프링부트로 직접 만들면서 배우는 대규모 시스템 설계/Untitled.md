@@ -733,6 +733,7 @@ spring:
 	- 한번만 요청하고 갱신할 수 있도록 논리/물리 ttl과 분산락 활용  (`논리 ttl < 물리 ttl`)
 	- Request Collapsing 기법 적용
 
+<img src="./image/article-read-flow.png"/>
 
 **페이징 목록 조회**
 - `readAllArticleIds(boardId, page, pageSize)` 
