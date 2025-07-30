@@ -508,8 +508,8 @@ console.log(addNumber(1, 2, 3, 4));
 	numbers.push(2); // 💣
 }
 ```
-- 100% 장담할때 써야 함
-	- <font color="#c00000">그렇지 않으면 런타임에 에러가 발생해 어플리케이션이 종료됨</font>💣
+- `!` (Non-null assertion operator)은 null과 undefined가 아닐때, 100% 장담할때 써야 함
+	- <font color="#c00000">그렇지 않으면 런타임에 에러가 발생해 어플리케이션이 종료됨</font>
 
 ---
 
