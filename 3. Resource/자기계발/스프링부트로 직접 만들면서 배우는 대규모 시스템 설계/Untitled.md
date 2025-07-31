@@ -615,6 +615,21 @@ $ ./kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --grou
 
 
 ```
+**250725**
+- docker-compose.yml에 `bitnami/kafka:3.8` 설정 추가
+- volumn을 연결했는데 `create-topics.sh`이 실행은 되지 않음 ❌
+	- 직접 컨테이너 접속해 실행해야 함 
+- docker-compose에 health check 속성이있었는데, 그걸 하니 kafka-init 컨테이너 하나 더 올라가고 원하는데로 토픽 4개 생성 되지도 않음 
+```shell
+$ docker exec -uroot -it board-kafka /bin/bash
+
+$ cd /bitnami/kafka-init-scripts/
+$ ./create-topics.sh
+
+$ cd /opt/bitnami/kafka/bin/
+$ ./kafka-topics.sh --bootstrap-server localhost:9092 --list
+// 토픽 4개 출력
+```
 
 ### outbox 테이블 설계 
 - article, view, like, comment 데이터베이스에 각각 outbox 테이블 생성해야 함
@@ -995,3 +1010,4 @@ public class OptimizedCacheManager {
 	- 두번째 스레드는 락을 획득 실패하고, physical TTL은 살아있는 상태라서 캐시 데이터를 반환한다
 - 이를 통해 멀티스레드 환경에서 RestClient 요청을 줄일 수 있다
 
+---
