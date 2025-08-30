@@ -49,3 +49,7 @@ https://github.com/eGovFramework/egovframe-common-components/blob/main/src/main/
 
 게시판 update에 파라미터가 너무 많아서 실수하기 딱 좋지 않나 싶다.. 
 https://github.com/eGovFramework/egovframe-msa-edu/blob/main/backend/board-service/src/main/java/org/egovframe/cloud/boardservice/service/board/BoardService.java
+
+
+---
+
