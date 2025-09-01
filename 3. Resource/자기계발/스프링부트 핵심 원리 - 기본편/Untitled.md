@@ -286,7 +286,122 @@ ClassPathBeanDefinitionScanner - Identified candidate component class:
 ```java
 @ComponentScan(basePackages = "hello.core", .. }
 ```
-- 
+- `basePackages` 기정하지 않으면 @ComponentScan이 붙은 클래스 위치 부터 하위 패키지 조회
+- 권장하는 방법
+	- 개인적으로 즐겨 사용하는 방법은 패키지 위치를 지정하지 않고, 설정 정보 클래스의 위치를 프로젝트 최상단에 두는 것이다. 최근 스프링 부트도 이 방법을 기본으로 제공한다
+
+### 컴포넌트 스캔 기본 대상 애노테이션
+컴포넌트 스캔은 `@Component` 뿐만 아니라 다음과 내용도 추가로 대상에 포함한다.
+- `@Component` : 컴포넌트 스캔에서 사용
+- `@Controller` : 스프링 MVC 컨트롤러에서 사용
+- `@Service` : 스프링 비즈니스 로직에서 사용
+- `@Repository` : 스프링 데이터 접근 계층에서 사용
+- `@Configuration` : 스프링 설정 정보에서 사용
+	- 목적에 맞게 애노테이션을 구분해서 사용, 합성 애노테이션이라고도 하는데 내부에 보면 @Component 애노테이션을 가지고 있다.
+
+> [!note] 사실 애노테이션에는 상속관계라는 것이 없다. 그래서 이렇게 애노테이션이 특정 애노테이션을 들고 있는 것을 인식할 수 있는 것은 자바 언어가 지원하는 기능은 아니고, 스프링이 지원하는 기능이다.
+
+컴포넌트 스캔 용도뿐만아니라 다음 애노테이션이 있으면 스프링은 부가 기능을 수행한다 
+- `@Controller` : 스프링 MVC 컨트롤러로 인식
+- `@Repository` : 스프링 데이터 접근 계층으로 인식하고, 데이터 계층의 예외를 스프링 예외로 변환해준다.
+- `@Configuration` : 앞서 보았듯이 스프링 설정 정보로 인식하고, 스프링 빈이 싱글톤을 유지하도록 추가 처리를 한다.
+- `@Service` : 사실 `@Service` 는 특별한 처리를 하지 않는다. 대신 개발자들이 핵심 비즈니스 로직이 여기에 있겠구나 라고 비즈니스 계층을 인식하는데 도움이 된다
+
+>[!note] useDefaultFilters` 옵션은 기본으로 켜져있는데, 이 옵션을 끄면 기본 스캔 대상들이 제외된다. 
+>그냥 이런 옵션이 있구나 정도 알고 넘어가자.
+
+### 필터 옵션
+- `includeFilters` : 컴포넌트 스캔 대상을 추가로 지정한다.
+- `excludeFilters` : 컴포넌트 스캔에서 제외할 대상을 지정한다.
+
+```java
+package hello.core.scan.filter;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.ApplicationContext;
+import
+org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.context.annotation.ComponentScan.Filter;
+public class ComponentFilterAppConfigTest {
+	
+	@Test
+	void filterScan() {
+		ApplicationContext ac = new
+		AnnotationConfigApplicationContext(ComponentFilterAppConfig.class);
+		BeanA beanA = ac.getBean("beanA", BeanA.class);
+		
+		assertThat(beanA).isNotNull();
+		Assertions.assertThrows(NoSuchBeanDefinitionException.class,
+		() -> ac.getBean("beanB", BeanB.class));
+	}
+	
+	@Configuration
+	@ComponentScan(
+	includeFilters = @Filter(type = FilterType.ANNOTATION, classes = MyIncludeComponent.class),
+	excludeFilters = @Filter(type = FilterType.ANNOTATION, classes = MyExcludeComponent.class)
+	)
+	static class ComponentFilterAppConfig {
+
+	}
+}
+```
+- FilterType 옵션 5가지 
+	- ANNOTATION: 기본값, 애노테이션을 인식해서 동작한다.
+		- ex) `org.example.SomeAnnotation`
+	- ASSIGNABLE_TYPE: 지정한 타입과 자식 타입을 인식해서 동작한다.
+		- ex) `org.example.SomeClass`
+	- ASPECTJ: AspectJ 패턴 사용
+		- ex) `org.example..*Service+`
+	- REGEX: 정규 표현식
+		- ex) `org\.example\.Default.*`
+	- CUSTOM: `TypeFilter` 이라는 인터페이스를 구현해서 처리
+		- ex) `org.example.MyTypeFilter`
+
+```java
+@ComponentScan(
+includeFilters = {
+	@Filter(type = FilterType.ANNOTATION, classes =
+	MyIncludeComponent.class),
+	},
+excludeFilters = {
+	@Filter(type = FilterType.ANNOTATION, classes = MyExcludeComponent.class),
+	@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = BeanA.class)
+}
+)
+```
+- 보통 includeFilters를 사용할 일은 거의 없다 
+	- 테스트 에서나 사용하려나 
+- excludeFilters는 여러가지 이유로 간혹 사용할 때가 있지만 많지는 않다
+- 특히 최근 스프링 부트는 컴포넌트 스캔을 기본으로 제공하는데, 개인적으로는 옵션을 변경하면서 사용하기 보다는 스프링의 기본 설정에 최대한 맞추어 사용하는 것을 권장하고, 선호하는 편이다.
+
+### 중복 빈 등록과 충돌 
+- 자동 등록시 `ConflictingBeanDefinitionException`예외 발생 
+- 수동 등록 vs 자동 등록 빈의 경우 
+	- 수동 등록빈이 우선위를 가진다.
+	- 수동 빈이 자동 빈을 오버라이딩 해버린다
+
+수동 빈 등록시 남는 로그
+> Overriding bean definition for bean 'memoryMemberRepository' with a different
+definition: replacing
+
+
+물론 개발자가 의도적으로 이런 결과를 기대했다면, 자동 보다는 수동이 우선권을 가지는 것이 좋다. 하지만 현실은 개발자가 의도적으로 설정해서 이런 결과가 만들어지기 보다는 여러 설정들이 꼬여서 이런 결과가 만들어지는 경우가 대부분이다!
+
+****그러면** **정말** **잡기** **어려운** **버그가** **만들어진다**. **항상** **잡기** **어려운** **버그는** **애매한** **버그다**.**
+그래서 최근 스프링 부트에서는 수동 빈 등록과 자동 빈 등록이 충돌나면 오류가 발생하도록 기본 값을 바꾸었다.
+
+****수동** **빈** **등록**, **자동** **빈** **등록** **오류시** **스프링** **부트** **에러****
+> `Consider renaming one of the beans or enabling overriding by setting
+spring.main.allow-bean-definition-overriding=true`
+
+스프링 부트인 `CoreApplication` 을 실행해보면 오류를 볼 수 있다.
+
+
 
 ---
 ## 섹션8. 의존관계 자동 주입
@@ -1083,5 +1198,583 @@ close + http://hello-spring.dev
 ---
 ## 섹션 10. 빈 스코프
 
+### 빈 스코프란
+
+스프링 빈은 스프링 컨테이너의 시작과 함께 생성되어 스프링 컨테이너가 종료될때까지 유지됩니다. 
+이것은 스프링 빈이 기본적으로 싱글톤 스코프로 생성되기 때문이다. 스코프는 번역 그대로 빈이 존재할 수 있는 범위를 뜻합니다.
+- `싱글톤 스코프`
+	- 기본 스코프, 스프링 컨테이너의 시작과 종료까지 유지되는 가장 넓은 범위의 스코프이다.
+- `프로토 타입 스코프` 
+	- 스프링 컨테이너는 프로토타입 빈의 생성과 의존관계 주입까지만 관여하고 더는 관리하지 않는 매우짧은 범위의 스코프이다.
+- `웹 관련 스코프`
+	- `request`: 웹 요청이 들어오고 나갈때 까지 유지되는 스코프이다.
+	- `session` : 웹 세션이 생성되고 종료될 때 까지 유지되는 스코프이다
+	- `application` : 웹의 서블릿 컨텍스트와 같은 범위로 유지되는 스코프이다.
+
+```java
+// 컴포넌트 스캔 자동 등록 
+@Scope("prototype")
+@Component
+public class HelloBean {}
+
+// 직접 수동 등록
+@Scope("prototype")
+@Bean
+PrototypeBean HelloBean() {
+	return new HelloBean();
+}
+
+```
 
 
+### 프로토타입 스코프 
+프로토타입 스코프 빈의 경우 스프링 컨테이너에 조회하면 스프링 컨테이너는 항상 새로운 인스턴스를 생성해서 반환한다
+
+여기서 핵심은 스프링 컨테이너는 프로토타입 빈을 생성하고, 의존관계 주입, 초기화까지만 처리한다는 것이다. 클라이언트에 빈을 반환하고, 이후 스프링 컨테이너는 생성된 프로토타입 빈을 관리하지 않는다. 고로 프로토타입 빈을 관리할 책임은 사용하는 클라이언트에 있다. 
+- @PreDestory 같은 종료 메서드도 호출되지 않는다
+- 직접 클라이언트에서  종료 생명주기를 관리해야 한다
+
+
+`싱글톤 스코프 빈 테스트`
+```java
+package hello.core.scope;
+import org.junit.jupiter.api.Test;
+import
+org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Scope;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import static org.assertj.core.api.Assertions.assertThat;
+public class SingletonTest {
+	@Test
+	public void singletonBeanFind() {
+		AnnotationConfigApplicationContext ac = new
+		AnnotationConfigApplicationContext(SingletonBean.class);
+		SingletonBean singletonBean1 = ac.getBean(SingletonBean.class);
+		SingletonBean singletonBean2 = ac.getBean(SingletonBean.class);
+		System.out.println("singletonBean1 = " + singletonBean1);
+		System.out.println("singletonBean2 = " + singletonBean2);
+		assertThat(singletonBean1).isSameAs(singletonBean2);
+		ac.close(); //종료
+	}
+
+	@Scope("singleton")
+	static class SingletonBean {
+	
+		@PostConstruct
+		public void init() {
+		System.out.println("SingletonBean.init");
+		}
+		
+		@PreDestroy
+		public void destroy() {
+		System.out.println("SingletonBean.destroy");
+		}
+	}
+}
+```
+
+실행 결과 로그
+```text
+SingletonBean.init
+singletonBean1 = hello.core.scope.PrototypeTest$SingletonBean@54504ecd
+singletonBean2 = hello.core.scope.PrototypeTest$SingletonBean@54504ecd
+org.springframework.context.annotation.AnnotationConfigApplicationContext -
+Closing SingletonBean.destroy
+```
+- 종료 메서드까지 스프링 컨테이너 통해 호출 확인 
+
+
+`프로토타입 스코프 빈 테스트`
+```java
+package hello.core.scope;
+import org.junit.jupiter.api.Test;
+import
+org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Scope;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import static org.assertj.core.api.Assertions.
+*;
+
+public class PrototypeTest {
+	@Test
+	public void prototypeBeanFind() {
+		AnnotationConfigApplicationContext ac = new
+		AnnotationConfigApplicationContext(PrototypeBean.class);
+		System.out.println("find prototypeBean1");
+		PrototypeBean prototypeBean1 = ac.getBean(PrototypeBean.class);
+		System.out.println("find prototypeBean2");
+		PrototypeBean prototypeBean2 = ac.getBean(PrototypeBean.class);
+		System.out.println("prototypeBean1 = " + prototypeBean1);
+		System.out.println("prototypeBean2 = " + prototypeBean2);
+		assertThat(prototypeBean1).isNotSameAs(prototypeBean2);
+		ac.close(); //종료
+	}
+
+	@Scope("prototype")
+	static class PrototypeBean {
+		@PostConstruct
+		public void init() {
+			System.out.println("PrototypeBean.init");
+		}
+		
+		@PreDestroy
+		public void destroy() {
+			System.out.println("PrototypeBean.destroy");
+		}
+	}
+}
+```
+
+
+**실행 결과 로그**
+```text
+find prototypeBean1
+PrototypeBean.init
+find prototypeBean2
+PrototypeBean.init
+prototypeBean1 = hello.core.scope.PrototypeTest$PrototypeBean@13d4992d
+prototypeBean2 = hello.core.scope.PrototypeTest$PrototypeBean@302f7971
+org.springframework.context.annotation.AnnotationConfigApplicationContext -
+Closing
+```
+- 싱글톤 빈은 스프링 컨테이너 생성 시점에 초기화 메서드가 실행 되지만, 프로토타입 스코프의 빈은 스프링 컨테이너에서 빈을 조회할 때 생성되고, 초기화 메서드도 실행된다.
+- 프로토타입 빈을 2번 조회했으므로 완전히 다른 스프링 빈이 생성되고, 초기화도 2번 실행된 것을 확인할 수 있다.
+- 싱글톤 빈은 스프링 컨테이너가 관리하기 때문에 스프링 컨테이너가 종료될 때 빈의 종료 메서드가 실행되지만, 프로토타입 빈은 스프링 컨테이너가 생성과 의존관계 주입 그리고 초기화 까지만 관여하고, 더는 관리하지 않는다. 따라서 프로토타입 빈은 스프링 컨테이너가 종료될 때 `@PreDestroy` 같은 종료 메서드가 전혀 실행되지 않는다.
+
+**프로토타입 빈의 특징 정리**
+- 스프링 컨테이너 요청할 때 마다 새로 생성
+- 스프링 컨테이너는 프로토타입 빈의 생성과 의존관계 주입 그리고 초기화까지만 관여한다.
+- 종료 메서드가 호출되지 않는다
+- 그래서 프로토타입 빈은 프로토타입 빈을 조회한 클라이언트가 관리해야 한다. 종료 메서드에 대한 호출도 클라이언트가 직접 해야한다
+
+### 프로토타입 스코프 - 싱글톤 빈과 함께 사용시 문제점 
+
+```java
+package hello.core.scope;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import
+org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Scope;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import static org.assertj.core.api.Assertions.
+*;
+public class SingletonWithPrototypeTest1 {
+	
+	@Test
+	void singletonClientUsePrototype() {
+		AnnotationConfigApplicationContext ac = new
+		AnnotationConfigApplicationContext(ClientBean.class, PrototypeBean.class);
+		
+		ClientBean clientBean1 = ac.getBean(ClientBean.class);
+		int count1 = clientBean1.logic();
+		assertThat(count1).isEqualTo(1);
+		
+		ClientBean clientBean2 = ac.getBean(ClientBean.class);
+		int count2 = clientBean2.logic();
+		assertThat(count2).isEqualTo(2);
+	}
+
+	static class ClientBean {
+		private final PrototypeBean prototypeBean; // 📌 이미 초기화에서 주입이 완료된 상태라서 사용할때마다 새로 생성되지 x 
+		
+		@Autowired
+		public ClientBean(PrototypeBean prototypeBean) {
+			this.prototypeBean = prototypeBean;
+		}
+		
+		public int logic() {
+			prototypeBean.addCount();
+			int count = prototypeBean.getCount();
+			return count;
+		}
+	}
+	
+	@Scope("prototype")
+	static class PrototypeBean {
+		private int count = 0;
+		
+		public void addCount() {
+			count++;
+		}
+		public int getCount() {
+			return count;
+		}
+		
+		@PostConstruct
+		public void init() {
+			System.out.println("PrototypeBean.init " + this);
+		}
+		
+		@PreDestroy
+		public void destroy() {
+			System.out.println("PrototypeBean.destroy");
+		}
+	}
+}
+```
+- 지금 원하는 건 싱글톤 안에 프로토타입 빈이 매번 생성되길 바라지만, 현실은 그렇지 않다 
+	- 싱글톤 초기화시 프로토타입 빈이 주입되고 공용해서 사용하게 된다 
+	- 그래서 카운트가 2번 증가하게 된거다
+
+
+### 해결 방법. 프로토타입 스코프 - 싱글톤 빈과 함께 사용시 Prodiver로 문제 해결 
+
+가장 간단한 방법은 스프링 컨테이너한테 매번 요청하는 것이다 
+
+```java
+public class PrototypeProviderTest {
+	@Test
+	void providerTest() {
+		AnnotationConfigApplicationContext ac = new
+		AnnotationConfigApplicationContext(ClientBean.class, PrototypeBean.class);
+		
+		ClientBean clientBean1 = ac.getBean(ClientBean.class);
+		int count1 = clientBean1.logic();
+		assertThat(count1).isEqualTo(1);
+		
+		ClientBean clientBean2 = ac.getBean(ClientBean.class);
+		int count2 = clientBean2.logic();
+		assertThat(count2).isEqualTo(1);
+	}
+
+	static class ClientBean {
+		// ✅ 매번 스프링 컨테이너에 조회 요청
+		@Autowired
+		private ApplicationContext ac; 
+		public int logic() {
+			PrototypeBean prototypeBean = ac.getBean(PrototypeBean.class);
+			prototypeBean.addCount();
+			int count = prototypeBean.getCount();
+			return count;
+		}
+	}
+		
+	@Scope("prototype")
+	static class PrototypeBean {
+		private int count = 0;
+		
+		public void addCount() {
+			count++;
+		}
+		
+		public int getCount() {
+			return count;
+		}
+		
+		@PostConstruct
+		public void init() {
+			System.out.println("PrototypeBean.init " + this);
+		}
+		
+		@PreDestroy
+		public void destroy() {
+			System.out.println("PrototypeBean.destroy");
+		}
+	}
+}
+```
+
+- 실행해보면 `ac.getBean()` 을 통해서 항상 새로운 프로토타입 빈이 생성되는 것을 확인할 수 있다.
+- 의존관계를 외부에서 주입(DI) 받는게 아니라 이렇게 직접 필요한 의존관계를 찾는 것을 Dependency Lookup (DL) 의존관계 조회(탐색) 이라한다.
+- 그런데 이렇게 스프링의 애플리케이션 컨텍스트 전체를 주입받게 되면, 스프링 컨테이너에 종속적인 코드가 되고, 단위 테스트도 어려워진다.
+- 지금 필요한 기능은 지정한 프로토타입 빈을 컨테이너에서 대신 찾아주는 딱! **DL** 정도의 기능만 제공하는 무언가 가 있으면 된다.
+
+
+### ObjectFactory, ObjectProvider 
+지정한 빈을 컨테이너에서 대신 찾아주는 DL 서비스를 제공하는 것이 바로 `ObjectProvider` 이다. 참고로 과거에는`ObjectFactory` 가 있었는데, 여기에 편의 기능을 추가해서 `ObjectProvider` 가 만들어졌다
+
+```java
+@Autowired
+private ObjectProvider<PrototypeBean> prototypeBeanProvider;
+
+public int logic() {
+	PrototypeBean prototypeBean = prototypeBeanProvider.getObject();
+	prototypeBean.addCount();
+	int count = prototypeBean.getCount();
+	return count;
+}
+```
+- `prototypeBeanProvider.getObject();` 통해서 항상 새로운 프로토타입 빈을 주입 받는다
+- `ObjectProvider` 의 `getObject()` 를 호출하면 내부에서는 스프링 컨테이너를 통해 해당 빈을 찾아서 반환한다. (**DL**)
+- 스프링이 제공하는 기능을 사용하지만, 기능이 단순하므로 단위 테스트를 만들거나 mock 코드를 만들기는 훨씬 쉬워진다. 
+- ObjectProvider는 지금 딱 필요한 DL 정도의 기능만 제공한다 
+
+**특징**
+- ObjectFactory: 기능이 단순, 별도의 라이브러리 필요 없음, 스프링에 의존
+- ObjectProvider: ObjectFactory 상속, 옵션, 스트림 처리등 편의 기능이 많고, 별도의 라이브러리 필요 없음, 스프링에 의존
+
+### JSR-330 Provider 
+- 외부 라이브러리 사용하는 방법인데 생략 
+
+> 참고. 실무에서 자바 표준인 JSR-330 Provider를 사용할 것인지, 아니면 스프링이 제공하는 ObjectProvider 를 사용할 것인지 고민이 될 것이다. ObjectProvider는 DL을 위한 편의 기능을 많이 제공해주고 스프링 외에 별도의 의존관계 추가가 필요 없기 때문에 편리하다. 만약(정말 그럴일은 거의 없겠지만) 코드를 스프링이 아닌 다른 컨테이너에서도 사용할 수 있어야 한다면 JSR-330 Provider를 사용해야한다.
+   스프링을 사용하다 보면 이 기능 뿐만 아니라 다른 기능들도 자바 표준과 스프링이 제공하는 기능이 겹칠때가 많
+이 있다. 대부분 스프링이 더 다양하고 편리한 기능을 제공해주기 때문에, 특별히 다른 컨테이너를 사용할 일이 없
+다면, 스프링이 제공하는 기능을 사용하면 된다.
+
+
+### 웹 스코프 
+
+지금까지 싱글톤과 프로토타입 스코프를 학습했다
+- 싱글톤은 스프링 컨테이너의 시작과 끝까지 함께하는 매우 긴 스코프 
+- 프로토타입은 생성과 의존관계 주입, 그리고 초기화까지만 진행하는 특별한 스코프이다
+
+**웹 스코프의 특징**
+- 웹 환경에서만 동작한다
+- 웹 스코프는 프로토 타입과 다르게 스프링이 해당 스코프의 종료시점까지 관리한다. 
+- 따라서 종료 메서드가 호출된다 
+
+**웹 스코프의 종류**
+- **request:** HTTP 요청 하나가 들어오고 나갈 때 까지 유지되는 스코프, 각각의 HTTP 요청마다 별도의 빈 인스턴스가 생성되고, 관리된다.
+- **session:** HTTP Session과 동일한 생명주기를 가지는 스코프
+- **application:** 서블릿 컨텍스트(`ServletContext` )와 동일한 생명주기를 가지는 스코프
+- **websocket:** 웹 소켓과 동일한 생명주기를 가지는 스코프
+
+스프링 web 의존성을 추가 후 스코프를 테스트한다 
+
+```java
+package hello.core.common;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.UUID;
+
+@Component
+@Scope(value = "request") // ✅
+public class MyLogger {
+	private String uuid;
+	private String requestURL;
+	
+	public void setRequestURL(String requestURL) {
+		this.requestURL = requestURL;
+	}
+	
+	public void log(String message) {
+		System.out.println("[" + uuid + "]" + "[" + requestURL + "] " +
+		message);
+	}
+	
+	@PostConstruct
+	public void init() {
+		uuid = UUID.randomUUID().toString();
+		System.out.println("[" + uuid + "] request scope bean create:" + this);
+	}
+	
+	@PreDestroy
+	public void close() {
+		System.out.println("[" + uuid + "] request scope bean close:" + this);
+	}
+}
+```
+
+
+**컨트롤러 생성**
+```java
+package hello.core.web;
+import hello.core.common.MyLogger;
+import hello.core.logdemo.LogDemoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import javax.servlet.http.HttpServletRequest;
+
+@Controller
+@RequiredArgsConstructor
+public class LogDemoController {
+	private final LogDemoService logDemoService;
+	private final MyLogger myLogger;
+	
+	@RequestMapping("log-demo")
+	@ResponseBody
+	public String logDemo(HttpServletRequest request) {
+		String requestURL = request.getRequestURL().toString();
+		myLogger.setRequestURL(requestURL);
+		myLogger.log("controller test");
+		logDemoService.logic("testId");
+		return "OK";
+	}
+}
+```
+
+```java
+package hello.core.logdemo;
+import hello.core.common.MyLogger;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class LogDemoService {
+	private final MyLogger myLogger;
+	
+	public void logic(String id) {
+		myLogger.log("service id = " + id);
+	}
+}
+```
+- 비즈니스 로직이 있는 서비스 계층에서도 로그를 출력해보자.
+- 여기서 중요한점이 있다. request scope를 사용하지 않고 파라미터로 이 모든 정보를 서비스 계층에 넘긴다면, 파라미터가 많아서 지저분해진다. 더 문제는 requestURL 같은 웹과 관련된 정보가 웹과 관련없는 서비스 계층까지 넘어가게 된다. 웹과 관련된 부분은 컨트롤러까지만 사용해야 한다. 서비스 계층은 웹 기술에 종속되지 않고, 가급적 순수하게 유지하는 것이 유지보수 관점에서 좋다.
+- request scope의 MyLogger 덕분에 이런 부분을 파라미터로 넘기지 않고, MyLogger의 멤버변수에 저장해서 코드와 계층을 깔끔하게 유지할 수 있다.
+
+> request 요청마다 같은 UUID를 출력해야 한다
+
+
+어플리케이션 실행시 
+```text
+Error creating bean with name 'myLogger': Scope 'request' is not active for the
+current thread; consider defining a scoped proxy for this bean if you intend to
+refer to it from a singleton;
+```
+
+스프링 애플리케이션을 실행 시키면 오류가 발생한다. 메시지 마지막에 싱글톤이라는 단어가 나오고…
+스프링 애플리케이션을 실행하는 시점에 싱글톤 빈은 생성해서 주입이 가능하지만, request 스코프 빈은 아직 생성되지 않는다. 이 빈은 실제 고객의 요청이 와야 생성할 수 있다!
+
+> request 스코프 빈의 경우 사용자 요청이 왔을때 생성되므로 초기화시 생성자 주입이 되지 않는다
+
+
+### 스코프와 Provider
+- `ObjectProvider<MyLogger>`를 사용해서 지연 로딩을 처리한다 
+
+```java
+package hello.core.web;
+import hello.core.common.MyLogger;
+import hello.core.logdemo.LogDemoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import javax.servlet.http.HttpServletRequest;
+
+@Controller
+@RequiredArgsConstructor
+public class LogDemoController {
+	private final LogDemoService logDemoService;
+	// ✅ 지연 로딩
+	private final ObjectProvider<MyLogger> myLoggerProvider;
+	
+	@RequestMapping("log-demo")
+	@ResponseBody
+	public String logDemo(HttpServletRequest request) {
+		String requestURL = request.getRequestURL().toString();
+		MyLogger myLogger = myLoggerProvider.getObject();
+		myLogger.setRequestURL(requestURL);
+		myLogger.log("controller test");
+		logDemoService.logic("testId");
+		return "OK";
+	}
+}
+```
+
+
+```java
+package hello.core.logdemo;
+import hello.core.common.MyLogger;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class LogDemoService {
+	private final ObjectProvider<MyLogger> myLoggerProvider;
+	
+	public void logic(String id) {
+		MyLogger myLogger = myLoggerProvider.getObject();
+		myLogger.log("service id = " + id);
+	}
+}
+```
+
+
+요청시 결과 출력 - 같은 UUID 사용
+```text
+[d06b992f...] request scope bean create
+[d06b992f...][http://localhost:8080/log-demo] controller test
+[d06b992f...][http://localhost:8080/log-demo] service id = testId
+[d06b992f...] request scope bean close
+```
+
+### 스코프와 프록시 - Provider를 사용하지 않는 방식 
+```java
+@Component
+@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
+public class MyLogger {
+}
+```
+- 여기가 핵심이다. `proxyMode = ScopedProxyMode.TARGET_CLASS` 를 추가해주자.
+	- 적용 대상이 인터페이스가 아닌 클래스면 `TARGET_CLASS` 를 선택
+	- 적용 대상이 인터페이스면 `INTERFACES` 를 선택
+- 이렇게 하면 MyLogger의 가짜 프록시 클래스를 만들어두고 HTTP request와 상관 없이 가짜 프록시 클래스를 다른 빈에 미리 주입해 둘 수 있다.
+
+ObjecrProvider 사용전으로 원복 (`서비스 생략`)
+```java
+package hello.core.web;
+import hello.core.common.MyLogger;
+import hello.core.logdemo.LogDemoService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import javax.servlet.http.HttpServletRequest;
+@Controller
+@RequiredArgsConstructor
+public class LogDemoController {
+	private final LogDemoService logDemoService;
+	private final MyLogger myLogger; // ObjecrProvider 사용전으로 원복
+	
+	@RequestMapping("log-demo")
+	@ResponseBody
+	public String logDemo(HttpServletRequest request) {
+		String requestURL = request.getRequestURL().toString();
+		myLogger.setRequestURL(requestURL);
+		myLogger.log("controller test");
+		logDemoService.logic("testId");
+		return "OK";
+	}
+}
+```
+
+
+```text
+System.out.println("myLogger = " + myLogger.getClass());
+
+myLogger = class hello.core.common.MyLogger$$EnhancerBySpringCGLIB$$b68b726d
+```
+
+**CGLIB**라는** **라이브러리로** **내** **클래스를** **상속** **받은** **가짜** **프록시** **객체를** **만들어서** **주입한다**.**
+- `@Scope` 의 `proxyMode = ScopedProxyMode.TARGET_CLASS)` 를 설정하면 스프링 컨테이너는 CGLIB 라는 바이트코드를 조작하는 라이브러리를 사용해서, MyLogger를 상속받은 가짜 프록시 객체를 생성한다.
+- 결과를 확인해보면 우리가 등록한 순수한 MyLogger 클래스가 아니라 `MyLogger$$EnhancerBySpringCGLIB` 이라는 클래스로 만들어진 객체가 대신 등록된 것을 확인할 수 있다.
+- 그리고 스프링 컨테이너에 "myLogger"라는 이름으로 진짜 대신에 이 가짜 프록시 객체를 등록한다.
+- `ac.getBean("myLogger", MyLogger.class)`로 조회해도 프록시 객체가 조회되는 것을 확인할 수 있다.
+- 그래서 의존관계 주입도 이 가짜 프록시 객체가 주입된다.
+
+
+// 이미지 생략, 결국 프록시 객체 처리된다는거네 CGLIB 통해서 
+
+**가짜** **프록시** **객체는** **요청이** **오면** **그때** **내부에서** **진짜** **빈을** **요청하는** **위임** **로직이** **들어있다**.**
+- 가짜 프록시 객체는 내부에 진짜 `myLogger` 를 찾는 방법을 알고 있다.
+- 클라이언트가 `myLogger.log()` 을 호출하면 사실은 가짜 프록시 객체의 메서드를 호출한 것이다.
+- 가짜 프록시 객체는 request 스코프의 진짜 `myLogger.log()` 를 호출한다.
+- 가짜 프록시 객체는 원본 클래스를 상속 받아서 만들어졌기 때문에 이 객체를 사용하는 클라이언트 입장에서는 사실 원본인지 아닌지도 모르게, 동일하게 사용할 수 있다(다형성)
+
+****동작** **정리****
+- CGLIB라는 라이브러리로 내 클래스를 상속 받은 가짜 프록시 객체를 만들어서 주입한다.
+- 이 가짜 프록시 객체는 실제 요청이 오면 그때 내부에서 실제 빈을 요청하는 위임 로직이 들어있다.
+- 가짜 프록시 객체는 실제 request scope와는 관계가 없다. 그냥 가짜이고, 내부에 단순한 위임 로직만 있고, 싱글톤 처럼 동작한다.
+
+****특징** **정리****
+- 프록시 객체 덕분에 클라이언트는 마치 싱글톤 빈을 사용하듯이 편리하게 request scope를 사용할 수 있다.
+- 사실 Provider를 사용하든, 프록시를 사용하든 핵심 아이디어는 진짜 객체 조회를 꼭 필요한 시점까지 지연처리한다는 점이다.
+- 단지 애노테이션 설정 변경만으로 원본 객체를 프록시 객체로 대체할 수 있다. 이것이 바로 다형성과 DI 컨테이너가 가진 큰 강점이다.
+- 꼭 웹 스코프가 아니어도 프록시는 사용할 수 있다.
+
+****주의점****
+- 마치 싱글톤을 사용하는 것 같지만 다르게 동작하기 때문에 결국 주의해서 사용해야 한다.
+- 이런 특별한 scope는 꼭 필요한 곳에만 최소화해서 사용하자, 무분별하게 사용하면 유지보수하기 어려워진다.
