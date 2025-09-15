@@ -50,3 +50,87 @@ $ npx cross-env NODE_OPTIONS="$NODE_OPTIONS --experimental-vm-modules" jest
 ```
 - `package.json`
 	- `"type" : "module"` 설정
+
+### Typescript 셋팅
+
+```shell
+$ npm i -D ts-jest @types/jest
+
+$ npx ts-jest config:init
+
+```
+- `jest.config.js` 생성됨
+	- 테스트 파일 확장자는 `*.spec.ts` , `*.test.ts` 둘 중 하나 선택해 사용
+	- 옵션 중에 `testRegex` 설정 있는데 찾아보기 (`강의 참고`)
+
+
+VSCode에서 Jest 익스텐션이랑 같이 사용하기 위해 작성
+`settings.json`
+```json
+{
+	"jest.pathToJest": "**/node_modules/.bin/jest",
+	"jest.pathToConfig": "**/jest.config.js",
+	"jest, showCoverageOnLoad": true
+}
+```
+
+
+`not`
+```typescript 
+import { sum } from './toBe';
+
+test('두 숫자를 합산한다', () => {
+	expect(sum(1, 2)).toBe(3);
+	expect(sum(1, 2)).not.toBe(2);
+});
+
+```
+
+`toStrictEqual`
+```typescript 
+export function obj() {
+	return { a : 'hello' };
+}
+```
+
+
+```typescript 
+import { obj } from './toStrictEqual';
+
+test('객체는 toStrictEqual로 비교한다', () => {
+	expect(obj()).toStrictEqual({ a : 'hello' });
+	expect(obj()).not.toBe({ a : 'hello' });
+})
+
+test('배열끼리도 toStrictEqual을 써야 한다', () => {
+	expect([1, 2, 3]).toStrictEqual([1, 2, 3]);
+	expect([1, 2, 3]).not.toBe([1, 2, 3]);
+});
+
+```
+- 객체 끼리 비교할 때 주로 사용
+
+`toMatchObject`
+```typescript 
+class TestObj {
+	a: string;
+	constructor(str) {
+		this.a = str;
+	}
+}
+
+export function obj(str: string) {
+	return new TestObj(str);
+}
+```
+
+```typescript 
+import { obj } from './toStrictEqual';
+
+test('객체 생성자까지 비교한다, 클래스 비교는 toMatchObject로 해야 한다', () => {
+	expect(obj('hello')).not.toStrictEqual({ a: 'hello' });
+	expect(obj('hello')).toMatchObject(new TestObj('hello'));
+})
+
+```
+- 클래스까지 다르면 사용
