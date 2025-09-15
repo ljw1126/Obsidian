@@ -134,3 +134,101 @@ test('객체 생성자까지 비교한다, 클래스 비교는 toMatchObject로 
 
 ```
 - 클래스까지 다르면 사용
+
+---
+
+### toHaveBeenCalled() 시리즈와 jest.fn(), jest.spyOn()
+
+jest.fn()을 스파이 함수라고 부르기도 함
+```typescript 
+
+test('sum 함수가 호출되었다', () => {
+	const sumSpy = jest.fn(sum);
+	sumSpy(1, 2);
+	expect(sumSpy).toHaveBeenCalled();
+})
+
+test('sum 함수가 1번 호출되었다', () => {
+	const sumSpy = jest.fn(sum);
+	sumSpy(1, 2);
+	expect(sumSpy).toHaveBeenCalledTimes(1);
+})
+
+test('sum 함수가 1,2와 함께 호출되었다', () => {
+	const sumSpy = jest.fn(sum);
+	sumSpy(1, 2);
+	expect(sumSpy).toHaveBeenCalledWith(1, 2);
+})
+
+```
+
+jest.spyOn()의 경우 
+- 객체의 메서드 일부를 스파이할 수 있다. 
+- 나머지는 실제 동작하게 하면서
+
+```typescript 
+import {obj} from "...";
+
+test('obj.minus 함수가 1번 호출되었다(spy 함수 생성)', () => {
+	const minusSpy = jest.fn(obj.minus);
+	minusSpy(1, 2);
+	expect(minusSpy).toHaveBeenCalledTimes(1);
+})
+
+test('obj.minus 함수가 1번 호출되었다(spy 삽입)', () => {
+	jest.spyOn(obj, 'minus');
+	obj.minus(1, 2);
+	
+	console.log(obj.minus); // 확인해보기 ✅
+	expect(obj.minus).toHaveBeenCalledTimes(1);
+})
+```
+
+---
+
+### mockImplementation, mockReturnValue
+- 원해 함수가 실행되지 않고, stubbing 함
+- 예제. `mockFuntion.ts`, `mockFunction.test.ts`
+
+유닛테스트에서 함수를 테스트하는데, 제어하기 힘든 외부 의존성을 제어할 수 있다.
+```typescript 
+
+test('obj.minus에 spy를 심고 리턴값을 바꾼다', () => {
+	jest.spyOn(obj, 'minus').mockImplementation((a, b) => a + b);
+	const result = obj.minus(1, 2);
+	
+	expect(obj.minus).toHaveBeenCalledTimes(1);
+	expect(result).toBe(5);
+})
+```
+
+`mockImplementationOnce`, `mockReturnValue`
+```typescript
+
+test('obj.minus에 spy를 심고 mockImplementationOnce로 구현을 한번 바꾼다', () => {
+	jest.spyOn(obj, 'minus')
+		.mockImplementationOnce((a, b) => a + b)
+		.mockImplementation(() => 5);
+	
+	const result1 = obj.minus(1, 2);
+	const result2 = obj.minus(1, 2);
+	const result3 = obj.minus(1, 2);
+	
+	expect(obj.minus).toHaveBeenCalledTimes(3);
+	expect(result1).toBe(3);
+	expect(result2).toBe(5);
+	expect(result3).toBe(-1);
+})
+
+test('obj.minus에 spy를 심고 mockReturnValue로 반환 값을 고정한다', () => {
+	jest.spyOn(obj, 'minus')
+		.mockReturnValue(5);
+	
+	const result = obj.minus(1, 2);
+
+	expect(obj.minus).toHaveBeenCalledTimes(1);
+	expect(result1).toBe(5);
+})
+
+```
+
