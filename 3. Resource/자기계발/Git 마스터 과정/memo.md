@@ -64,3 +64,25 @@ pick 9c3e567 커밋 B
 pick 9c3e567 커밋 B
 pick 00208e6 커밋 A
 ```
+
+
+### commit
+- [커밋 날짜 및 시간 변경](https://blacklobster.tistory.com/17)
+
+```text
+// 하루 전 날짜로 커밋
+git commit --date "1 day ago" -m "커밋 메시지"
+
+// 특정 날짜, 시간 정해서 커밋 
+git commit --date "Thu 30 Mar 2023 10:00:00 KST" -m "커밋 메시지"
+
+// 바로 최근 커밋에 날짜 변경하기 (이때 뒤에 -m 옵션 줘서 커밋 메시지 적으면 메시지도 변경)
+git commit --amend --no-edit --date "1 day ago"
+
+or
+
+git commit --amend --no-edit --date "Thu 30 Mar 2023 10:10:00 KST"
+
+// 특정 커밋의 날짜 변경 (생략)
+
+```
