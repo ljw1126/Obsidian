@@ -232,3 +232,114 @@ test('obj.minus에 spy를 심고 mockReturnValue로 반환 값을 고정한다',
 
 ```
 
+---
+
+### 비동기  함수 테스트 
+
+`asyncFunction.ts`
+```typescript 
+export function okPromise() {
+	return Promise.resolve('ok');
+}
+
+export function noPromise() {
+	return Promise.reject('no');
+}
+
+// 둘다 자동으로 Promise 감싸준다
+export async fnction okAsync() {
+	return 'ok';
+}
+
+export async function noAsync() {
+	throw 'no';
+}
+```
+
+`asyncFunction.test.ts`
+```typescript 
+import { ... }
+
+test('okPromise 테스트 💩', () => {
+	const okSpy = jest.fn(okPromise);
+	expect(okSpy()).resolves.toBe('no');
+})
+
+test('okPromise 테스트1', () => {
+	const okSpy = jest.fn(okPromise);
+	return expect(okSpy()).resolves.toBe('no');
+})
+
+test('okPromise 테스트2', () => {
+	const okSpy = jest.fn(okPromise);
+	return okSpy().then((result) => {
+		expect(result).toBe('ok');
+	})
+})
+
+test('okPromise 테스트3', async () => {
+	const okSpy = jest.fn(okPromise);
+	const result = await okSpy();
+	expect(okSpy()).toBe('ok');
+})
+
+test('noPromise 테스트', () => {
+	const noSpy = jest.fn(noPromise);
+	return noSpy().catch((result) => {
+		expect(result).toBe('no');
+	})
+})
+
+test('noPromise 테스트2', () => {
+	const noSpy = jest.fn(noPromise);
+	return noSpy().rejects.toBe('no');
+})
+
+test('noPromise 테스트3', () => {
+	const noSpy = jest.fn(noPromise);
+	try {
+		const result = await noSpy();
+	} catch(err) {
+		expect(err).toBe('no');
+	}
+})
+
+// okPromise랑 동일함
+test('okAsync 테스트', () => {
+	const okSpy = jest.fn(okAsync);
+	expect(okSpy()).resolves.toBe('no');
+})
+
+test('okAsync 테스트1', () => {
+	const okSpy = jest.fn(okAsync);
+	return expect(okSpy()).resolves.toBe('no');
+})
+
+test('okAsync 테스트2', () => {
+	const okSpy = jest.fn(okAsync);
+	return okSpy().then((result) => {
+		expect(result).toBe('ok');
+	})
+})
+```
+- 테스트 성공으로 표기되고 나중에 실패 로그가 뜬다. 💩
+	- ✅ `return`을 꼭 붙여줘서 해결한다
+	- 또는 method chaining을 해서 해결
+	- 또는 await 키워드 사용하는 방법
+
+```typescript 
+import * as fns from './asyncFunction';
+
+test('okPromise 테스트1', () => {
+	jest.spyOn(fns, 'okPromise').mockResolveValue('ok');
+	return expect(fns.okPromise()).resolves.toBe('no');
+})
+
+test('noPromise 테스트2', () => {
+	//jest.spyOn(fns, 'noPromise').mockReturnValue(Promise.reject('no'));
+	jest.spyOn(fns, 'noPromise').mockRejectedValue('no');
+	return expect(fns.noPromise()).rejects.toBe('no');
+})
+```
+
+> 강의 스타일인지 싶지만, 명시적으로 안하고 이러하다라고 있는 예시에 수정을 하다보니 헷갈리네
