@@ -393,9 +393,10 @@ describe('중복 탐지 포매터', () => {
 ```
 
 ---
-
 ## Reference.
 - [tsconfig.json 완전 정복]([🚀 tsconfig.json 완전 정복! 타입스크립트 설정 옵션 A to Z 가이드 🚀](https://www.jaenung.net/tree/15794))
 - [tsconfig 공식 reference]([TypeScript: TSConfig Reference - Docs on every TSConfig option](https://www.typescriptlang.org/tsconfig/#paths))
+- [How to User TSCOnfig Path Aliases to Improve Your Code]([How to Use TSConfig Path Aliases to Improve Your Code](https://webreaper.dev/posts/tsconfig-paths-setup/))
+
 
 
