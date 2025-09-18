@@ -343,3 +343,29 @@ test('noPromise 테스트2', () => {
 ```
 
 > 강의 스타일인지 싶지만, 명시적으로 안하고 이러하다라고 있는 예시에 수정을 하다보니 헷갈리네
+
+---
+### 콜백함수 테스트 
+
+`callback.ts`
+```typescript
+export function timer(callback) {
+	setTimeout(() => {
+		callback('success');
+	}, 3000);
+}
+```
+
+```typescript
+import { timer } from './callback';
+
+test('타이머 잘 실행되나?', (done) => {
+	timer((message:string) => {
+		expect(message).toBe('success');
+		done();
+	})
+})
+```
+- setTimeout과 같은 콜백함수 테스트시에는 done 매개변수를 사용해서 종료해줘야 한다
+
+> ✅ 콜백 함수는 테스트 안하는게 낫다 (실행시간 길어지니), 왠만해서 promise 처리 권장📌
