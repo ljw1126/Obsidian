@@ -437,6 +437,253 @@ describe('중복 탐지 포매터', () => {
   제가 이 리팩토링 작업을 진행해볼까요?
 ```
 
+**결과. 클래스 다이어그램**
+![[composite class diagram.png]]
+- `중복 탐지`, `수정 번호 탐지`의 경우 CompositeFormatter 해당
+- 나머지 탐지 기능을 가진 구현체는 Leaf Node에 해당
+- `container.ts`에서 조립하여 사용
+
+```typescript 
+// 생략..
+
+// Presentation Layer
+const missingSequenceFormat = new MissingSequenceFormatter();
+
+const duplicationFormatter = new CompositeFormatter(new Map<string, Formatter>([
+    ["완전 중복", new IdenticalDuplicateFormatter()],
+    ["번호 중복", new SequenceDuplicateFormatter()],
+    ["이벤트 중복", new EventDuplicateFormatter()]
+]));
+
+const wrongLocationFormat = new WrongLocationFormatter();
+
+const updateNumberFormatter = new CompositeFormatter(new Map<string, Formatter>([
+    ["ADD ZERO 탐지", new AddZeroFormatter()],
+    ["UPDATE ZERO 탐지", new UpdateZeroFormatter()],
+    ["UPDATE 누락 탐지", new MissingUpdateFormatter()]
+]));
+
+const rootFormatter = new CompositeFormatter(new Map<string, Formatter>([
+    ["누락 탐지", missingSequenceFormat],
+    ["중복 탐지", duplicationFormatter],
+    ["위치 탐지", wrongLocationFormat],
+    ["수정 번호 탐지", updateNumberFormatter]
+]));
+
+export const logController = new LogController(logAnalzer, rootFormatter);
+```
+---
+
+### Code Convention
+- [typescript-eslint]([Getting Started | typescript-eslint](https://typescript-eslint.io/getting-started))
+- [prettier]([What is Prettier? · Prettier](https://prettier.io/docs/))
+- husky
+- 그 외 패키지
+
+참고. 
+- [블로그]([Linting in TypeScript using ESLint and Prettier - LogRocket Blog](https://blog.logrocket.com/linting-typescript-eslint-prettier/))
+
+typescript eslint 설치 후 확인된 에러 
+```shell
+> npx eslint .
+
+
+/home/leejinwoo/gitRepository/express-app/jest.config.ts
+  185:9  error  Unnecessary escape character: \.  no-useless-escape
+
+/home/leejinwoo/gitRepository/express-app/src/domain/analysisReport.test.ts
+   4:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/missingSequenceDetector.ts
+  7:39  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  9:63  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/eventDuplicateStrategy.test.ts
+  52:16  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  53:16  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  54:24  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/eventDuplicateStrategy.ts
+  20:31  error  '_' is defined but never used  @typescript-eslint/no-unused-vars
+  31:34  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
+  31:53  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
+  39:16  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/identicalLogStrategy.ts
+  12:31  error  '_' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/sequenceDuplicateStrategy.ts
+  20:31  error  '_' is defined but never used  @typescript-eslint/no-unused-vars
+  31:34  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
+  31:53  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
+  39:16  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/updateNumber/missingUpdateStrategy.ts
+  10:37  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  10:53  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  22:44  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/updateNumber/parsingHelper.ts
+  8:12  error  '_' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/leejinwoo/gitRepository/express-app/src/domain/service/wrongLocationDetector.ts
+   6:33  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+  18:35  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+
+/home/leejinwoo/gitRepository/express-app/src/domain/types.ts
+   4:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+   9:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  14:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  19:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  25:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  32:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  39:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  50:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  58:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  63:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  68:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+  80:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+
+/home/leejinwoo/gitRepository/express-app/src/infrastructure/unit/fileReader.test.ts
+  23:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  60:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/compositeFormatter.ts
+  12:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/duplication/identicalDuplicateFormatter.ts
+  6:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
+  6:30  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
+
+/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/helper.ts
+   1:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
+  25:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
+  38:15  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
+  75:26  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
+  76:37  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
+
+/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/types.ts
+  4:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/updateNumber/missingUpdateFormatter.ts
+  12:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
+  12:30  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
+  18:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
+  18:31  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
+  38:27  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
+  58:31  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
+  61:36  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
+  63:42  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
+
+✖ 58 problems (58 errors, 0 warnings)
+  21 errors and 0 warnings potentially fixable with the `--fix` option.
+```
+
+크게 보이는건 6종류
+- 💩`error`  Unnecessary escape character: \.  no-useless-escape
+- 💩`error ` Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+- 💩`error`  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
+- 💩`error`  `'_'`is defined but never used  @typescript-eslint/no-unused-vars
+- 💩`error`  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
+- 💩`error`  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
+
+💩`error`  Unnecessary escape character: \.  no-useless-escape
+- `jest.config.ts`에 주석되어 있는 정규식에서 검출
+- 설정 파일은 lint 검사 제외
+- `.eslintignore`는 이제 지원하지 않음 
+
+```text
+1. eslint.config.mjs -> eslint.config.js
+   
+2. tseslint.config() deprecated ▶️ defineConfig() 마이그레이션 
+https://typescript-eslint.io/packages/typescript-eslint/#config-deprecated
+
+
+```
+
+
+💩`error`  Use an `interface` instead of a `type`
+- `@typescript-eslint/consistent-type-definitions`
+
+```shell
+// Gemini
+
+왜 이런 규칙이 존재하고, 왜 interface를 선호하는가?
+
+  이 규칙의 목적은 "어떤 것이 더 좋다"라기보다는 "프로젝트 내에서 일관성을 유지하자"는 데에 있습니다. 객체의 형태를 정의할 때 어떤 파일에서는
+  interface를 쓰고, 다른 파일에서는 type을 쓰면 코드 스타일이 파편화되어 보일 수 있기 때문입니다.
+
+  그렇다면 왜 기본값이 interface일까요? 타입스크립트 커뮤니티와 공식 문서에서 interface를 객체 구조 정의에 선호하는 데에는 몇 가지 전통적인 이유가
+  있습니다.
+
+   1. 선언 병합 (Declaration Merging): interface는 같은 이름으로 여러 번 선언하면 자동으로 합쳐집니다. 이는 라이브러리의 타입을 확장하거나 모듈의
+      타입을 보강할 때 매우 유용합니다. type은 이것이 불가능합니다.
+
+   1     interface User {
+   2       name: string;
+   3     }
+   4
+   5     interface User {
+   6       age: number;
+   7     }
+   8
+   9     const user: User = { name: 'Alice', age: 30 }; // OK
+
+   2. 더 나은 에러 메시지: 과거에는 interface로 정의된 타입에서 에러가 발생했을 때 타입스크립트 컴파일러가 더 이해하기 쉬운 에러 메시지를 보여주는
+      경향이 있었습니다. (최신 버전에서는 많이 개선되었습니다.)
+
+   3. 확장 문법의 명확성: interface는 extends 키워드를, type은 & (인터섹션)을 사용하여 상속/확장을 구현합니다. 많은 개발자들이 클래스 상속과 유사한
+      extends 문법을 더 객체지향적이고 직관적이라고 느낍니다.
+
+  현실적인 접근 방법: 규칙 조정하기
+
+  말씀하신 대로, 이 규칙은 때로는 너무 강하게 느껴질 수 있습니다. 다행히도 ESLint 규칙은 얼마든지 우리 프로젝트에 맞게 조정할 수 있습니다.
+
+  해결책은 두 가지입니다.
+
+   4. 규칙을 따르기: 프로젝트의 모든 객체 형태 정의를 interface로 통일합니다. 이는 일관성 측면에서 가장 좋은 방법입니다.
+   5. 규칙을 수정하거나 끄기: type과 interface를 의도에 따라 혼용하고 싶다면, 이 규칙을 비활성화할 수 있습니다. 또는, "객체 리터럴 형태일 때만
+      interface를 사용하고, 유니온이나 유틸리티 타입을 쓸 때는 type을 허용"하도록 옵션을 조정할 수도 있습니다.
+
+  규칙을 끄는 방법 (`eslint.config.js`):
+
+    1 // eslint.config.js
+    2
+    3 module.exports = tseslint.config(
+    4   // ... 다른 설정들
+    5   {
+    6     rules: {
+    7       // ... 다른 규칙들
+    8       '@typescript-eslint/consistent-type-definitions': 'off', // 규칙 비활성화
+    9     },
+   10   }
+   11 );
+
+  제안
+
+  제 생각에는, DTO나 순수한 데이터 구조는 `interface`로 정의하는 것에 큰 단점이 없으므로, 일단은 일관성을 위해 규칙을 따르는 방향으로 진행해 보시는
+  것을 추천합니다. type은 유니온(|), 인터섹션(&), 또는 Record나 Omit 같은 유틸리티 타입을 사용하여 복잡한 타입을 "별칭(alias)"으로 만들 때 사용하는
+  것으로 역할을 분리하면 좋습니다.
+
+  예시:
+
+   1 // 객체의 "모양"은 interface로 정의
+   2 interface User {
+   3   id: number;
+   4   name: string;
+   5 }
+   6
+   7 // 여러 타입을 조합하거나 별칭을 만들 땐 type 사용
+   8 type UserOrGuest = User | { isGuest: true };
+   9 type UserId = User['id'];
+
+  이 규칙에 대해 어떻게 생각하시나요? 규칙을 비활성화할까요, 아니면 일단 규칙에 맞춰 코드를 수정하는 방향으로 진행할까요?
+```
 
 
 ---
