@@ -475,114 +475,13 @@ export const logController = new LogController(logAnalzer, rootFormatter);
 ---
 
 ### Code Convention
-- [typescript-eslint]([Getting Started | typescript-eslint](https://typescript-eslint.io/getting-started))
 - [prettier]([What is Prettier? · Prettier](https://prettier.io/docs/))
+- [typescript-eslint]([Getting Started | typescript-eslint](https://typescript-eslint.io/getting-started))
 - husky
 - 그 외 패키지
 
 참고. 
 - [블로그]([Linting in TypeScript using ESLint and Prettier - LogRocket Blog](https://blog.logrocket.com/linting-typescript-eslint-prettier/))
-
-typescript eslint 설치 후 확인된 에러 
-```shell
-> npx eslint .
-
-
-/home/leejinwoo/gitRepository/express-app/jest.config.ts
-  185:9  error  Unnecessary escape character: \.  no-useless-escape
-
-/home/leejinwoo/gitRepository/express-app/src/domain/analysisReport.test.ts
-   4:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  11:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  18:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/missingSequenceDetector.ts
-  7:39  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-  9:63  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/eventDuplicateStrategy.test.ts
-  52:16  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-  53:16  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-  54:24  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/eventDuplicateStrategy.ts
-  20:31  error  '_' is defined but never used  @typescript-eslint/no-unused-vars
-  31:34  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
-  31:53  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
-  39:16  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/identicalLogStrategy.ts
-  12:31  error  '_' is defined but never used  @typescript-eslint/no-unused-vars
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/duplication/sequenceDuplicateStrategy.ts
-  20:31  error  '_' is defined but never used  @typescript-eslint/no-unused-vars
-  31:34  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
-  31:53  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
-  39:16  error  Forbidden non-null assertion   @typescript-eslint/no-non-null-assertion
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/updateNumber/missingUpdateStrategy.ts
-  10:37  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-  10:53  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-  22:44  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/strategies/updateNumber/parsingHelper.ts
-  8:12  error  '_' is assigned a value but never used  @typescript-eslint/no-unused-vars
-
-/home/leejinwoo/gitRepository/express-app/src/domain/service/wrongLocationDetector.ts
-   6:33  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-  18:35  error  Forbidden non-null assertion  @typescript-eslint/no-non-null-assertion
-
-/home/leejinwoo/gitRepository/express-app/src/domain/types.ts
-   4:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-   9:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  14:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  19:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  25:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  32:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  39:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  50:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  58:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  63:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  68:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-  80:13  error  Use an `interface` instead of a `type`  @typescript-eslint/consistent-type-definitions
-
-/home/leejinwoo/gitRepository/express-app/src/infrastructure/unit/fileReader.test.ts
-  23:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  24:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  60:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/compositeFormatter.ts
-  12:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  25:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  29:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/duplication/identicalDuplicateFormatter.ts
-  6:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
-  6:30  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
-
-/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/helper.ts
-   1:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
-  25:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
-  38:15  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
-  75:26  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
-  76:37  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
-
-/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/types.ts
-  4:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/home/leejinwoo/gitRepository/express-app/src/presentation/formatter/updateNumber/missingUpdateFormatter.ts
-  12:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
-  12:30  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
-  18:6   error  Use an `interface` instead of a `type`         @typescript-eslint/consistent-type-definitions
-  18:31  error  A record is preferred over an index signature  @typescript-eslint/consistent-indexed-object-style
-  38:27  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
-  58:31  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
-  61:36  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
-  63:42  error  Forbidden non-null assertion                   @typescript-eslint/no-non-null-assertion
-
-✖ 58 problems (58 errors, 0 warnings)
-  21 errors and 0 warnings potentially fixable with the `--fix` option.
-```
 
 크게 보이는건 6종류
 - 💩`error`  Unnecessary escape character: \.  no-useless-escape
@@ -685,12 +584,151 @@ https://typescript-eslint.io/packages/typescript-eslint/#config-deprecated
   이 규칙에 대해 어떻게 생각하시나요? 규칙을 비활성화할까요, 아니면 일단 규칙에 맞춰 코드를 수정하는 방향으로 진행할까요?
 ```
 
+**Prettier 설치** 
+- VSCode extension 설치 
+	- `Prettier - Code formatter`
+- 루트 디렉터리 기준
+	- `.prettierrc` 생성 
+	- `.prettierignore` 생성
+
+```shell
+$ npm install --save-dev prettier
+```
+
+`.prettierrc`
+```text
+{
+  "singleQuote": true,
+  // 작은 따옴표
+  "semi": true,
+  // 세미콜론 사용 여부
+  "useTabs": false,
+  // 탭 사용 여부
+  "tabWidth": 4,
+  // 탭 4탭
+  "trailingComma": "all",
+  // 여러 줄을 사용할 때, 후행 콤마 사용 방식
+  "printWidth": 140,
+  // 줄바꿈 될 width
+  "arrowParens": "avoid"
+  // 화살표 함수 깔끔 하게 처리
+}
+```
+- FE팀 컨벤션 따라감
+- 주석은 삭제해야 함
+
+`.prettierignore`
+```text
+# 빌드 및 의존성 관련
+/node_modules
+/dist
+/build
+/coverage
+
+# 로그 및 캐시
+*.log
+.cache
+.env
+
+# 설정 파일 및 잠금 파일
+.gitignore
+.prettierrc
+.prettierignore
+package-lock.json
+yarn.lock
+jest.config.ts
+tsconfig.json
+
+# 기타
+.DS_Store # macOS에서 생성되는 파일
+```
+- [Ignoring Code · Prettier](https://prettier.io/docs/ignore/)
+
+**✅ 자동/수정 적용 설정**
+
+VSCode ▶️ `ctrl + shift + p (팔레트)` ▶️ Preferences: Open User Settings(JSON) 수정
+```json
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}
+```
+
+`package.json`
+```text
+"scripts": {
+  "format": "prettier --write .",
+  "test": "jest"
+}
+```
+
+```shell
+$ npm run format
+```
+
+eslint
+
+```text
+╭──────────────────────────────────────────────────────────────────────────────────────────────╮
+│  > typescript를 주 언어로 사용했는데  eslint.configs.recommended와 같이 사용하는게 맞나요??  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✦ 네, TypeScript를 주 언어로 사용할 때 두 가지 recommended 설정을 모두 사용하는 것이 맞는지 헷갈릴 수 있습니다. 아주 좋은 질문입니다.
+
+  결론부터 말씀드리면, 네, 두 가지를 함께 사용하는 것이 완벽하게 올바른 최신 표준 방식입니다.
+
+  그 이유는 두 설정이 서로 다른 역할을 책임지는, 상호 보완적인 관계이기 때문입니다.
+
+  두 설정의 역할 분담
+
+  TypeScript 코드는 결국 JavaScript로 변환됩니다. 따라서 우리는 두 가지 종류의 잠재적인 오류를 모두 잡아야 합니다.
+
+   1. `eslint.configs.recommended` (from `@eslint/js`)
+       * 역할: 순수 JavaScript 문법에서 발생할 수 있는 명백한 논리적 오류를 잡아냅니다.
+       * 예시:
+           * return문 뒤에 코드가 있어서 절대 실행될 수 없는 경우 (no-unreachable)
+           * switch문에서 case가 중복된 경우 (no-duplicate-case)
+           * 정규식에 잘못된 문법이 있는 경우 (no-invalid-regexp)
+       * 비유: 모든 글쓰기에 적용되는 기본적인 문법 및 맞춤법 검사기와 같습니다.
+
+   2. `...tseslint.configs.recommended` (from `typescript-eslint`)
+       * 역할: TypeScript의 타입 시스템과 관련된 코드 품질 문제를 잡아냅니다. 또한, TypeScript 문법 때문에 기본 JavaScript 규칙이 오작동하는 것을
+         막아줍니다.
+       * 주요 기능:
+           * TypeScript 전용 규칙 추가: any 타입 사용을 경고하거나(@typescript-eslint/no-explicit-any), interface와 type 사용 스타일을 강제하는 등
+             TypeScript에만 의미 있는 규칙을 추가합니다.
+           * 기본 규칙 확장 및 비활성화: 예를 들어, 기본 ESLint의 "사용하지 않는 변수" 규칙(no-unused-vars)은 TypeScript의 interface나 type을
+             변수로 오해하고 에러를 발생시킬 수 있습니다. typescript-eslint는 이 기본 규칙을 끄고, TypeScript 문법을 제대로 이해하는 더 똑똑한
+             버전(@typescript-eslint/no-unused-vars)으로 대체합니다.
+       * 비유: 기본적인 문법 검사기 위에, 특정 분야(예: 법률, 의료)의 전문 용어나 구조를 검사하는 전문 편집기와 같습니다.
+
+  결론
+
+  두 설정을 함께 사용함으로써, 우리는 다음과 같은 완벽한 검증 시스템을 구축하게 됩니다.
+
+  eslint.configs.recommended가 코드의 JavaScript로서의 기반을 다지고,
+  ...tseslint.configs.recommended가 그 위에 TypeScript로서의 특수성을 검증하고 보강하는 것입니다.
+
+  따라서 지금 하시고 계신 방식이 두 계층의 검사를 모두 수행하는 가장 이상적인 설정입니다. 아주 잘하고 계십니다
+
+```
+
+```shell
+$ npm install eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin --save-dev
+$ npm install --save-dev @eslint/js typescript-eslint
+$ npm install --save-dev eslint-config-prettier
+```
+- airbnb까지 하면 너무 rule이 어려워서 추가하지 않음
+
+
 
 ---
 ## Reference.
 - [tsconfig.json 완전 정복]([🚀 tsconfig.json 완전 정복! 타입스크립트 설정 옵션 A to Z 가이드 🚀](https://www.jaenung.net/tree/15794))
 - [tsconfig 공식 reference]([TypeScript: TSConfig Reference - Docs on every TSConfig option](https://www.typescriptlang.org/tsconfig/#paths))
 - [How to User TSCOnfig Path Aliases to Improve Your Code]([How to Use TSConfig Path Aliases to Improve Your Code](https://webreaper.dev/posts/tsconfig-paths-setup/))
+- [TypeScript의 유형 대 인터페이스 - LogRocket Blog](https://blog.logrocket.com/types-vs-interfaces-typescript/)
+- [TypeScript 인터페이스와 유형: 차이점 및 최상의 사용 사례 - DEV 커뮤니티 --- TypeScript Interface vs Type: Differences and Best Use Cases - DEV Community](https://dev.to/get_pieces/typescript-interface-vs-type-differences-and-best-use-cases-1073)
 
 
 
