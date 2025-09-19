@@ -368,4 +368,40 @@ test('타이머 잘 실행되나?', (done) => {
 ```
 - setTimeout과 같은 콜백함수 테스트시에는 done 매개변수를 사용해서 종료해줘야 한다
 
-> ✅ 콜백 함수는 테스트 안하는게 낫다 (실행시간 길어지니), 왠만해서 promise 처리 권장📌
+> ✅ 콜백 함수는 테스트 안하는게 낫다 (실행시간 길어지니), 왠만해서 `promise` 처리 권장📌
+
+--- 
+
+### 에러 테스트
+
+```typescript 
+export function error() {
+	throw new Error();
+}
+
+class CustomError extends Error {}
+
+export function customeError() {
+	throw new CustomError();
+}
+```
+
+
+```typescript 
+import { error, customeError } from './throwFunction';
+
+test('error가 잘 난다', () => {
+	expect(() => error()).toThrow(Error);
+})
+
+test('error가 잘 난다(tyr/catch)', () => {
+	try {
+		error();
+	} catch(err) {
+		expect(err).toStrictEqual(new Error());
+	}
+})
+
+```
+- 예외 테스트 작성시 함수로 expect에 작성해야 함. 
+	- `expect(error())`와 같이 작성할 경우 에러가 바로 발생해서 실패 
