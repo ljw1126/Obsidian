@@ -1,5 +1,8 @@
 - [raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore](https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore)
 	- [https://github.com/github/gitignore/blob/main/VisualStudio.gitignore - Google 검색](https://www.google.com/search?q=https://github.com/github/gitignore/blob/main/VisualStudio.gitignore) 
+- [C# Clean Code: Coding Conventions - DEV Community](https://dev.to/moh_moh701/c-clean-code-coding-conventions-2c41#:~:text=Learn%20the%20essential%20coding%20conventions%20in%20C%23%20to,with%20practical%20examples%20and%20Visual%20Studio%E2%80%99s%20refactoring%20tools.)
+- [.NET Coding Conventions - C# | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+- [C# docs - get started, tutorials, reference. | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/)
 
 
 **설치**
@@ -187,4 +190,40 @@ app.MapPut("/todoitems/{id}", async (int id, Todo inputTodo, TodoDb db) =>
 ```c#
 var todoItems = app.MapGroup("/todoitems");
 ```
+
+```c#
+var todoItems = app.MapGroup("/todoitems");
+
+todoItems.MapGet("/", GetAllTodos);
+// ..
+
+static async Task<IResult> GetAllTodos(TodoDb db)
+{
+    return TypedResults.Ok(await db.Todos.ToListAsync()));
+}
+```
+
+Q. TypedResults는 스프링의 ResponseEntity와 같은 걸까요? `Task<IResult>`는 반환타입을 명시한거구요. ▶️ Task는 Webflux의 Mono, Flux 같은 느낌
+
+```text
+네, 맞습니다. **`TypedResults`는 스프링의 `ResponseEntity` 객체와 동일한 역할을 한다고 볼 수 있습니다.**
+
+`TypedResults`는 HTTP 응답 상태 코드(예: 200 OK, 201 Created, 404 Not Found)와 함께 응답 본문 데이터를 생성하는 헬퍼 클래스입니다. `ResponseEntity`가 상태 코드, 헤더, 본문을 한 번에 담아 반환하는 것처럼, `TypedResults`는 **`IResult`**라는 인터페이스를 구현하는 응답 객체를 만들어줍니다.
+
+### `Task<IResult>`의 의미
+
+`Task<IResult>`는 **메서드의 반환 타입을 명시**하는 것입니다.
+
+- **`Task`**: 메서드가 **비동기적으로 실행**된다는 것을 나타냅니다. `await db.Todos.ToListAsync()`처럼 비동기 작업을 포함하므로 `Task`를 반환 타입으로 사용합니다.
+    
+- **`IResult`**: HTTP 응답을 나타내는 **인터페이스**입니다. `TypedResults.Ok()`, `Results.NotFound()`와 같은 모든 응답 헬퍼 메서드는 이 `IResult` 인터페이스를 반환합니다.
+    
+
+따라서 `Task<IResult>`는 **"이 메서드는 비동기적으로 실행되며, 최종적으로 HTTP 응답을 나타내는 `IResult` 객체를 반환한다"**는 의미입니다.
+```
+
+
+---
+
+TODO. [자습서: ASP.NET Core를 사용하여 컨트롤러 기반 웹 API 만들기 | Microsoft Learn](https://learn.microsoft.com/ko-kr/aspnet/core/tutorials/first-web-api?view=aspnetcore-8.0&tabs=visual-studio)
 
