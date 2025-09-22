@@ -3,6 +3,9 @@
 - [C# Clean Code: Coding Conventions - DEV Community](https://dev.to/moh_moh701/c-clean-code-coding-conventions-2c41#:~:text=Learn%20the%20essential%20coding%20conventions%20in%20C%23%20to,with%20practical%20examples%20and%20Visual%20Studio%E2%80%99s%20refactoring%20tools.)
 - [.NET Coding Conventions - C# | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
 - [C# docs - get started, tutorials, reference. | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/)
+- [visual studio shortcut cheat sheet](https://visualstudio.microsoft.com/keyboard-shortcuts.pdf)
+- [공식 tip 문서](https://learn.microsoft.com/en-us/visualstudio/ide/default-keyboard-shortcuts-in-visual-studio?view=vs-2022)
+- [공식 유튜브](https://www.youtube.com/watch?v=r3ys7oL9izQ&list=PLdo4fOcmZ0oWunQnm3WnZxJrseIw2zSAk&index=3)
 
 
 **설치**
