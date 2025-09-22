@@ -405,3 +405,69 @@ test('error가 잘 난다(tyr/catch)', () => {
 ```
 - 예외 테스트 작성시 함수로 expect에 작성해야 함. 
 	- `expect(error())`와 같이 작성할 경우 에러가 바로 발생해서 실패 
+
+---
+
+### mockClear, mockReset, mockRestore
+
+spy를 심어서 여러 테스트에서 사용하게 될 경우 서로 영향을 끼쳐 테스트 실패하는 상황 
+
+```typescript 
+import { obj } from './mockFunction';
+
+test('obj.minus 함수가 1번 호출되었다(spy삽입)', () => {
+	const spyFn = jest.spyOn(obj, 'minus');
+	const result = obj.minus(1, 2);
+	
+	expect(obj.minus).toHaveBeenCalledTimes(1);
+	expect(result).toBe(-1);
+	spyFn.mockClear(); // ✅ Time, With 초기화
+})
+```
+
+```typescript
+spyFn.mockReset(); // mockClear + mock.implementation(() => {}) 초기화
+spyFn.mockRestore(); // 아예 전부 초기화
+```
+- clear는 time, with를 초기화한다면 , reset은 거기에 mock.implementation()까지 한 경우
+
+---
+
+### 테스트 라이프 사이클 beforeAll, beforeEach, afterEach, afterAll
+
+```typescript
+beforeAll(() => {
+	// 이 파일에 준비 사항 실행
+})
+
+beforeEach(() => {
+	// 매번 테스트 실행 전 실행
+})
+
+afterEach(() => {
+	// 매번 테스트 실행 후 실행
+	//spyFn.mockRestore();
+	// jest.clearAllMock();
+	// jest.resetAllMock();
+	// jest.restoreAllMocks();
+})
+
+afterAll(() => {
+	// 모든 테스트가 끝난 후에 실행
+})
+```
+- 목적에 맞게 사용하는 것을 권장하는 듯 함
+
+--- 
+
+### 테스트 그룹화를 위한 describe
+그룹화 하는 방법 
+- 파일을 나눈다 
+- `describe('', () => { .. })`를 사용한다
+
+```typescript
+
+```
+- `before*`, `after*` 메서드는 비동기라 생각하는게 편함 
+- 실행 순서 관련해서 예시를 해보는게 좋을 듯 하다
+
