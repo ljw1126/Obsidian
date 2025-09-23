@@ -45,4 +45,57 @@
 > ✅ (내 생각) 특정 디비에 대한 권한을 가진 일반 계정으로 접속하는게 맞는듯하다.
 
 
-▶️ 개체 탐색기가 안
+개체 탐색기가 안보이는 경우
+▶️ SSMS 상단 메뉴에서 `보기 > 개체 탐색기`를 선택
+▶️ 또는 단축키 `F8` 사용
+
+데이터베이스 폴더가 없음 
+▶️ 아직 SQL Server에 연결되지 않거나 폴더가 숨겨진 상태
+▶️ MSSQLLocalDB 서버에 연결하기
+
+**1단계 DB 생성**
+
+데이터베이스는 우리가 파일을 저장하는 **'폴더'** 와 같습니다. 데이터를 체계적으로 관리하기 위해 제일 먼저 만들어야 하는 공간이죠.
+
+1. **SSMS**를 실행하고 접속합니다.
+2. 왼쪽의 **'개체 탐색기(Object Explorer)'** 에서 **'Databases'** 폴더를 우클릭하고 **'새 데이터베이스(New Database)'** 를 선택합니다.
+3. 데이터베이스 이름을 `TestDB`라고 입력하고 **확인**을 누릅니다.
+    
+이렇게 하면 앞으로 모든 데이터는 `TestDB`라는 폴더 안에 저장됩니다.
+
+<img src="1-mssql디비생성.png">
+
+**2단계: 사용자(계정) 생성 및 권한 부여**
+
+데이터베이스에 접근할 **'사용자 계정'** 을 만들고, 이 계정이 `TestDB`에 접근할 수 있도록 **'권한'** 을 부여해야 합니다. 이는 마치 특정 폴더를 다른 사람과 공유하고 접근 권한을 설정하는 것과 같습니다.
+
+1. **'보안(Security)'** 폴더를 열고 **'로그인(Logins)'** 폴더를 우클릭한 뒤 **'새 로그인(New Login)'**을 선택합니다.
+2. **'로그인 이름(Login name)'**에 원하는 계정명(예: `dev_user`)을 입력하고 **'SQL Server 인증(SQL Server Authentication)'**을 선택합니다.
+3. 비밀번호를 설정하고, `암호 정책 강제 적용(Enforce password policy)` 체크박스를 해제하면 간단한 비밀번호도 사용할 수 있습니다.
+4. **'사용자 매핑(User Mapping)'** 탭으로 이동해 방금 만든 `TestDB`를 선택하고, **'db_owner'** 역할을 체크합니다. 이렇게 하면 이 계정이 `TestDB`의 모든 권한을 갖게 됩니다.
+5. **확인**을 누르면 계정 생성이 완료됩니다
+
+
+> TestDB , tester/qwer1234!@#$
+
+
+**3단계: 테이블 생성 및 데이터 조작**
+- SSMS 상단에서 **'새 쿼리(New Query)'** 버튼을 클릭합니다.
+- 쿼리 편집기 상단의 드롭다운 메뉴에서 `master`가 아닌 **`TestDB`**를 선택합니다.
+- 아래 코드를 복사해서 붙여넣고 **'실행(Execute)'** 버튼을 클릭합니다.
+
+```sql
+-- `Users`라는 테이블을 만듭니다. Id, Name, Email 세 개의 열이 생깁니다.
+CREATE TABLE Users (
+    Id INT PRIMARY KEY IDENTITY(1,1),
+    Name NVARCHAR(50) NOT NULL,
+    Email NVARCHAR(100) NOT NULL
+);
+
+-- `Users` 테이블에 데이터 두 줄(레코드)을 삽입합니다.
+INSERT INTO Users (Name, Email) VALUES ('Alice', 'alice@example.com');
+INSERT INTO Users (Name, Email) VALUES ('Bob', 'bob@example.com');
+
+-- `Users` 테이블에 있는 모든 데이터를 조회합니다.
+SELECT * FROM Users;
+```
