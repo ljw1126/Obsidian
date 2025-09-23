@@ -225,8 +225,70 @@ Q. TypedResults는 스프링의 ResponseEntity와 같은 걸까요? `Task<IResul
 따라서 `Task<IResult>`는 **"이 메서드는 비동기적으로 실행되며, 최종적으로 HTTP 응답을 나타내는 `IResult` 객체를 반환한다"**는 의미입니다.
 ```
 
+---
+
+### SQL Server Client 설치 
+- [SQL Server 다운로드 | Microsoft](https://www.microsoft.com/ko-kr/sql-server/sql-server-downloads?msockid=3524f9483223634a38d5ef123336626b)
+	- 우선 SQL Server 2022 개발자 설치
+	- [공식 sql-server-samples/samples/tutorials/c#/Windows at master · microsoft/sql-server-samples](https://github.com/microsoft/sql-server-samples/tree/master/samples/tutorials/c%23/Windows) // 안봄
+- [SQL Server Management Studio 설치 | Microsoft Learn](https://learn.microsoft.com/ko-kr/ssms/install/install?redirectedfrom=MSDN)
+	- 이것도 설치해야 하는 듯함
+- Visual Studio용 SSDT(SQL Server Data Tools) 
+	- [SSDT (SQL Server Data Tools)설치 - SQL Server Data Tools (SSDT) | Microsoft Learn](https://learn.microsoft.com/ko-kr/sql/ssdt/download-sql-server-data-tools-ssdt?view=sql-server-ver17&tabs=vs2022)
+	- `선택사항`인듯
+
+
+> SQL Server는 MSSQL을 의미한다 
+> MSSQL은 Microsoft SQL Server의 줄임말
+
+> SSMS가 클라이언트 도구이고, SQL Server (MSSQL)은 DBMS에 해당한다
+
+
+
 
 ---
 
 TODO. [자습서: ASP.NET Core를 사용하여 컨트롤러 기반 웹 API 만들기 | Microsoft Learn](https://learn.microsoft.com/ko-kr/aspnet/core/tutorials/first-web-api?view=aspnetcore-8.0&tabs=visual-studio)
 
+
+1. 닷넷 Marketplace - Theme // 설치후 재시작 필요
+- [Search results - theme | Visual Studio , Visual Studio Marketplace](https://marketplace.visualstudio.com/search?term=theme&target=VS&category=All%20categories&cost=free&vsVersion=vs2022&sortBy=Installs)
+- `[도구 > 테마]`
+
+2. V.S 코파일럿 무료 사용 가이드 
+- [Visual Studio에서 GitHub Copilot 무료 제공 - Visual Studio (Windows) | Microsoft Learn](https://learn.microsoft.com/ko-kr/visualstudio/ide/copilot-free-plan?view=vs-2022)
+- **월별 사용량 제한**
+	- **코드 자동완성(Completions): 월 2,000회**
+	- **Copilot Chat(채팅): 월 50회**
+	- 프리미엄 모델 요청: 월 50회
+
+3. 유용한 플러그인 모음 
+- [Visual studio 2022 확장 추천](https://nanagame2.tistory.com/213)
+- [Reddit - Visual Studio 2022에 제일 좋고 유용한 확장 프로그램 뭐 있어? : r/csharp](https://www.reddit.com/r/csharp/comments/r3b082/best_most_useful_extensions_for_visual_studio_2022/?tl=ko)
+
+ 4. 폰트 변경
+- 네이버 D2 폰트 설치 
+- `[도구 > 옵션 > 환경 > 글꼴 및 색]`에서 글꼴 변경, 크기(`15`)도 조절
+
+ 5. 에디터 줄번호표시
+- `[도구 > 옵션 > 텍스트 편집기 > 모든 언어]` 에서 **줄 번호**✅
+
+```text
+file icon
+https://marketplace.visualstudio.com/items?itemName=MadsKristensen.FileIcons&ssr=false#overview
+
+sonarqube
+https://marketplace.visualstudio.com/items?itemName=SonarSource.SonarLintforVisualStudio2022
+
+Roslynator
+https://marketplace.visualstudio.com/items?itemName=josefpihrt.Roslynator2022
+
+CodeMaid
+https://marketplace.visualstudio.com/items?itemName=SteveCadwallader.CodeMaidVS2022
+
+Viasfora
+https://marketplace.visualstudio.com/items?itemName=TomasRestrepo.Viasfora
+
+CommentsPlus
+https://marketplace.visualstudio.com/search?term=CommentsPlus&target=VS&category=All%20categories&cost=free&vsVersion=vs2022&sortBy=Relevance
+```
