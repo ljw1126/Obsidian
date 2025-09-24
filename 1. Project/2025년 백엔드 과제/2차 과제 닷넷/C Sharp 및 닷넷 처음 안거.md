@@ -68,3 +68,53 @@ builder.Services.AddDbContext<UserDb>(opt => opt.UseSqlServer(builder.Configurat
 	- 2. 의존성 해결 : API 엔드포인트나 컨트롤러가 `UserDb`를 생성자 매개변수로 요청하면, 컨테이너는 이 요청을 감지합니다.
 	- 3. 객체 생성 및 주입 : 컨테이너는 등록된 설정(`opt.UseSqlServer(...)`)을 사용하여 `DbContextOptions<UserDb>` 객체를 생성합니다. 그리고 이 `options` 객체를 `UserDb`의 생성자(`UserDb(DbContextOptions<UserDb> options)`)에 전달하여 `UserDb` 인스턴스를 만들고, 최종적으로 요청한 클래스에 주입해줍니다.
 	- 최종적으로 new 생성자 처리가 필요 없음
+
+### 초과 게시 방지 (Over-posting protection)
+> 엔티티 모델에 민감한 정보가 포함되어 있을 경우, 클라이언트가 악의적으로 해당 정보를 업데이트하는 것을 막기 위한 보안 기법
+- 간단하게 말하자면
+	- 엔티티 그대로 응답하는게 아니라, 불필요한/노출 되면 위험한 정보가 응답되는 걸 방지하기 위해 DTO(Data Transfer Object)로 변환하여 제한한다는 것
+- [공식문서 - Tutorial: Create a controller-based web API with ASP.NET Core | Microsoft Learn](https://learn.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-9.0&tabs=visual-studio#prevent-over-posting)
+
+
+```c#
+namespace TodoApi.Models;
+
+public class TodoItem
+{
+    public long Id { get; set; }
+    public string? Name { get; set; }
+    public bool IsComplete { get; set; }
+    public string? Secret { get; set; }
+}
+```
+
+```c#
+namespace TodoApi.Models;
+
+public class TodoItemDTO
+{
+    public long Id { get; set; }
+    public string? Name { get; set; }
+    public bool IsComplete { get; set; }
+}
+```
+
+### 닷넷 소스 브라우저 
+- [Source Browser](https://source.dot.net/)
+- [microsoft/referencesource: Source from the Microsoft .NET Reference Source that represent a subset of the .NET Framework](https://github.com/microsoft/referencesource)
+
+
+### 닷넷 디버깅 
+- [[프로그래밍Tip] C# .net framework 내부까지 디버깅 해 보자](https://www.youtube.com/watch?v=80P0Zmk3KK0)
+	- 소스 코드를 다운 받아서 인식 해주는 게 있구나.
+
+**✅ Visual Studio 단축키**
+- `F5` : 디버깅 모드로 시작
+- `ctrl + F5` : 일반 시작
+- `F9` : break point(중단점) 설정/해제 ▶️ 커서 위치 기준
+- `F10` : **프로시저(함수 또는 메서드)** 단위로 실행 
+- `F11` : **한 줄** 단위로 실행
+
+> 디버깅 = "문제 해결 능력"
+
+[Visual Studio 디버거 사용하기(C# 프로그래밍 학습을 위한)](https://www.youtube.com/watch?v=DIIe6MVKLTg)
