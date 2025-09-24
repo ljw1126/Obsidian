@@ -118,3 +118,140 @@ public class TodoItemDTO
 > 디버깅 = "문제 해결 능력"
 
 [Visual Studio 디버거 사용하기(C# 프로그래밍 학습을 위한)](https://www.youtube.com/watch?v=DIIe6MVKLTg)
+
+
+### 의존성 주입 확장 메서드
+
+```c#
+using TodoApi.Repositories;
+using TodoApi.Services;
+
+namespace TodoApi.Extensions
+{
+    public static class ServiceCollectionExtensions
+    {
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+        {
+            services.AddScoped<ITodoItemRepository, TodoItemInmemoryRepository>();
+            services.AddScoped<TodoItemService>();
+            return services;
+        }
+    }
+}
+
+```
+- `static` 선언 : 클래스, 메서드
+- `this IServiceCollection services` (핵심✅)
+	- 첫 번째 매개변수 앞에 `this` 키워드를 붙여서 정의하면, 해당 매개변수의 타입에 속한 인스턴스 메서드처럼 호출할 수 있습니다.
+	- C# 컴파일러는 이 구문을 보고 `AddApplicationServices`가 `IServiceCollection` 타입의 확장 메서드임을 인식합니다.
+
+```c#
+// Program.cs 에서 아래와 같이 호출하면
+builder.Services.AddApplicationServices();
+
+// C# 컴파일러는 내부적으로 아래와 같이 변환
+MyServiceExtensions.AddApplicationServices(builder.Services);
+```
+
+이것이 마치 `IServiceCollection` 객체에 `AddApplicationServices`라는 인스턴스 메서드가 있는 것처럼 동작하게 되는 이유입니다. 이 패턴을 통해 개발자는 `Program.cs`의 코드를 간결하고 가독성 높게 유지할 수 있습니다.
+
+
+### Entity Framework 사용시 DB 동기화 
+- powershell에서 커맨드 기반으로 실행 가능
+- 또는 `Program.cs`에서 어플리케이션 실행시 직접 실행하는 형태로 동기화 가능 
+- 💩 JPA의 ddl-auto와 같은 역할이라서 .. 운영환경에서 사용하면 대재앙을 맞이 할 수 있다
+	- 오직 로컬/개발 환경에서만 실행 
+
+```shell
+# 설치
+> dotnet tool install --global dotnet-ef
+
+# 파일 생성
+> dotnet ef migrations add migration1 
+
+# 반영
+> dotnet ef database update // MSSQL 주입
+
+# 파일 삭제 
+> dotnet ef migrations remove
+```
+- Migrations 디렉터리 생성되고 `{날짜시간}_migration1.cs`와 `*Snapsho.cs` 파일 생성됨
+- `.gitignore` 처리도 필요할 듯 하다
+- [ASP.NET Core EF Core - C# 프로그래밍 배우기 (Learn C# Programming)](https://www.csharpstudy.com/web/article/14-ASP-NET-Core-EF-Core)
+- [마이그레이션 개요 - EF Core | Microsoft Learn](https://learn.microsoft.com/ko-kr/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli)
+
+
+> 우선 DbContext 주입이 되지 않는 이슈가 계속 발생한다.. dotnet CLI 실행시 profiles별로 분리되도록 실행하는 방법이 없는지 확인할 필요가 있다. 
+
+
+### Data Annotation in EF Core
+- JPA(ORM 프레임워크)와 비슷한 느낌
+- 이걸 기반으로 DB 마이그레이션을 생성 가능하지 않나 싶다. 
+- 우선 순위는 명시적인게 높다✅
+```c#
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TodoApi.Models
+{
+    [Table("TODO_ITEMS")] // UPPER_SNAKE_CASE라서, 실수하기 딱좋다
+    public class TodoItem
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("ID")]
+        public long Id { get; set; }
+
+        [Column("NAME")]
+        public string? Name { get; set; }
+
+        [Column("IS_COMPLETE")]
+        public bool IsComplete { get; set; }
+
+        [Column("SECRET")]
+        public string? Secret { get; set; }
+    }
+}
+
+```
+
+```c#
+namespace TodoApi.Models
+{
+    public class TodoContext: DbContext
+    {
+        public TodoContext(DbContextOptions<TodoContext> options)
+            : base(options)
+        {
+        }
+
+		//<도메인모델> , TodoItems 는 테이블명 혹은 속성명 
+		// 만약 [Table("..")]이 없으면 해당 속성명으로 테이블 쿼리 날림 
+        public DbSet<TodoItem> TodoItems { get; set; } = null!;
+    }
+}
+
+```
+
+Q. 스프링에서 명시적인 선언이 우선순위가 더 높았는데 닷넷도 그런가 봐요 
+```text
+네, 맞습니다. 스프링과 .NET 모두 명시적인 설정이 컨벤션보다 우선순위가 높습니다.
+
+이는 두 프레임워크가 추구하는 핵심 철학 중 하나입니다. 프레임워크의 규칙(컨벤션)을 따르면 코드를 빠르게 작성할 수 있지만, 복잡한 요구사항이나 기존 시스템과의 통합을 위해서는 개발자가 직접 설정을 정의(명시적 설정)할 수 있는 유연성이 필요하기 때문입니다.
+
+스프링 vs .NET 설정 우선순위
+스프링: @Configuration 클래스나 XML 설정 파일에서 정의된 내용이 기본 컨벤션(예: 빈 이름 자동 생성)보다 우선시됩니다. @Override나 @Qualifier 같은 어노테이션은 명시적인 의존성 주입을 가능하게 합니다.
+
+.NET: 엔티티 프레임워크 코어(EF Core)에서 [Table]이나 [Column]과 같은 데이터 어노테이션이나 OnModelCreating 메서드에서 정의된 Fluent API 설정이 기본 컨벤션(예: 테이블명 복수화, 컬럼명 파스칼 케이스)보다 우선적으로 적용됩니다.
+
+두 프레임워크 모두 개발자가 컨벤션에 의존할지, 아니면 명시적으로 재정의할지 선택할 수 있는 구조를 제공합니다.
+```
+
+
+**참고.**
+- [Data Annotations in Entity Framework Core - Dot Net Tutorials](https://dotnettutorials.net/lesson/data-annotation-attributes-in-entity-framework-core/#google_vignette)
+- [EF Annotation - C# 프로그래밍 배우기 (Learn C# Programming)](https://www.csharpstudy.com/Data/EF-annotation.aspx)
+
+
+### 라우팅 및 URL 경로 
+[자습서: ASP.NET Core를 사용하여 컨트롤러 기반 웹 API 만들기 | Microsoft Learn](https://learn.microsoft.com/ko-kr/aspnet/core/tutorials/first-web-api?view=aspnetcore-8.0&tabs=visual-studio)

@@ -10,7 +10,7 @@
 - `[도구 > NuGet 패키지 관리자 > 솔루션용 NuGet 패키지 관리...]` 실행
 - 닷넷 코어 버전이 v8.x 라서, 동일한 버전대로 설치.
 ```text
-Microsoft.EntityFrameworkCore.SqlServer
+Microsoft.EntityFrameworkCore.SqlServer  // 8.0.20
 Microsoft.EntityFrameworkCore.Tools
 Microsoft.EntityFrameworkCore.Design
 Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore  //추가 설치 

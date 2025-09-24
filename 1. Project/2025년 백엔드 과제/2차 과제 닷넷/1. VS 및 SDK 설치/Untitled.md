@@ -6,6 +6,9 @@
 - [visual studio shortcut cheat sheet](https://visualstudio.microsoft.com/keyboard-shortcuts.pdf)
 - [공식 tip 문서](https://learn.microsoft.com/en-us/visualstudio/ide/default-keyboard-shortcuts-in-visual-studio?view=vs-2022)
 - [공식 유튜브](https://www.youtube.com/watch?v=r3ys7oL9izQ&list=PLdo4fOcmZ0oWunQnm3WnZxJrseIw2zSAk&index=3)
+- [Create a web API with ASP.NET Core controllers - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/build-web-api-aspnet-core/?source=recommendations)
+	- 닷넷 공식 트레이닝 예제
+- [자습서: ASP.NET Core를 사용하여 컨트롤러 기반 웹 API 만들기 | Microsoft Learn](https://learn.microsoft.com/ko-kr/aspnet/core/tutorials/first-web-api?view=aspnetcore-8.0&tabs=visual-studio)
 
 
 **설치**

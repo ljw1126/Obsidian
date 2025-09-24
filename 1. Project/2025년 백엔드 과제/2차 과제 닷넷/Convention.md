@@ -41,6 +41,10 @@
 
 **✅ 레파지토리 패턴**
 - [F-lab - 레포지토리 패턴의 이해와 활용](https://f-lab.ai/en/insight/understanding-repository-pattern-20250305)
+
+✅ 스택 오버플로우 C# 컨벤션
+- [Code style for private methods in C# - Stack Overflow](https://stackoverflow.com/questions/2758684/code-style-for-private-methods-in-c-sharp#:~:text=All%20method%20names%20in%20C%23%20start%20with%20an,asking%20for%20a%20%C2%BBwhy%C2%AB%20is%20a%20little%20misplaced.)
+	- private `_멤버`
 ### xUnit 
 
 
