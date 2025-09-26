@@ -45,6 +45,37 @@
 ✅ 스택 오버플로우 C# 컨벤션
 - [Code style for private methods in C# - Stack Overflow](https://stackoverflow.com/questions/2758684/code-style-for-private-methods-in-c-sharp#:~:text=All%20method%20names%20in%20C%23%20start%20with%20an,asking%20for%20a%20%C2%BBwhy%C2%AB%20is%20a%20little%20misplaced.)
 	- private `_멤버`
+
+컨벤션 가이드 (MS AI)
+
+```text
+1. General Rules
+- Camel Case: Use camel case for local variables and private fields (e.g., myVariable).
+- Descriptive Names: Choose meaningful and descriptive names that clearly indicate the purpose of the variable.
+- Avoid Abbreviations: Avoid using short or unclear abbreviations unless they are widely understood (e.g., use customerId instead of custId).
+- No Special Characters: Variable names should not include special characters except underscores (_) in specific cases (e.g., private fields).
+Avoid Reserved Keywords: Do not use C# reserved keywords as variable names unless prefixed with @ (e.g., @class).
+
+2. Specific Guidelines
+- Local Variables: Use camel case (e.g., totalAmount, isAvailable).
+- Private Fields: Use camel case prefixed with an underscore (_) (e.g., _userName, _isActive).
+- Constants: Use Pascal case with all uppercase letters and underscores for word separation (e.g., MAX_VALUE, DEFAULT_TIMEOUT).
+- Static Fields: Use Pascal case (e.g., GlobalCounter, DefaultSettings).
+
+
+// 예시
+// Local variable
+int totalAmount = 100;
+
+// Private field
+private string _userName;
+
+// Constant
+const int MAX_RETRIES = 5;
+
+// Static field
+public static int GlobalCounter = 0;
+```
 ### xUnit 
 
 
