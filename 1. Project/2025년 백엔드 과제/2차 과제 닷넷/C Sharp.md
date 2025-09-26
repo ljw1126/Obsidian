@@ -1005,3 +1005,606 @@ Console.WriteLine(txt1.Equals(txt2)); // True
 
 4.3.3 모든 배열의 조상 : System.Array
 
+
+표4.4 Array 타입의 멤버
+
+| 멤버       | 타입        | 설명                           |
+| -------- | --------- | ---------------------------- |
+| Rank     | 인스턴스 프로퍼티 | 배열 인스턴스의 차원(dimension) 수를 반환 |
+| Length   | 인스턴스 프로퍼티 | 배열 인스턴스의 요소 수를 반환            |
+| Sort     | 정적 메서드    | -                            |
+| GetValue | 인스턴스 메서드  | 지정된 인덱스의 배열 요소 값을 반환         |
+| Copy     | 정적 메서드    | 배열의 내용을 다른 배열에 복사한다          |
+
+
+```c#
+namespace TodoApi
+{
+    public class ConsoleApp1
+    {
+        private static void OutputArrayInfo(Array arr)
+        {
+            Console.WriteLine("배열의 차원 수 : " + arr.Rank);
+            Console.WriteLine("배열의 요소 수 : " + arr.Length);
+            Console.WriteLine();
+        }
+
+        private static void OutputArrayElements(string title, Array arr)
+        {
+            Console.WriteLine("[" + title + "]");
+            for (int i = 0; i < arr.Length; i++)
+            {
+                Console.Write(arr.GetValue(i) + ",");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine();
+        }
+
+        static void Main(string[] args)
+        {
+            bool[,] boolArray = new bool[,] { { true, false }, { false, true } };
+            OutputArrayInfo(boolArray);
+
+            int[] intArray = new int[] { 5, 4, 3, 2, 1, 0 };
+            OutputArrayInfo(intArray);
+
+            OutputArrayElements("원본 intArray", intArray);
+            Array.Sort(intArray);
+            OutputArrayElements("정렬 후 intArray", intArray);
+
+            int[] copyArray = new int[intArray.Length];
+            Array.Copy(intArray, copyArray, intArray.Length);
+
+            OutputArrayElements("intArray로부터 복사된 copyArray", copyArray);
+        }
+    }
+}
+
+```
+
+```text
+배열의 차원 수 : 2
+배열의 요소 수 : 4
+
+배열의 차원 수 : 1
+배열의 요소 수 : 6
+
+[원본 intArray]
+5, 4, 3, 2, 1,0,
+
+정렬후 
+0, 1, 2, 3, 4, 5,
+
+copyArray
+0, 1, 2, 3, 4, 5
+```
+
+
+**4.3.4 this**✅✅
+- 클래스 내부에 멤버변수에 접근했을때 this를 생략했다고 봐도 무방
+- this 표현을 쓰고 안 쓰고는 개발자의 취향.
+	- 어떤 개발자는 메서드 내에서 멤버 변수에 접근할 떄 그것이 멤버 변수임을 명확히 인식할 수 있게 this를 명시하기도 함
+
+예제 4.15 this를 이용한 생성자 코드 재사용🔖
+
+```c# hl:7,16,23
+class Book
+{
+	string title;
+	decimal isbn13;
+	string author;
+	
+	public Book(string title) : this(title, 0)
+	{
+	}
+	
+	public Book(string title, decimal isbn13)
+		: this(title, isbn13, string.Empty)
+	{
+	}
+	
+	public Book(string title, deciaml isbn13, string author)
+	{
+		this.title = title;
+		this.isbn13 = isbn13;
+		this.author = author;
+	}
+	
+	public Book() : this(string.Empty, 0, string.Empty)
+	{
+	}
+}
+``` 
+
+
+4.3.4.1 this와 인스턴스/정적 멤버의 관계 
+
+```c#
+class Book
+{
+	string title; // 인스턴스 필드
+	static int count; // 정적 필드
+	
+	public Book(strin gtitle) // 인스턴스 생성자
+	{
+		this.title = title; // this로 인스턴스 필드 식별 가능
+		this.Open(); // this로 인스턴스 메서드 식별 가능
+		increment(); // 정적 메서드 사용 가능
+	}
+	
+	void Open() // 인스턴스 메서드
+	{
+		Console.WriteLine(this.title); // 인스턴스 멤버 사용 가능
+		Console.WriteLine(count); // 정적 멤버 사용 가능
+	}
+	
+	public void Close()
+	{
+		Console.WriteLine(this.title + " 책을 덮는다");
+	}
+	
+	static void Increment()
+	{
+		count ++; // 정적 필드 사용 가능
+				  // 정적 메서드에서는 this가 없으므로 인스턴스 멤버 사용 x
+	}
+}
+```
+
+C# 컴파일러는 메서드 호출시 this를 인스턴스 메서드의 첫 번째 인자로 넘겨주는 식으로 구현하고 있따. 
+
+```c# hl:6
+Book book = new Book("");
+book.Close();
+
+// C# 컴파일러가 빌드한 후에 
+Book book = new Book("");
+book.Close(book);
+```
+
+즉 메서드에 해당 객체를 가리키는 인스턴스 변수를 인자로 넘기는 것이다. 그와 동시에 C# 컴파일러는 인스턴스 메서드도 다음과 같이 변환해서 컴파일한다. 
+
+```c# hl:5
+class Book
+{
+	// 생략 
+	
+	public void Close(Book this)
+	{
+		Console.WriteLine(this.title + " 책을 덮는다");
+	}
+}
+```
+
+> 컴파일 후에 this를 사용하는 곳은 저렇게 바꿔주나 보다 🔖
+
+>[!tip] 마법처럼 보였던 this 식별자의 존재는 이처럼 컴파일러의 노력으로 빚어낸 결과다. 이 때문에 모든 인스턴스 메서드는 인자를 무조건 1개 이상 더 받게 돼 있으므로 내부에서 인스턴스 멤버에 접근할 일이 없다면 정적 메서드로 명시하는 것이 성능상 유리할 수 있다.
+
+
+4.3.5 base🔖
+- `this` 예약어가 클래스 인스턴스 자체를 가리키는 것과 달리`base` 예약어는 "부모 클래스"를 명시적으로 가르킴
+- this 와 마찬가지로 부모 클래스의 멤버를 사용할 때 base 키워드가 생략 된것이나 다름없다고 보면 된다. 
+
+```c#
+public class Computer
+{
+	bool powerOn;
+	
+	public void Boot() { }
+	public void Shutdown() { }
+	public void Reset() { }
+}
+
+public class Notebook : Computer
+{
+	bool fingerScan;
+	public bool HashFingerScanDevice() { return fingerScan; }
+	
+	public void CloseLid()
+	{
+		base.Shutdown(); // base 예약어를 명시
+	}
+}
+```
+
+```c# hl:13,17
+class Book
+{
+	decimal isbn13;
+	
+	public Book(decimal isbn13)
+	{
+		this.isbn13 = isbn13;
+	}
+}
+
+class EBook : Book
+{
+	public EBook() : base(0)
+	{
+	}
+	
+	public EBook(decimal isbn) : base(isbn)
+	{
+	}
+}
+
+```
+
+
+### 4.4 다형성 (polymorphism)
+
+```c#
+class Mammal
+{
+	public void Move()
+	{
+		Console.WriteLine("이동한다");
+	}
+}
+
+class Lion : Mammal
+{
+	public void Move()
+	{
+		Console.WriteLine("네 발로 움직인다");
+	}
+}
+
+class Whale : Mammal
+{
+	public void Move()
+	{
+		Console.WriteLine("수영한다");
+	}
+}
+
+class Human : Mammal
+{
+	public void Move()
+	{
+		Console.WriteLine("두 발로 움직인다");
+	}
+}
+```
+
+
+```c#
+Lion lion = new Lion();
+Mammal one = lion; // 부모 타입으로 형변환
+
+one.Move(); // "이동한다" 출력 💩
+```
+
+
+> ✅ virtual과 override 예약어 명시하여 다형성 유지
+
+
+```c# hl:3,11,19,27
+class Mammal
+{
+	virtual public void Move()
+	{
+		Console.WriteLine("이동한다");
+	}
+}
+
+class Lion : Mammal
+{
+	override public void Move()
+	{
+		Console.WriteLine("네 발로 움직인다");
+	}
+}
+
+class Whale : Mammal
+{
+	override public void Move()
+	{
+		Console.WriteLine("수영한다");
+	}
+}
+
+class Human : Mammal
+{
+	override public void Move()
+	{
+		Console.WriteLine("두 발로 움직인다");
+	}
+}
+```
+
+```c#
+Lion lion = new Lion();
+Mammal one = lion; // 부모 타입으로 형변환
+
+one.Move(); // "네 발로 움직인다" 출력 
+
+Human human = new Human();
+Mamal two = human;
+two.Move(); // "두 발로 움직인다" 출력
+```
+
+
+추가적으로 컴파일 경고를 없애려면 다음과 같이 할 수도 있다
+```c#
+class Lion : Mammal
+{
+	new public void Move() { } // 구현 생략
+}
+
+class Whale : Mammal
+{
+	new public void Move() { } // 구현 생략
+}
+
+class Human : Mammal
+{
+	new public void Move() { } // 구현 생략
+}
+```
+
+>[!note] 부모와 자식 클래스에서 동일한 이름의 메서드를 사용하려면 두 가지 중 하나를 선택
+>1. 메서드 오버라이드를 원하는가? 그렇다면 virtual/override를 사용하라 
+>2. 단순히 자식 클래스에서 동일한 이름의 메서드가 필요했떤 것인가? 그렇다면 new를 사용하라
+
+
+4.4.1.1 base를 이용한 메서드 재사용
+
+```c# hl:13
+public class Computer 
+{
+	virtual public void Boot()
+	{
+		Console.WriteLine("메인보드 켜기");
+	}
+}
+
+public class Notebook : Computer
+{
+	override public void Boot()
+	{
+		base.Boot();
+		Console.WriteLine("액정 화면 켜기");
+	}
+}
+```
+
+
+4.4.2 오버로드
+- 메서드 시그니처(method signature)
+	- 말 그대로 서명으로 번역
+	- 일상 생활에서는 서명을 보고 그 주체가 누군인지를 판달할 수 있다.
+	- 마찬가지로 메서드 시그니처는 어떤 메서드를 교유하게 규정할 수 있는 정보를 의미
+
+> [!info] 메서드의 정의 분리
+> - "이름", "반환 타입", "매개변수의 수", "개별 매개변수 타입 "
+> - 위의 것들이 메서드의 "서명"이 된다
+> - "메서드의 시그니처가 동일하다" == "메서드가 같다"로 해석
+
+> 함수 이름만 같고 파라미터, 반환 타입/값이 다른 경우를 메서드 오버로드라고 함
+
+
+4.4.2.2 연산자 오버로드 
+```c#
+public class Kilogram
+{
+	double mass;
+	
+	public Kilogram(double value)
+	{
+		this.mass = value;
+	}
+	
+	public Kilogram Add(kilogram target) 
+	{
+		return new Kilogram(this.mass + target.mass);
+	}
+	
+	public override string ToString() 
+	{
+		return mass + "kg";
+	}
+}
+```
+
+
+▶️ 처음보는 시그니처다..
+```text
+public static 타입 operator 연산자 (타입1 변수명1, 타입2 변수명2)
+{
+	// [타입]을 반환하는 코드
+}
+```
+
+Kilogram의 + 연산자를 재정의하면 다음과 같다
+```c# hl:5,14
+public class Kilogram
+{
+	// 생략
+	
+	public static Kilogram operator +(Kilogram op1, Kilogram op2)
+	{
+		return new Kilogram(op1.mass + op2.mass);
+	}
+}
+
+Kilogram kg1 = new Kilogram(5);
+Kilogram kg2 = new Kilogram(15);
+
+Kilogram kg3 = kg1 + kg2;
+```
+- `+` 연산자가 재정의된 메서드
+- 이를 연산자 오버로드라고 한다
+
+// p175 표 4.5 연산자에 따른 오버로드 가능 여부 (📸)
+
+
+4.4.2.3 클래스 간의 형변환
+```c#
+public class Currency
+{
+	decimal money;
+	public decimal Money { get { return money; } }
+	
+	public Currency(decimal money)
+	{
+		this.money = money;
+	}
+}
+
+public class Won : Currency
+{
+	public Won(decimal money) : base(money) { }
+	
+	public override string ToString() 
+	{
+		return Money + "Won";
+	}
+}
+
+public class Dollar : Currency
+{
+	public Dollar(decimal money) : base(money) { }
+	
+	public override string ToString() 
+	{
+		return Money + "Dollar";
+	}
+}
+
+public class Yen : Currency
+{
+	public Yen(decimal money) : base(money) { }
+	
+	public override string ToString() 
+	{
+		return Money + "Yen";
+	}
+}
+```
+
+
+```c#
+Won won = new Won(1000);
+Dollar dollar = new Dollar(1);
+Yen yen = new Yen(13);
+
+won = yen; // 💩 컴파일 오류, 형변환 실패
+```
+
+> implicit(암시적), explicit(명시적) 예약어를 사용해서 해결 가능
+
+```c# hl:5
+public class Yen : Currency
+{
+	// Yen -> Won 대입
+	static bpulic implicit operator Won(Yen yen)
+	{
+		return new Won(yen.Money * 13m); // m?
+	}
+}
+
+Yen yen = new Yen(100);
+Won won = yen; // implicit(암시적) 형변환 가능
+Won won2 = (Won) yen; // explicit(명시적) 형변환 가능
+
+Console.WriteLine(won); // 1300Won
+```
+
+
+```c# hl:3
+public class Dollar : Currency 
+{
+	static bpulic explicit operator Won(Dollar dollar)
+	{
+		return new Won(dollar.Money * 1000m);
+	}
+}
+
+Dollar dollar = new Dollar(1);
+Won won = dollar; // implicit(암시적) 형변환 x (컴파일 오류)
+Won won2 = (Won)dollar; // explicit(명시적) 형변환
+
+Console.WriteLine(won2); // 1000Won
+```
+
+
+### 4.5 C#의 클래스 확장
+
+4.5.1.1 중첩 클래스 
+```c#
+public class HardDisk
+{
+	class Platter // 접근 제어자 생략시 private로 지정됨
+	{
+	}
+	
+	class Head
+	{
+	}
+	
+	Platter[] platter;
+	Head head;
+}
+```
+
+4.5.1.2 추상 클래스 
+- 추상 메서드는 private 선언 x
+- 추상 클래스는 new로 인스턴스화 x
+	- 만약 추사 을래스가 new를 통해 존재한다면 추상 메서드를 호출하는 경우 어떤 식으로 동작할지 예측할 수 없을 것이다. 추상 클래스에 반드시 추상 메서드가 포함돼 있어야 하는 것은 아니지만 그래도 여전히 추상 클래스는 new로 인스턴스화할 수 x
+
+```c# hl:18,20
+class Point
+{
+	int x, y;
+	
+	public Point(int x, int y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+	
+	public override string ToString()
+	{
+		return "x : " + x + ", y : " + y; 
+	}
+}
+
+// 추상 클래스
+abstract class DrawingObject
+{
+	public abstract void Draw(); // 추상 메서드
+	
+	public void Move() { Console.WriteLine("Move"); }
+}
+
+class Line : DrawingObject 
+{
+	Point p1, p2;
+	
+	public Line(Point p1, Point p2)
+	{
+		this.p1 = p1;
+		this.p2 = p2;
+	}
+	
+	public override void Draw()
+	{
+		Console.WriteLine("Line : " + p1.ToString() + " ~ " + p2.ToString());
+	}
+}
+```
+
+
+4.5.1.3 델리게이트 (p183 ~ 200)
+
+
+4.5.1.4 인터페이스 (p201 ~ 216)
+
+
+4.5.1.5 구조체 (p216 ~ 232)
+
+
+4.5.1.6 열거형 (p232)
