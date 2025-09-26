@@ -255,3 +255,76 @@ Q. 스프링에서 명시적인 선언이 우선순위가 더 높았는데 닷�
 
 ### 라우팅 및 URL 경로 
 [자습서: ASP.NET Core를 사용하여 컨트롤러 기반 웹 API 만들기 | Microsoft Learn](https://learn.microsoft.com/ko-kr/aspnet/core/tutorials/first-web-api?view=aspnetcore-8.0&tabs=visual-studio)
+
+
+### 생성자 초기화 문법
+
+```c#
+namespace TodoApi.Repositories
+{
+    public class TodoItemInmemoryRepository : ITodoItemRepository
+    {
+        private readonly TodoContext _dbContext;
+
+        public TodoItemInmemoryRepository(TodoContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+ 
+       
+        //..
+	}
+}
+```
+
+리팩터링1. 생성자에 식 본문 사용 
+```c#
+public TodoItemInmemoryRepository(TodoContext dbContext) => _dbContext = dbContext;
+```
+
+리팩터링2. 기본 생성자 사용 
+```c#
+namespace TodoApi.Repositories
+{
+    public class TodoItemInmemoryRepository(TodoContext dbContext) : ITodoItemRepository
+    {
+        private readonly TodoContext _dbContext = dbContext;
+	     
+		//..   
+	}
+}
+```
+
+
+### 레코드 타입
+
+```c#
+public record TodoItemDto(long Id, string? Name, bool IsComplete);
+
+// TodoItemsController.cs
+private static TodoItemDto ItemToDto(TodoItem todoItem) =>
+    new(todoItem.Id, todoItem.Name, todoItem.IsComplete);
+```
+- **위치 기반 초기화 (Positional Initialization)** 또는 **생성자 초기화 (Constructor Initialization)** 라고 부릅니다. 이는 `record`의 주 생성자(Primary Constructor)가 정의된 순서대로 값을 전달하여 초기화합니다.
+
+아래와 같이 선언하는 경우
+```c#
+public class TodoItemDTO
+{
+	public long Id { get; set; }
+	public string? Name { get; set; }
+	public bool IsComplete { get; set; }
+}
+
+private static TodoItemDTO ItemToDto(TodoItem todoItem) =>
+new TodoItemDTO
+{
+	Id = todoItem.Id,
+	Name = todoItem.Name,
+	IsComplete = todoItem.IsComplete
+};
+```
+
+
+🔖 [(공식문서)개체 이니셜라이저를 사용하여 개체를 초기화하는 방법 - C# | Microsoft Learn](https://learn.microsoft.com/ko-kr/dotnet/csharp/programming-guide/classes-and-structs/how-to-initialize-objects-by-using-an-object-initializer)
+

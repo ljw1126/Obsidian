@@ -73,7 +73,7 @@ private string _userName;
 // Constant
 const int MAX_RETRIES = 5;
 
-// Static field
+// Static field, 정적 필드
 public static int GlobalCounter = 0;
 ```
 ### xUnit 
