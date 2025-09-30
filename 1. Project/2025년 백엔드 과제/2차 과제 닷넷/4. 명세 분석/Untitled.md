@@ -221,6 +221,60 @@ namespace ShipParticularsApi.Contexts
 > dotnet ef migrations remove
 ```
 
+---
+
+### 플로우 차트 (재작성)
+- Yes/No가 반대라서 mermaid로 차트 그려보면서 반전
+
+```text
+---
+config:
+  theme: mc
+  layout: dagre
+  look: neo
+---
+flowchart TD
+    A(["API 요청"]) --> B{"AIS Toggle On ?"}
+    B -- Yes --> C{"Exist Service?"}
+        C -- Yes --> G{"GPS Toggle On ?"}
+        C -- No --> E["Add SHIP_SERVICE"]
+    B -- No --> D{"Exist Service?"}
+        D -- Yes --> F["Delete SHIP_SERVICE"]
+        D -- No --> G
+    E --> G
+    F --> G
+    G -- Yes --> H{"Exist Service ?"}
+        H -- Yes --> K
+        H -- No --> J
+        J["ADD SHIP_SERVICE"]
+        J --> K
+        K{"Use SK Tellink?"}
+        K -- Yes --> L
+        K -- No --> O
+        L["Add SK_TELINK_COMPANY_SHIP"]
+        L --> O
+    G -- No --> I{"Exist Service ?"}
+        M["Delete SHIP_SERVICE"]
+        I -- Yes --> M
+        I -- No --> O
+        M --> O
+
+
+    O["Upsert SHIP_INFO"]
+    P["Upsert REPLACE_SHIP_NAME"]
+    Q["Upsert SHIP_MODEL_TEST"]
+    R["Upsert SHIP_SATELLITE"]
+    S["Update SHIP_SERVICE"]
+    Z["End"]
+
+    O --> P
+    P --> Q
+    Q --> R
+    R --> S
+    S --> Z
+```
+
+<img src="비즈니스로직-플로우차트.png">
 
 
 ---
@@ -236,4 +290,5 @@ namespace ShipParticularsApi.Contexts
 [관계 소개 - EF Core | Microsoft Learn](https://learn.microsoft.com/ko-kr/ef/core/modeling/relationships)
 - 연관 관계에 대한 내용 
 	- 일대다, 일대일, 다대일, 다대다
+
 
