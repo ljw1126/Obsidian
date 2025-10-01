@@ -5,6 +5,8 @@
 - DbContext는 thread-safe 하지 않다. 공유하면 멸망할 수 있다는듯
 	- [DbContext 수명, 구성 및 초기화 - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/)
 		- DbContext의 생명주기에 대해 간단히 언급. single unit-of-work 동안 인스턴스가 사용된다네 .
+- JPA는 수정시 더티 체킹을 해줘서 트랜잭션 생명 주기 끝날 때 쯤 save 호출해준다 
+	- 반면 E.F Core에서는 엔티티 속성 변경 후 명시적으로 SaveChangesAsync() 호출해야 동기화가 맞춰진다. 
 
 
 **SHIP PARTICULAR**

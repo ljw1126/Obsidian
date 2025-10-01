@@ -160,6 +160,182 @@ namespace ShipParticularsApi.Tests
 ### 테스트 데이터 관련..
 
 
+---
+
+C# 기본값과 "값이 제공되지 않음"을 의미하는 null과 구분되지 않아 발생하는 문제를 "Sentinel Value 문제"가 확인됨 
+
+```c#
+// ShipInfo 
+[Column("IS_SERVICE")]
+public bool IsService { get; set; } // bool 기본값이 false라서 0이 할당됨 (Fluent API 기본값 설정 적용 x)
+
+[Column("IS_SERVICE")]
+public bool? IsService { get; set; } // 초기화 하지 않을 경우 null 할당되서 1 기본 저장
+```
+
+
+```c#
+ [Fact]
+ public async Task CacheTest()
+ {
+     await using var context = CreateContext();
+
+     var newShip = new ShipInfo
+     {
+         ShipKey = "CREATE01",
+         ShipName = "New Vessel",
+         Callsign = "CALL01"
+     };
+
+     context.ShipInfos.Add(newShip);
+     await context.SaveChangesAsync();
+
+	 // Id 값으로 맵핑되어 있는 캐시 객체를 조회
+     var savedShip = await context.ShipInfos.SingleAsync(s => s.Id == newShip.Id);
+
+     Assert.Same(newShip, savedShip); // 주소 값이 같다. (캐싱을 읽어옴)
+     Assert.Equal("-", savedShip.ShipType); // 기본값 할당
+     Assert.True(savedShip.IsService); // 마찬가지로 기본값 할당
+ }
+```
+- 기본적으로 저장시 PK값을 DB에서 읽어와 할당하는 형태
+- `ShipInfo.IsService`, `ShipInfo.ShipType`을 nullable로 선언해둠
+	- ▶️ 저장시 쿼리에서 null 필드를 제외하고, DB에서는 기본값이 할당됨
+	- ▶️ SaveChangesAsync()는 DB로부터 반환받은 값들을 사용하여, 추적하고 있던 원본 C# 객체의 속성을 업데이트한다.
+	- ▶️ 고로 nullable 선언된 `ShipInfo.IsService = true(1)`, `ShipInfo.ShipType = '-'` 기본값이 업데이트 된다.
+		- nullable이고, Fluent API로 기본값이 설정되어 있으면 저장 후 불러와 업데이트 해준다!
+
+> Fluent API를 사용하지 않는다고 했는데 .. 테이블에 default랑 nullable 설정이 잘되어 있고, 엔티티 모델에도 nullable (?) 표기 및 초기화만 잘 한다면 데이터 오류가 발생하거나 하지는 않을거 같다.
+
+---
+### SQLite 테스트 골격 
+🏠[EntityFramework.Docs/samples/core/Testing/TestingWithoutTheDatabase/SqliteInMemoryBloggingControllerTest.cs at live · dotnet/EntityFramework.Docs](https://github.com/dotnet/EntityFramework.Docs/blob/live/samples/core/Testing/TestingWithoutTheDatabase/SqliteInMemoryBloggingControllerTest.cs#L50)
+
+```c#
+namespace ShipParticularsApi.Tests
+{
+    public class BasicCrudTests : IDisposable
+    {
+        private readonly SqliteConnection _connection;
+        private readonly DbContextOptions<ShipParticularsContext> _options;
+        private readonly ITestOutputHelper _output;
+        // NOTE: beforeEach
+        public BasicCrudTests(ITestOutputHelper output)
+        {
+            _output = output;
+
+            _connection = new SqliteConnection("DataSource=:memory:");
+            _connection.Open();
+
+            _options = new DbContextOptionsBuilder<ShipParticularsContext>()
+                .UseSqlite(_connection)
+                .Options;
+
+            var context = new ShipParticularsContext(_options);
+            context.Database.EnsureCreated();
+        }
+
+        // NOTE: AfterEach
+        public void Dispose() => _connection.Dispose();
+
+        ShipParticularsContext CreateContext() => new(_options);
+        
+        // 테스트 작성
+	}
+}
+```
+- memory를 사용하기 때문에 테스트마다 초기화하게 된다.
+- 처음에 Migrations/Update 명령어를 실행했을때 `*.db`가 생성 되었는데, 로컬에 H2 디비 올려서 실행하는 것과 비슷하다고 생각하면 되는 듯하다.
+
+---
+
+### 쿼리 출력 
+
+```c#
+public class NavigationPropertyTests
+{
+    private readonly SqliteConnection _connection;
+    private readonly DbContextOptions<ShipParticularsContext> _options;
+    private readonly ITestOutputHelper _output;
+
+    // NOTE: beforeEach
+    public NavigationPropertyTests(ITestOutputHelper output)
+    {
+        _output = output;
+
+        _connection = new SqliteConnection("DataSource=:memory:");
+        _connection.Open();
+
+        _options = new DbContextOptionsBuilder<ShipParticularsContext>()
+            .UseSqlite(_connection)
+            // 모든 로그를 _output(xUnit의 테스트별 출력)으로 보내도록 설정합니다.
+            .LogTo(message => _output.WriteLine(message), LogLevel.Information)
+            // (선택사항) 민감한 데이터(파라미터 값) 로깅 활성화. 디버깅 시에만 사용하세요.
+            .EnableSensitiveDataLogging()
+            .Options;
+
+        var context = new ShipParticularsContext(_options);
+        context.Database.EnsureCreated();
+    }
+
+    // NOTE: AfterEach
+    public void Dispose() => _connection.Dispose();
+
+    ShipParticularsContext CreateContext() => new(_options);
+    
+    // 테스트 .. 
+}
+```
+
+---
+
+### Include 사용 여부
+- ShipInfo (부모)
+	- ReplaceShipName (자식) : 일대일
+	- ShipService(자식) : 일대다
+
+DbContext에서 Include 사용하지 않는 경우 null로 할당된다.
+```text
+SELECT "s"."id",  
+       "s"."callsign",  
+       "s"."external_ship_id",  
+       "s"."is_service",  
+       "s"."is_use_ais",  
+       "s"."is_use_ktsat",  
+       "s"."ship_code",  
+       "s"."ship_key",  
+       "s"."ship_name",  
+       "s"."ship_type"  
+FROM   "ship_info" AS "s"  
+WHERE  "s"."ship_key" = 'SHIP01'  
+LIMIT  2     // SingleAsync() 의 안전 장치, 2개 이상이면 예외 던진다
+```
+
+DbContext에서 Include 사용하는 경우 
+```text
+SELECT "t"."ID", "t"."CALLSIGN", "t"."EXTERNAL_SHIP_ID", "t"."IS_SERVICE", "t"."IS_USE_AIS", "t"."IS_USE_KTSAT", "t"."SHIP_CODE", "t"."SHIP_KEY", "t"."SHIP_NAME", "t"."SHIP_TYPE", "t"."ID0", "s0"."ID", "s0"."IS_COMPLETED", "s0"."SERVICE_NAME", "s0"."SHIP_KEY", "t"."REPLACED_SHIP_NAME", "t"."SHIP_KEY0"
+      FROM (
+          SELECT "s"."ID", "s"."CALLSIGN", "s"."EXTERNAL_SHIP_ID", "s"."IS_SERVICE", "s"."IS_USE_AIS", "s"."IS_USE_KTSAT", "s"."SHIP_CODE", "s"."SHIP_KEY", "s"."SHIP_NAME", "s"."SHIP_TYPE", "r"."ID" AS "ID0", "r"."REPLACED_SHIP_NAME", "r"."SHIP_KEY" AS "SHIP_KEY0"
+          FROM "SHIP_INFO" AS "s"
+          LEFT JOIN "REPLACE_SHIP_NAME" AS "r" ON "s"."SHIP_KEY" = "r"."SHIP_KEY"
+          WHERE "s"."SHIP_KEY" = 'SHIP01'
+          LIMIT 2
+      ) AS "t"
+      LEFT JOIN "SHIP_SERVICE" AS "s0" ON "t".
+... <잘림>
+```
+
+
+---
+### xUnit 테스트 동등성, 동일성
+- `동등성`은 주소값이 다르더라도 정의된 필드 값이 같으면 같은 객체 (equality)
+	- Assert.Equal(..)
+- `동일성`은 값(주소 값)이 같다면 동일하다고 판변
+	- Assert.Same(..)
+
+🏠 [xUnit Assert basics: True/False, Equal, Same, Matches](https://www.roundthecode.com/dotnet-tutorials/xunit-assert-basics-true-false-equal-same-other-methods)
+- 이외에도 여러 메서드를 지원하는 것으로 보인다.
+
 
 ---
 ### Migration, Update 명령어 
