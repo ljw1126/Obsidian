@@ -15,6 +15,12 @@ Microsoft.EntityFrameworkCore.SqlServer  // 8.0.20
 Microsoft.EntityFrameworkCore.Tools
 Microsoft.EntityFrameworkCore.Design
 Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore  //추가 설치 
+
+// SQLite 사용시 추가 (v8.0.20)
+Microsoft.EntityFrameworkCore.Sqlite 
+
+// 지연 로딩 사용시 추가 (v8.0.20)
+Microsoft.EntityFrameworkCore.Proxies
 ```
 
 **단위 테스트 관련**
@@ -313,17 +319,136 @@ LIMIT  2     // SingleAsync() 의 안전 장치, 2개 이상이면 예외 던�
 
 DbContext에서 Include 사용하는 경우 
 ```text
-SELECT "t"."ID", "t"."CALLSIGN", "t"."EXTERNAL_SHIP_ID", "t"."IS_SERVICE", "t"."IS_USE_AIS", "t"."IS_USE_KTSAT", "t"."SHIP_CODE", "t"."SHIP_KEY", "t"."SHIP_NAME", "t"."SHIP_TYPE", "t"."ID0", "s0"."ID", "s0"."IS_COMPLETED", "s0"."SERVICE_NAME", "s0"."SHIP_KEY", "t"."REPLACED_SHIP_NAME", "t"."SHIP_KEY0"
+ SELECT "t"."ID", "t"."CALLSIGN", "t"."EXTERNAL_SHIP_ID", "t"."IS_SERVICE", "t"."IS_USE_AIS", "t"."IS_USE_KTSAT", "t"."SHIP_CODE", "t"."SHIP_KEY", "t"."SHIP_NAME", "t"."SHIP_TYPE", "t"."ID0", "s0"."ID", "s0"."IS_COMPLETED", "s0"."SERVICE_NAME", "s0"."SHIP_KEY", "t"."REPLACED_SHIP_NAME", "t"."SHIP_KEY0"
       FROM (
           SELECT "s"."ID", "s"."CALLSIGN", "s"."EXTERNAL_SHIP_ID", "s"."IS_SERVICE", "s"."IS_USE_AIS", "s"."IS_USE_KTSAT", "s"."SHIP_CODE", "s"."SHIP_KEY", "s"."SHIP_NAME", "s"."SHIP_TYPE", "r"."ID" AS "ID0", "r"."REPLACED_SHIP_NAME", "r"."SHIP_KEY" AS "SHIP_KEY0"
           FROM "SHIP_INFO" AS "s"
           LEFT JOIN "REPLACE_SHIP_NAME" AS "r" ON "s"."SHIP_KEY" = "r"."SHIP_KEY"
           WHERE "s"."SHIP_KEY" = 'SHIP01'
-          LIMIT 2
+          LIMIT 2 // SinglrAsync() 안전 장치 .. 
       ) AS "t"
-      LEFT JOIN "SHIP_SERVICE" AS "s0" ON "t".
-... <잘림>
+      LEFT JOIN "SHIP_SERVICE" AS "s0" ON "t"."SHIP_KEY" = "s0"."SHIP_KEY"
+      ORDER BY "t"."ID", "t"."ID0"
 ```
+- SHIP_INFO와 SHIP_SERVICE는 일대다의 관계인데 .. 지연 전략을 사용해야 하지 않나 싶다. 
+	- 페이징 이슈, 메모리 초과, 데이터 정합성
+
+---
+### 지연 로딩
+- 지연 로딩 기능을 사용하기 위해서는 프록시 패키지와 함께 엔티티 모델에 virtual이 선언되어 있어야 한다.
+- `> dotnet add package Microsoft.EntityFrameworkCore.Proxies` 설치 후 DbContext 옵션 설정에 `.UseLazyLoadingProxies()` 추가
+- 프록시 패키지 없는 상태에서 virtual 붙여도 지연 로딩이 동작하지 않는다. 
+	- 그렇다고 해서 일대다 관계에서 Include() 호출하게 되면 "다"를 기준으로 뻥튀기 되는 이슈 발생
+
+```c#
+ [Table("SHIP_INFO")]
+ [Index(nameof(ShipKey), IsUnique = true)]
+ public class ShipInfo
+ {
+	 // ..
+	 
+	public virtual ReplaceShipName? ReplaceShipName { get; set; }
+	public virtual ShipModelTest? ShipModelTest { get; set; }
+	public virtual ShipSatellite? ShipSatellite { get; set; }
+	public virtual ICollection<ShipService>? ShipServices { get; set; }
+	public virtual SkTelinkCompanyShip? SkTelinkCompanyShip { get; set; }
+ }
+```
+
+설정 활성화 하기 전이기 때문에 SHIP_SERVICE는 테스트별로 Null 확인된다.
+```c#
+[Fact]
+public async Task Test1()
+{
+    // Arrange
+    await using (var arrangeContext = CreateContext())
+    {
+        List<ShipService> shipServices = [];
+        shipServices.Add(new ShipService { ShipKey = "SHIP01", ServiceName = "cctv", IsCompleted = true });
+        shipServices.Add(new ShipService { ShipKey = "SHIP01", ServiceName = "eu-mrv", IsCompleted = true });
+        shipServices.Add(new ShipService { ShipKey = "SHIP01", ServiceName = "noon-report", IsCompleted = false });
+
+        var shipInfo = new ShipInfo
+        {
+            ShipKey = "SHIP01",
+            ShipName = "New Vessel",
+            Callsign = "CALL01",
+            ReplaceShipName = new ReplaceShipName { ShipKey = "SHIP01", ReplacedShipName = "Next Vessel" },
+            ShipServices = shipServices
+        };
+
+        arrangeContext.ShipInfos.Add(shipInfo);
+        await arrangeContext.SaveChangesAsync();
+    }
+
+    // Act, Assert
+    await using (var assertContext = CreateContext())
+    {
+        var retrevedShipInfo = await assertContext.ShipInfos.SingleAsync(s => s.ShipKey == "SHIP01");
+        var services = retrevedShipInfo.ShipServices;
+        var replaceShipName = retrevedShipInfo.ReplaceShipName;
+
+        Assert.Null(services);
+        Assert.Null(replaceShipName);
+    }
+}
+
+[Fact]
+public async Task Test2()
+{
+    // Arrange
+    await using (var arrangeContext = CreateContext())
+    {
+        List<ShipService> shipServices = [];
+        shipServices.Add(new ShipService { ShipKey = "SHIP01", ServiceName = "cctv", IsCompleted = true });
+        shipServices.Add(new ShipService { ShipKey = "SHIP01", ServiceName = "eu-mrv", IsCompleted = true });
+        shipServices.Add(new ShipService { ShipKey = "SHIP01", ServiceName = "noon-report", IsCompleted = false });
+
+        var shipInfo = new ShipInfo
+        {
+            ShipKey = "SHIP01",
+            ShipName = "New Vessel",
+            Callsign = "CALL01",
+            ReplaceShipName = new ReplaceShipName { ShipKey = "SHIP01", ReplacedShipName = "Next Vessel" },
+            ShipServices = shipServices
+        };
+
+        arrangeContext.ShipInfos.Add(shipInfo);
+        await arrangeContext.SaveChangesAsync();
+    }
+
+    // Act, Assert
+    await using (var assertContext = CreateContext())
+    {
+        var retrevedShipInfo = await assertContext.ShipInfos
+            .Include(s => s.ReplaceShipName)
+            .SingleAsync(s => s.ShipKey == "SHIP01");
+        var services = retrevedShipInfo.ShipServices; // 지연로딩 호출 x
+        var replaceShipName = retrevedShipInfo.ReplaceShipName; 
+
+        Assert.Null(services);
+        Assert.NotNull(replaceShipName);
+    }
+}
+```
+
+
+```text
+System.InvalidOperationException : Property 'ReplaceShipName.ShipInfo' is not virtual. 'UseChangeTrackingProxies' requires all entity types to be public, unsealed, have virtual properties, and have a public or protected constructor. 'UseLazyLoadingProxies' requires only the navigation properties be virtual.
+```
+- navigation properteis는 be virtual , public or protected가 되야 한다
+- 전체 엔티티에 navigation property에 virual을 추가하여 해결 
+
+
+💩 직렬화 순환 참조 이슈 
+```text
+    Actual:   [ShipServiceProxy { Id = 1, IsCompleted = True, LazyLoader = LazyLoader { }, ServiceName = "cctv", ShipInfo = ShipInfoProxy { Callsign = "CALL01", ExternalShipId = null, Id = 1, IsService = True, IsUseAis = False, ··· }, ··· }, ShipServiceProxy { Id = 2, IsCompleted = True, LazyLoader = LazyLoader { }, ServiceName = "eu-mrv", ShipInfo = ShipInfoProxy { Callsign = "CALL01", ExternalShipId = null, Id = 1, IsService = True, IsUseAis = False, ··· }, ··· }, ShipServiceProxy { Id = 3, IsCompleted = False, LazyLoader = LazyLoader { }, ServiceName = "noon-report", ShipInfo = ShipInfoProxy { Callsign = "CALL01", ExternalShipId = null, Id = 1, IsService = True, IsUseAis = False, ··· }, ··· }]
+```
+- 지연로딩 테스트 과정에서 테스트 실패시 위와 같은 순환 참조 형태로 로그가 출력이 됨
+- Program.cs 에 순환 참조 해제 옵션을 걸었으나, 테스트와는 전혀 상관없어 적용이 안됨
+- 지연 로딩과 테스트 실패의 문제라기 보다는.. 양방향 관계의 순환참조가 본질적인 문제로 보임 
+	- 직렬화 함수를 따로 만들어서 사용하는 것을 권장하나 테스트 의도에서 벗어남 .. 
+	- ✅`Include() + AsSplitQuery()` 최적화 방식 사용
 
 
 ---
