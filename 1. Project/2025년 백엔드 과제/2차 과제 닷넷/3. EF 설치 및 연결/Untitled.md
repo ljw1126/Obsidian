@@ -32,12 +32,18 @@ Microsoft.NET.Test.Sdk // 17.14.1
 code-first 방식으로 C# 기반 엔티티 클래스 생성 후 
 ```shell
 // 프로젝트 루트 디렉터리로 이동
-> dotnet ef migration add initialCreate
+> dotnet ef migrations add initialCreate
 
 > dotnet ef database update
 
 > dotnet ef migrations remove
 ```
+
+엔티티 모델을 업데이트 후에 동기화하려고 할때
+- Migrations 폴더와 디비 테이블 기반으로 히스토리를 관리한다
+- 그래서 수동으로 Migrations 폴더 지우고 업데이트를 할 경우 히스토리가 맞지 않아 에러가 출력된다. 
+- 최초 동기화한 이후에 누적해서 쌓아가야 한다.
+
 
 ---
 
