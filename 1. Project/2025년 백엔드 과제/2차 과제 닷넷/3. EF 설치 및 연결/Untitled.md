@@ -1,4 +1,5 @@
 
+🏠 [Installing Entity Framework Core - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/get-started/overview/install)
 
 ### 💣 마이그레이션 생성 및 DB 업데이트 
 - 개발/테스트 환경에서는 괜찮지만, 운영 환경에서는 재앙을 일으킬 수 있다. ☠️☠️
@@ -27,6 +28,139 @@ Microsoft.NET.Test.Sdk // 17.14.1
 	- 진짜 위에 3개 설치한다 
 	- xUnit.net v2를 지금 설치한거고 v3가 나온 상태인듯하다
 
+**FluentAssertions**
+- 🏠 [Fluent Assertions - Fluent Assertions](https://fluentassertions.com/)
+
+> 우선 보류 .. 테스트 작성한 다음에 나중에 도입 고려해보는 형태로 가자
+
+
+**SQLite** 
+- SQLite는 Spring으로 치면 H2 DB에 해당
+
+```shell
+> dotnet add package Microsoft.EntityFrameworkCore.Sqlite // 8.0.20
+```
+
+`Progame.cs`에서 우선은 하드코딩 형태로 변경
+```c#
+builder.Services.AddDbContext<ShipParticularsContext>(options
+=> options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+```
+
+```shell
+> dotnet ef migrations add InitialCreateSqlite
+
+> dotnet ef migrations remove
+```
+- 💩 앞에 MSSQL 작업했던게 남아서 `nvarchar(max)` 문법이 SQLite 문법으로 변환되지 않아 실패 발생 
+	- migrations가 앞에 작업에 영향을 받는다함 .. 
+	- 그래서 디렉터리 삭제후 다시 생성 및 업데이트하여 처리
+
+SQLite는 단순한 동적 타입 시스템을 사용, 주로 5가지 타입만 존재함
+ ┌─────────────┬────────────────────────┬────────────────────────────────────────────────┐
+  │ SQLite 타입 │ C# 타입과 맵핑되는 예  │ 설명                                           │
+  ├─────────────┼────────────────────────┼────────────────────────────────────────────────┤
+  │ `TEXT`        │ string, DateTime, Guid │ 문자열, 날짜, GUID 등을 저장합니다.            │
+  │ `INTEGER`     │ int, long, bool        │ 정수, 참/거짓 값을 저장합니다.                 │
+  │ `REAL`        │ float, double          │ 부동 소수점 숫자를 저장합니다.                 │
+  │ `NUMERIC`     │ decimal                │ decimal과 같이 정확한 숫자 값을 저장합니다.    │
+  │ `BLOB`        │ byte[]                 │ 바이너리 데이터(이미지, 파일 등)를 저장합니다. │
+  └─────────────┴────────────────────────┴────────────────────────────────────────────────┘
+- 프로젝트 루트 디렉터리에 `ShipParticulars.db` 생성됨 
+	- 버전마다 경로가 다를 수 있다하네 (이전: `{프로젝트 루트}/bin/Debug/net8.0/`)
+
+SQLite Browser 설치 
+- [Downloads - DB Browser for SQLite](https://sqlitebrowser.org/dl/)
+- 루트 디렉터리에 생성된 `ShipParticulars.db` 열면 GUI 도구 통해 확인 가능
+
+<img src="sqlite browser 설치.png">
+
+---
+
+### 테스트 콘솔 출력
+- xUnit 테스트 실행 중에 `Console.WriteLine(..)` 출력은 기본적으로 숨기도록 동작 
+- 콘솔 출력 확인할 수 있는 방법 2가지
+	- 1. `dotnet test` 명령어를 직접 실행하여 실패한 테스트에 한해서 콘솔 출력이 확인가능 
+		- `--logger` 옵션 추가해 상세하게 확인 가능 
+		- `dotnet test --logger "console;verbosity=detailed"`
+	- 2. `ITestOutputHelper` 사용 (xUnit에서 권장하는 방식)
+		- xUnit은 콘솔에 직접 출력하는 대신, 테스트별로 격리된 출력 버퍼를 제공함
+		- 생성자 주입 방식으로 초기화하여 사용 (아래 코드 참고)
+		  
+```c#
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using ShipParticularsApi.Contexts;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace ShipParticularsApi.Tests
+{
+    public class BasicCrudTests : IDisposable
+    {
+        private readonly ITestOutputHelper _output; // ✅
+        private readonly SqliteConnection _connection;
+        private readonly ShipParticularsContext _context;
+
+        // NOTE: beforeEach
+        public BasicCrudTests(ITestOutputHelper output)
+        {
+            _output = output;
+            _connection = new SqliteConnection("DataSource=:memory:");
+            _connection.Open();
+
+            var options = new DbContextOptionsBuilder<ShipParticularsContext>()
+                .UseSqlite(_connection)
+                .Options;
+
+            _context = new ShipParticularsContext(options);
+            _context.Database.EnsureCreated();
+
+            _output.WriteLine("초기화(beforeEach)");
+        }
+
+        [Fact]
+        public void Test1()
+        {
+            int a = 1;
+            int b = 2;
+
+            int actual = a + b;
+
+            Assert.Equal(3, actual);
+            _output.WriteLine("Test1");
+        }
+
+        [Fact]
+        public void Test2()
+        {
+            int a = 1;
+            int b = 2;
+
+            int actual = b - a;
+
+            Assert.Equal(1, actual);
+            _output.WriteLine("Test2");
+        }
+
+        // NOTE: AfterEach
+        public void Dispose()
+        {
+            _context.Dispose();
+            _output.WriteLine("자원 해제(afterEach)");
+        }
+    }
+}
+
+```
+- "테스트 탐색기"에서 "테스트 세부 정보 요약" 창에 출력이됨
+
+---
+
+### 테스트 데이터 관련..
+
+
+
 ---
 ### Migration, Update 명령어 
 code-first 방식으로 C# 기반 엔티티 클래스 생성 후 
@@ -42,7 +176,7 @@ code-first 방식으로 C# 기반 엔티티 클래스 생성 후
 엔티티 모델을 업데이트 후에 동기화하려고 할때
 - Migrations 폴더와 디비 테이블 기반으로 히스토리를 관리한다
 - 그래서 수동으로 Migrations 폴더 지우고 업데이트를 할 경우 히스토리가 맞지 않아 에러가 출력된다. 
-- 최초 동기화한 이후에 누적해서 쌓아가야 한다.
+- ✅ 최초 동기화한 이후에 누적해서 쌓아가야 한다.
 
 
 ---
