@@ -355,7 +355,7 @@ DbContext에서 Include 사용하는 경우
  }
 ```
 
-설정 활성화 하기 전이기 때문에 SHIP_SERVICE는 테스트별로 Null 확인된다.
+프록시 패키지 설치 및 설정 활성화 하기 전이기 때문에 SHIP_SERVICE는 테스트별로 Null 확인된다.
 ```c#
 [Fact]
 public async Task Test1()
@@ -437,7 +437,7 @@ public async Task Test2()
 System.InvalidOperationException : Property 'ReplaceShipName.ShipInfo' is not virtual. 'UseChangeTrackingProxies' requires all entity types to be public, unsealed, have virtual properties, and have a public or protected constructor. 'UseLazyLoadingProxies' requires only the navigation properties be virtual.
 ```
 - navigation properteis는 be virtual , public or protected가 되야 한다
-- 전체 엔티티에 navigation property에 virual을 추가하여 해결 
+- 전체 엔티티에 navigation property에 `virtual`을 추가하여 해결 
 
 
 💩 직렬화 순환 참조 이슈 
@@ -449,7 +449,7 @@ System.InvalidOperationException : Property 'ReplaceShipName.ShipInfo' is not vi
 - 지연 로딩과 테스트 실패의 문제라기 보다는.. 양방향 관계의 순환참조가 본질적인 문제로 보임 
 	- 직렬화 함수를 따로 만들어서 사용하는 것을 권장하나 테스트 의도에서 벗어남 .. 
 	- ✅`Include() + AsSplitQuery()` 최적화 방식 사용
-
+ 
 
 ---
 ### xUnit 테스트 동등성, 동일성

@@ -7,6 +7,21 @@
 		- DbContext의 생명주기에 대해 간단히 언급. single unit-of-work 동안 인스턴스가 사용된다네 .
 - JPA는 수정시 더티 체킹을 해줘서 트랜잭션 생명 주기 끝날 때 쯤 save 호출해준다 
 	- 반면 E.F Core에서는 엔티티 속성 변경 후 명시적으로 SaveChangesAsync() 호출해야 동기화가 맞춰진다. 
+- 신기한게 JPA는 PK 값이 null이면 insert, 아니면 update가 발생하는데 EF Core는 0이면 insert 0보다 큰 값이면 update가 발생하는 원리인듯하다.
+	- [Change Detection and Notifications - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/change-tracking/change-detection)
+	- Entity State에 5가지 상태가 있는 듯하다 
+		- Modified, Added, Unchanged, Detached, StateChanged .. 
+- 조회 요청시 `AsNoTracking()` 옵션이 조회 성능 최적화에 도움이 되나보다 
+	- `AsNoTracking()` 조회시 E.F Core에서 메모리 저장하지 않는다함 
+	- 그러다보니 `트랜잭션 read-only = true`와 같은 효과가 있어서 큰 볼륨의 데이터를 읽을때 퍼포먼스 최적화가 된다함 (아래 링크 하단 참고)
+		- [Tracking vs No-Tracking in Entity Framework](https://www.luisllamas.es/en/tracking-vs-no-tracking-in-entity-framework/)
+		- 단, EF Core에서 관리하지 않기 때문에 변경 추적은 X
+		- 오직 조회 용도로 활용하면 도움이 되는 듯하다. 
+	- 트랜잭션 readOnly=true 에 대한 동작을 찾아보자
+- Cacade 설정 한 적없는데 ShipInfo 하위 자식 테이블까지 Insert 되더라 (신기)
+
+
+
 
 
 **SHIP PARTICULAR**
