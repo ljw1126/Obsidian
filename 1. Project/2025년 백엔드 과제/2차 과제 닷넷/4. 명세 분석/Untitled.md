@@ -463,15 +463,16 @@ flowchart TD
     G -- Yes --> H{"Exist Service ?"}
         H -- Yes --> K
         H -- No --> J
-        J["ADD SHIP_SERVICE"]
+        J["Add SHIP_SERVICE"]
         J --> K
         K{"Use SK Tellink?"}
         K -- Yes --> L
-        K -- No --> O
+        K -- No --> T["Delete SK_TELINK_COMPANY_SHIP"]
         L["Add SK_TELINK_COMPANY_SHIP"]
         L --> O
+        T --> O
     G -- No --> I{"Exist Service ?"}
-        M["Delete SHIP_SERVICE"]
+        M["Delete SHIP_SERVICE, SHIP_SATELLITE, SK_TELINK_COMPANY_SHIP"]
         I -- Yes --> M
         I -- No --> O
         M --> O
@@ -482,7 +483,7 @@ flowchart TD
     Q["Upsert SHIP_MODEL_TEST"]
     R["Upsert SHIP_SATELLITE"]
     S["Update SHIP_SERVICE"]
-    Z["End"]
+    Z(["종료"])
 
     O --> P
     P --> Q
