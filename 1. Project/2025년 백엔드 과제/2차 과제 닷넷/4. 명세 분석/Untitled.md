@@ -491,7 +491,7 @@ flowchart TD
     S --> Z
 ```
 
-<img src="비즈니스로직-플로우차트.png">
+<img src="플로우차트v2.png">
 
 ---
 

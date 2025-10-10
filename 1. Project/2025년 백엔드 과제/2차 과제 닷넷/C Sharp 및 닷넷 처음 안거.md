@@ -328,3 +328,267 @@ new TodoItemDTO
 
 🔖 [(공식문서)개체 이니셜라이저를 사용하여 개체를 초기화하는 방법 - C# | Microsoft Learn](https://learn.microsoft.com/ko-kr/dotnet/csharp/programming-guide/classes-and-structs/how-to-initialize-objects-by-using-an-object-initializer)
 
+---
+
+### enum to string, string to enum
+enum 상수를 사용시 EF Core에서는 기본적으로 int로 값을 저장하게 된다
+- 이 경우 enum 상수의 순서가 변경되면 데이터 부정합 발생 (critical)
+- JPA에서는 OrderNo로 저장하는 것을 지양하고 `문자열` 그대로 넣는 방식을 권장
+
+[Value Conversions - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/modeling/value-conversions?tabs=data-annotations#the-valueconverter-class)
+
+1. 파스칼 표기법으로 enum 선언
+```cs
+namespace ShipParticularsApi.Entities
+{
+    public enum ShipTypes
+    {
+        Default,
+        Roro,
+        Ropax,
+        CruisePassenger,
+        Fishing,
+        RefrigeratedCargo,
+        GeneralCargo,
+        Passenger,
+        Vehicle,
+        LngCarrier,
+        BulkCarrier,
+        Combination,
+        Chemical,
+        Container,
+        SpecialCraft,
+        Cargo,
+        Other,
+        GasCarrier,
+        OilTanker,
+        Tanker
+    }
+}
+
+```
+
+2. 엔티티 모델 수정
+```cs
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+namespace ShipParticularsApi.Entities
+{
+    [Table("SHIP_INFO")]
+    [Index(nameof(ShipKey), IsUnique = true)]
+    public class ShipInfo
+    {
+        [Key]
+        [Column("ID")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public long Id { get; set; }
+
+        [Required]
+        [Column("SHIP_KEY")]
+        [MaxLength(10)]
+        public string ShipKey { get; set; }
+
+        [Column("CALLSIGN")]
+        [MaxLength(10)]
+        public string Callsign { get; set; }
+
+        [Column("SHIP_NAME")]
+        [MaxLength(10)]
+        public string ShipName { get; set; }
+
+        [Column("SHIP_TYPE")] // 여기
+        public ShipTypes? ShipType { get; set; }
+
+        [Column("SHIP_CODE")]
+        [MaxLength(100)]
+        public string? ShipCode { get; set; }
+
+        [Column("EXTERNAL_SHIP_ID")]
+        [MaxLength(36)]
+        public string? ExternalShipId { get; set; }
+
+        [Column("IS_USE_KTSAT")]
+        public bool? IsUseKtsat { get; set; }
+
+        [Column("IS_SERVICE")]
+        public bool? IsService { get; set; }
+
+        [Column("IS_USE_AIS")]
+        public bool? IsUseAis { get; set; }
+
+        public virtual ReplaceShipName? ReplaceShipName { get; set; }
+        public virtual ShipModelTest? ShipModelTest { get; set; }
+        public virtual ShipSatellite? ShipSatellite { get; set; }
+        public virtual ICollection<ShipService>? ShipServices { get; set; }
+        public virtual SkTelinkCompanyShip? SkTelinkCompanyShip { get; set; }
+    }
+}
+
+```
+
+3. convert 정의
+```cs
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+namespace ShipParticularsApi.Entities
+{
+    public class ShipTypesToStringConverter : ValueConverter<ShipTypes, string>
+    {
+        public ShipTypesToStringConverter() : base(
+            v => ShipTypesToString(v),
+            v => StringToShipTypes(v)
+        )
+        {
+        }
+
+        private static string ShipTypesToString(ShipTypes shipTypes)
+        {
+            return shipTypes switch
+            {
+                ShipTypes.Default => "-",
+                ShipTypes.Roro => "RORO",
+                ShipTypes.Ropax => "ROPAX",
+                ShipTypes.CruisePassenger => "CRUISE_PASSENGER",
+                ShipTypes.Fishing => "FISHING",
+                ShipTypes.RefrigeratedCargo => "REFRIGERATED_CARGO",
+                ShipTypes.GeneralCargo => "GENERAL_CARGO",
+                ShipTypes.Passenger => "PASSENGER",
+                ShipTypes.Vehicle => "VEHICLE",
+                ShipTypes.LngCarrier => "LNG_CARRIER",
+                ShipTypes.BulkCarrier => "BULK_CARRIER",
+                ShipTypes.Combination => "COMBINATION",
+                ShipTypes.Chemical => "CHEMICAL",
+                ShipTypes.Container => "CONTAINER",
+                ShipTypes.SpecialCraft => "SPECIAL_CRAFT",
+                ShipTypes.Cargo => "Cargo",
+                ShipTypes.Other => "OTHER",
+                ShipTypes.GasCarrier => "GAS_CARRIER",
+                ShipTypes.OilTanker => "OIL_TANKER",
+                ShipTypes.Tanker => "Tanker",
+                _ => throw new ArgumentException()
+            };
+        }
+
+        private static ShipTypes StringToShipTypes(string value)
+        {
+            return value switch
+            {
+                "-" => ShipTypes.Default,
+                "RORO" => ShipTypes.Roro,
+                "ROPAX" => ShipTypes.Ropax,
+                "CRUISE_PASSENGER" => ShipTypes.CruisePassenger,
+                "FISHING" => ShipTypes.Fishing,
+                "REFRIGERATED_CARGO" => ShipTypes.RefrigeratedCargo,
+                "GENERAL_CARGO" => ShipTypes.GeneralCargo,
+                "PASSENGER" => ShipTypes.Passenger,
+                "VEHICLE" => ShipTypes.Vehicle,
+                "LNG_CARRIER" => ShipTypes.LngCarrier,
+                "BULK_CARRIER" => ShipTypes.BulkCarrier,
+                "COMBINATION" => ShipTypes.Combination,
+                "CHEMICAL" => ShipTypes.Chemical,
+                "CONTAINER" => ShipTypes.Container,
+                "SPECIAL_CRAFT" => ShipTypes.SpecialCraft,
+                "Cargo" => ShipTypes.Cargo,
+                "OTHER" => ShipTypes.Other,
+                "GAS_CARRIER" => ShipTypes.GasCarrier,
+                "OIL_TANKER" => ShipTypes.OilTanker,
+                "Tanker" => ShipTypes.Tanker,
+                _ => throw new ArgumentException(),
+            };
+        }
+    }
+}
+
+```
+
+
+4. context 설정 
+```cs
+using Microsoft.EntityFrameworkCore;
+using ShipParticularsApi.Entities;
+
+namespace ShipParticularsApi.Contexts
+{
+    public class ShipParticularsContext(DbContextOptions<ShipParticularsContext> options) : DbContext(options)
+    {
+        public DbSet<ReplaceShipName> ReplaceShipNames { get; set; }
+        public DbSet<ShipInfo> ShipInfos { get; set; }
+        public DbSet<ShipModelTest> ShipModelTests { get; set; }
+        public DbSet<ShipSatellite> ShipSatellites { get; set; }
+        public DbSet<ShipService> ShipServices { get; set; }
+        public DbSet<SkTelinkCompanyShip> SkTelinkCompanyShips { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ReplaceShipName>(entity =>
+            {
+                entity.HasOne(child => child.ShipInfo)
+                .WithOne(parent => parent.ReplaceShipName)
+                .HasForeignKey<ReplaceShipName>(child => child.ShipKey)
+                .HasPrincipalKey<ShipInfo>(parent => parent.ShipKey);
+            });
+            
+            modelBuilder.Entity<ShipInfo>(entity =>
+            {
+	            // 여기
+                entity.Property(p => p.ShipType)
+                    .HasDefaultValue(ShipTypes.Default)
+                    .HasConversion<ShipTypesToStringConverter>();
+
+                entity.Property(p => p.IsUseKtsat)
+                    .HasDefaultValue(false);
+
+                entity.Property(p => p.IsUseAis)
+                    .HasDefaultValue(false);
+
+                entity.Property(p => p.IsService)
+                    .HasDefaultValue(true);
+            });
+
+            modelBuilder.Entity<ShipModelTest>(entity =>
+            {
+                entity.HasOne(child => child.ShipInfo)
+                .WithOne(parent => parent.ShipModelTest)
+                .HasForeignKey<ShipModelTest>(child => child.ShipKey)
+                .HasPrincipalKey<ShipInfo>(parent => parent.ShipKey);
+            });
+
+            modelBuilder.Entity<ShipSatellite>(entity =>
+            {
+                entity.HasOne(child => child.ShipInfo)
+                .WithOne(parent => parent.ShipSatellite)
+                .HasForeignKey<ShipSatellite>(child => child.ShipKey)
+                .HasPrincipalKey<ShipInfo>(parent => parent.ShipKey);
+
+                entity.Property(p => p.CreateDateTime)
+                    .HasDefaultValueSql("SYSDATETIME()");
+            });
+
+            modelBuilder.Entity<ShipService>(entity =>
+            {
+                entity.HasOne(child => child.ShipInfo)
+                .WithMany(parent => parent.ShipServices)
+                .HasForeignKey(child => child.ShipKey)
+                .HasPrincipalKey(parent => parent.ShipKey);
+
+                entity.Property(p => p.IsCompleted)
+                    .HasDefaultValue(false);
+            });
+
+            modelBuilder.Entity<SkTelinkCompanyShip>(entity =>
+            {
+                entity.HasOne(child => child.ShipInfo)
+                .WithOne(parent => parent.SkTelinkCompanyShip)
+                .HasForeignKey<SkTelinkCompanyShip>(child => child.ShipKey)
+                .HasPrincipalKey<ShipInfo>(parent => parent.ShipKey);
+            });
+
+        }
+    }
+}
+
+```
