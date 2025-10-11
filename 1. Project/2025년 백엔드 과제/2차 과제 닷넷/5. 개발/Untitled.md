@@ -136,3 +136,11 @@ namespace ShipParticularsApi.Tests.Services
 `Case3` AIS Toggle : **Off** 인데
 - SHIP_SERVICE가 없는 경우
 - SHIP_SERVICE가 있는 경우 ▶️ SHIP_SERVICE 삭제
+
+`Case4` GPS Toggle : **Off**
+- SHIP_SERVICE가 없는 경우
+- SHIP_SERVICE가 있는 경우  ▶️ DELETE  
+
+`Case5` GPS Toggle : **On**
+- SHIP_SERVICE가 없는 경우
+- SHIP_SERVICE가 있는 경우
