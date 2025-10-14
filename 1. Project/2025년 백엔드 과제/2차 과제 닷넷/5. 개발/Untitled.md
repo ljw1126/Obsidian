@@ -144,3 +144,82 @@ namespace ShipParticularsApi.Tests.Services
 `Case5` GPS Toggle : **On**
 - SHIP_SERVICE가 없는 경우
 - SHIP_SERVICE가 있는 경우
+
+`Case6`
+- ShipInfo가 이미 생성되어 있는 경우
+
+
+---
+
+```cs
+using ShipParticularsApi.Entities;
+using static ShipParticularsApi.Tests.Services.ShipParticularsServiceTests;
+
+namespace ShipParticularsApi.Services
+{
+    // NOTE: ShipInfo가 자식의 생명 주기를 관리하다보니, 불필요한 Repository도 존재할 수 있음. 
+    public class ShipParticularsService(IReplaceShipNameRepository replaceShipNameRepository,
+        IShipInfoRepository shipInfoRepository,
+        IShipModelTestRepository shipModelTestRepository,
+        IShipSatelliteRepository shipSatelliteRepository,
+        IShipServiceRepository shipServiceRepository,
+        ISkTelinkCompanyShipRepository skTelinkCompanyShipRepository)
+    {
+        public async Task Process(ShipParticularsParam param)
+        {
+
+            ShipInfo? shipInfo = await shipInfoRepository.GetByShipKeyAsync(param.ShipKey);
+
+            bool isNewShipInfo = shipInfo == null;
+
+            ShipInfo entityToProcess = isNewShipInfo ? ShipInfo.From(param) : shipInfo.Update(param);
+
+            if (param.IsAisToggleOn)
+            {
+                ShipService existingAisService = await shipServiceRepository.GetByShipKeyAndServiceNameAsync(
+                   param.ShipKey,
+                   ServiceNameTypes.SatAis
+                );
+
+                if (existingAisService == null)
+                {
+                    entityToProcess.ShipServices.Add(ShipService.of(param.ShipKey, ServiceNameTypes.SatAis));
+                    entityToProcess.EnableAis();
+                }
+            }
+            else
+            {
+                ShipService existingAisService = await shipServiceRepository.GetByShipKeyAndServiceNameAsync(
+                   param.ShipKey,
+                   ServiceNameTypes.SatAis
+                );
+
+                if (existingAisService != null)
+                {
+                    entityToProcess.ShipServices.Remove(existingAisService);
+                    entityToProcess.DisableAis();
+                }
+            }
+
+            if (param.IsGPSToggleOn)
+            {
+                ShipService gpsService = await shipServiceRepository.GetByShipKeyAndServiceNameAsync(
+                    param.ShipKey,
+                    ServiceNameTypes.KtSat
+                );
+                // biz logic
+            }
+
+            await shipInfoRepository.UpsertAsync(entityToProcess);
+        }
+    }
+}
+
+```
+- 생명주기를 ShipInfo에서 관리하고 있는데 자식 엔티티인 ShipService를 Repository를 통해 조회하고 있다. 
+	- 캡슐화 깨지고, 응집도 낮고..
+- 내 생각 
+	- 우선은 서비스 로직 기반으로 테스트 작성한다. 
+	- 도메인으로 비즈니스 로직을 이동 시킨다.  (with 도메인 단위 ㅌ테스트)
+	- 서비스 로직을 리팩터링한다. 
+		- 이때 트랜잭션을 사용하지 않기 때문에 **ShipInfo에 대한 상태 기반으로 동등성만 검증**하면 된다.
