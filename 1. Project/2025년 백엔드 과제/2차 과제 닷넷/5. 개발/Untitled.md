@@ -223,3 +223,85 @@ namespace ShipParticularsApi.Services
 	- 도메인으로 비즈니스 로직을 이동 시킨다.  (with 도메인 단위 ㅌ테스트)
 	- 서비스 로직을 리팩터링한다. 
 		- 이때 트랜잭션을 사용하지 않기 때문에 **ShipInfo에 대한 상태 기반으로 동등성만 검증**하면 된다.
+
+
+**리팩터링**. AIS Toggle On/Off에 대한 비즈니스 로직을 ShipInfo로 이동
+
+```cs
+public class ShipParticularsService(IReplaceShipNameRepository replaceShipNameRepository,
+    IShipInfoRepository shipInfoRepository,
+    IShipModelTestRepository shipModelTestRepository,
+    IShipSatelliteRepository shipSatelliteRepository,
+    IShipServiceRepository shipServiceRepository,
+    ISkTelinkCompanyShipRepository skTelinkCompanyShipRepository)
+{
+    public async Task Process(ShipParticularsParam param)
+    {
+
+        ShipInfo? shipInfo = await shipInfoRepository.GetByShipKeyAsync(param.ShipKey);
+
+        bool isNewShipInfo = shipInfo == null;
+
+        ShipInfo entityToProcess = isNewShipInfo ? ShipInfo.From(param) : shipInfo.Update(param);
+
+        if (param.IsAisToggleOn)
+        {
+            ShipService existingAisService = await shipServiceRepository.GetByShipKeyAndServiceNameAsync(
+               param.ShipKey,
+               ServiceNameTypes.SatAis
+            );
+
+            if (existingAisService == null)
+            {
+                entityToProcess.ShipServices.Add(ShipService.of(param.ShipKey, ServiceNameTypes.SatAis));
+                entityToProcess.EnableAis();
+            }
+            else if (isNewShipInfo)
+            {
+                entityToProcess.ShipServices.Add(existingAisService);
+                entityToProcess.EnableAis();
+            }
+        }
+        else
+        {
+            ShipService existingAisService = await shipServiceRepository.GetByShipKeyAndServiceNameAsync(
+               param.ShipKey,
+               ServiceNameTypes.SatAis
+            );
+
+            if (existingAisService != null)
+            {
+                entityToProcess.ShipServices.Remove(existingAisService);
+                entityToProcess.DisableAis();
+            }
+        }
+
+
+        await shipInfoRepository.UpsertAsync(entityToProcess);
+        
+```
+
+
+리팩터링 후
+```cs
+// NOTE: ShipInfo가 자식의 생명 주기를 관리하다보니, 불필요한 Repository도 존재할 수 있음. 
+public class ShipParticularsService(IReplaceShipNameRepository replaceShipNameRepository,
+    IShipInfoRepository shipInfoRepository,
+    IShipModelTestRepository shipModelTestRepository,
+    IShipSatelliteRepository shipSatelliteRepository,
+    IShipServiceRepository shipServiceRepository,
+    ISkTelinkCompanyShipRepository skTelinkCompanyShipRepository)
+{
+    public async Task Process(ShipParticularsParam param)
+    {
+
+        ShipInfo? shipInfo = await shipInfoRepository.GetByShipKeyAsync(param.ShipKey);
+
+        ShipInfo entityToProcess = shipInfo == null ? ShipInfo.From(param) : shipInfo.Update(param);
+
+        entityToProcess.ManageAisService(param.IsAisToggleOn);
+
+        await shipInfoRepository.UpsertAsync(entityToProcess);
+    }
+}
+```
