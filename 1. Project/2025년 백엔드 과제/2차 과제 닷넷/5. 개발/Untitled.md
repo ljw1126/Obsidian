@@ -305,3 +305,105 @@ public class ShipParticularsService(IReplaceShipNameRepository replaceShipNameRe
     }
 }
 ```
+
+
+---
+
+AIS Toggle On/Off 관련 ShipInfo 비즈니스 로직 리팩터링
+
+리팩터링
+```cs
+ public void ManageAisService(bool isAisToggleOn)
+ {
+     var existingService = this.ShipServices.FirstOrDefault(s => s.ServiceName == ServiceNameTypes.SatAis);
+     if (isAisToggleOn)
+     {
+	     if(existingService == null) {
+	         this.ShipServices.Add(ShipService.Of(this.ShipKey, ServiceNameTypes.SatAis));
+         }
+         
+		 this.IsUseAis = true
+     }
+     else 
+     {
+	     if(existingService != null){
+	         this.ShipServices.Remove(existingService);
+         }
+         this.IsUseAis = false
+     }
+ }
+```
+
+리팩터링 후 
+```cs
+public void ManageAisService(bool isAisToggleOn)
+{
+    var existingService = this.ShipServices.FirstOrDefault(s => s.ServiceName == ServiceNameTypes.SatAis);
+    if (isAisToggleOn && existingService == null)
+    {
+        this.ShipServices.Add(ShipService.Of(this.ShipKey, ServiceNameTypes.SatAis));
+        this.EnableSatAis();
+    }
+
+    if (!isAisToggleOn && existingService != null)
+    {
+        this.ShipServices.Remove(existingService);
+        this.DisableSatAis();
+    }
+}
+
+private void EnableSatAis()
+{
+    this.IsUseAis = true;
+}
+
+private void DisableSatAis()
+{
+    this.IsUseAis = false;
+}
+```
+
+
+```cs
+ public void ManageAisService(bool isAisToggleOn)
+ {
+     if (ShouldActivateAis(isAisToggleOn))
+     {
+         this.ShipServices.Add(ShipService.Of(this.ShipKey, ServiceNameTypes.SatAis));
+         this.ActiveAis();
+         return;
+     }
+
+     if (ShouldDeactivateAis(isAisToggleOn))
+     {
+         var existingService = this.ShipServices.First(s => s.ServiceName == ServiceNameTypes.SatAis);
+         this.ShipServices.Remove(existingService);
+         this.DeactiveAis();
+     }
+ }
+
+ private bool ShouldActivateAis(bool isAisToggleOn)
+ {
+     return isAisToggleOn && !this.HasSatAisService();
+ }
+
+ private bool ShouldDeactivateAis(bool isAisToggleOn)
+ {
+     return !isAisToggleOn && this.HasSatAisService();
+ }
+
+ private bool HasSatAisService()
+ {
+     return this.ShipServices.Any(s => s.ServiceName == ServiceNameTypes.SatAis);
+ }
+
+ private void ActiveAis()
+ {
+     this.IsUseAis = true;
+ }
+
+ private void DeactiveAis()
+ {
+     this.IsUseAis = false;
+ }
+```
