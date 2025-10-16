@@ -543,3 +543,17 @@ private bool HasKtSatService()
     return this.ShipServices.Any(s => s.ServiceName == ServiceNameTypes.KtSat);
 }
 ```
+
+---
+
+### 연관관계 참조 끊기와 DELETE 쿼리 여부에 대해 (251016)
+연관관계 참조를 Null로 끊을때 더티 체킹시 DELETE 쿼리가 만들어지는가?
+- 우선은 양방향 연관관계이고, ShipInfo 엔티티에서 하위 자식 엔티티에 대한 생명주기를 관리하고 있다. 
+- ✅ 일대다 관계에 해당하는 ShipService의 경우, 컬렉션의 Remove 호출시 DELETE 호출되는 것을 확인 
+- ✅ GPS 관련 하위 엔티티의 경우, 일대일 참조에 대해 null로 참조 끊을 시 DELETE 쿼리 날아가는 것을 확인함.
+- 📌 FK가 non-nullable인 경우에만 EF Core에서 인식하고 DELETE 쿼리를 만든다는데 자세한 내용은 공식 문서 학습 필요
+	- FK가 nullable인 경우 UPDATE 쿼리가 나간다고 함
+
+<img src="연관관계 참조를 null로 끊을 경우 결과.png">
+
+✅ 공식문서 - [Cascade Delete - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/saving/cascade-delete#cascading-nulls)
