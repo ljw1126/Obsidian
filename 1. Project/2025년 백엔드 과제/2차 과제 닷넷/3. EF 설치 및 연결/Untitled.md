@@ -215,7 +215,7 @@ public bool? IsService { get; set; } // 초기화 하지 않을 경우 null 할�
 
 ---
 ### SQLite 테스트 골격 
-🏠[EntityFramework.Docs/samples/core/Testing/TestingWithoutTheDatabase/SqliteInMemoryBloggingControllerTest.cs at live · dotnet/EntityFramework.Docs](https://github.com/dotnet/EntityFramework.Docs/blob/live/samples/core/Testing/TestingWithoutTheDatabase/SqliteInMemoryBloggingControllerTest.cs#L50)
+`🏠공식 저장소` [EntityFramework.Docs/samples/core/Testing/TestingWithoutTheDatabase/SqliteInMemoryBloggingControllerTest.cs at live · dotnet/EntityFramework.Docs](https://github.com/dotnet/EntityFramework.Docs/blob/live/samples/core/Testing/TestingWithoutTheDatabase/SqliteInMemoryBloggingControllerTest.cs#L50)
 
 ```c#
 namespace ShipParticularsApi.Tests
