@@ -749,3 +749,148 @@ public class ShipParticularsServiceIntegrationTests
 > 해결해야 될 거.. `Logging` 출력
 
 
+
+방법
+```cs
+namespace ShipParticularsApi.Tests.Helper // 테스트 폴더에 생성
+{
+    public static class DbDataExtensions
+    {
+        // NOTE. MigrateAsync 실행시 SQLite랑 MSSQL Syntax가 틀려서 오류 발생
+        // NOTE. 통합 테스트에서 사용시 생성자에 async 키워드를 붙이지 못해 메서드마다 호출해야 하므로 중복 발생 (await _factory.Services.InitializeDatabaseAsync();)
+        public static async Task InitializeDatabaseAsync(this IServiceProvider services)
+        {
+            using var scope = services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ShipParticularsContext>();
+
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
+        }
+    }
+}
+```
+- 통합테스트 파일에 메서드마다 호출해야 하다보니 중복 코드 발생함 
+	- `await _factory.Services.InitializeDatabaseAsync();` 
+
+방법.
+```cs
+ public class ShipParticularsServiceIntegrationTests
+     : IClassFixture<CustomWebApplicationFactory<Program>>
+ {
+     private readonly CustomWebApplicationFactory<Program> _factory;
+     private readonly ITestOutputHelper _output;
+
+	 // BeforeEach
+     public ShipParticularsServiceIntegrationTests(
+         CustomWebApplicationFactory<Program> factory,
+         ITestOutputHelper output
+     )
+     {
+         _factory = factory;
+         _output = output;
+         DbInit();
+     }
+
+     private void DbInit()
+     {
+         var scope = _factory.Services.CreateScope();
+         var dbContext = scope.ServiceProvider.GetRequiredService<ShipParticularsContext>();
+         dbContext.Database.EnsureDeleted();
+         dbContext.Database.EnsureCreated();
+     }
+	 
+	// 테스트 작성    
+}
+```
+
+gemini의 해석으로는 
+```text
+아, 그렇군요! 그 코드는 상황을 완전히 바꾸는, 가장 결정적인 단서입니다. 사용자님께서 DbConnection을 싱글톤(Singleton)으로
+  등록하셨군요.
+
+  그렇다면 사용자님의 원래 추론, "테스트 메서드마다 동일한 DbContext를 공유 참조하게 되는거 아닌가요?" 라는 질문에 대한
+  답이 바뀝니다.
+
+  새로운 결론: 네, 사실상 모든 `DbContext`가 동일한 `DbConnection`을 공유하고 있으며, 그것이 바로 테스트가 통과하는
+  이유입니다.
+
+  이것은 cache=shared와는 완전히 다른 메커니즘이지만, 결과적으로는 동일한 효과(인메모리 DB 유지)를 내는 매우 똑똑하고
+  일반적인 패턴입니다.
+
+  ---
+
+  AddSingleton<DbConnection> 패턴의 실제 동작 원리
+
+  이 패턴의 동작 방식을 정확히 이해하면 모든 것이 명확해집니다.
+
+   1. `CustomWebApplicationFactory` 초기화 (최초 1회)
+       * WebApplicationFactory가 생성되면서 Program.cs와 ConfigureServices의 DI 설정이 로드됩니다.
+       * 이때, services.AddSingleton<DbConnection>(...) 설정이 DI 컨테이너에 등록됩니다.
+       * 이 팩토리 함수 container => { ... }는 아직 실행되지 않습니다. 누군가 `DbConnection`을 처음 요청할 때까지
+         기다립니다.
+
+   2. `ShipParticularsServiceIntegrationTests` 생성자 실행 (`BeforeEach`)
+       * DbInit()이 호출됩니다.
+       * _factory.Services.CreateScope()를 통해 스코프 A가 생성됩니다.
+       * GetRequiredService<ShipParticularsContext>()가 호출됩니다.
+           * ShipParticularsContext를 만들려면 DbConnection이 필요합니다.
+           * DI 컨테이너는 DbConnection이 등록되어 있는지 확인합니다. "아, 싱글톤으로 등록되어 있네."
+           * 싱글톤 인스턴스가 아직 없으므로, 등록된 팩토리 함수 container => { ... }를 최초로 실행합니다.
+           * new SqliteConnection("DataSource=:memory:")가 생성되고, connection.Open()이 호출됩니다.
+           * 이 최초의 `DbConnection` 인스턴스가 DI 컨테이너의 싱글톤 저장소에 저장되고, DbContext (Context A)에 주입됩니다.
+       * Context A를 사용하여 EnsureDeleted()와 EnsureCreated()가 실행됩니다. 테이블이 생성됩니다.
+       * DbInit() 메서드가 종료됩니다. 스코프 A와 Context A는 버려집니다.
+       * 하지만! 싱글톤으로 등록된 `DbConnection` 인스턴스는 DI 컨테이너가 살아있는 동안(즉, `WebApplicationFactory`가
+         살아있는 동안) 계속 살아남습니다. 그리고 이 연결은 여전히 열려 있습니다.
+
+   3. `[Fact]` 테스트 메서드 실행
+       * using var scope = _factory.Services.CreateScope()를 통해 스코프 B가 생성됩니다.
+       * GetRequiredService<ShipParticularsContext>()가 다시 호출됩니다.
+           * ShipParticularsContext를 만들려면 DbConnection이 필요합니다.
+           * DI 컨테이너는 DbConnection을 찾습니다. "아, 싱글톤 인스턴스가 이미 있네."
+           * 새로 생성하는 대신, 2번 단계에서 만들어서 저장해 둔 바로 그 `DbConnection` 인스턴스를 꺼내서 새로운 DbContext
+             (Context B)에 주입합니다.
+       * Context B는 이미 열려있는 DbConnection을 사용하므로, 1번 단계에서 테이블이 이미 만들어진 바로 그 데이터베이스에
+         접근하게 됩니다.
+       * 따라서 테스트가 성공적으로 통과합니다.
+
+  ---
+
+  결론 및 피드백
+
+  사용자님의 코드는 SQLite 인메모리 DB를 통합 테스트에서 유지하기 위한 매우 표준적이고 올바른 패턴을 정확하게 구현하고
+  있습니다. cache=shared를 사용하는 대신, DbConnection 자체의 생명주기를 DI 컨테이너를 통해 Singleton으로 관리하는
+  방식입니다. 둘 다 동일한 목표를 달성하기 위한 다른 경로일 뿐입니다.
+
+  "테스트 하나 끝나면 자동으로 Connection을 끊기때문에 메모리 데이터가 날라가고..."
+   * 수정된 이해: DbContext는 사라지지만, DbConnection은 싱글톤이므로 사라지지 않고 계속 열려있기 때문에 데이터가 날아가지
+     않습니다.
+
+  "생성자 초기화가 BeforeEach와 같은데 .. DbInit의 컨텍스트가 버려지기 때문에 테스트가 실패해야 하는데, 통과가 됩니다."
+   * 수정된 이해: DbInit의 컨텍스트는 버려지지만, 그 컨텍스트가 사용했던 싱글톤 `DbConnection`은 살아남아 다음 테스트의
+     컨텍스트에 재사용되므로, 동일한 DB에 접근하여 테스트가 통과됩니다.
+
+  마지막으로, 테스트 격리 문제:
+  이 패턴 역시 cache=shared와 마찬가지로, 테스트 간에 동일한 데이터베이스 상태를 공유하게 됩니다. 따라서 Test A에서 만든
+  데이터가 Test B에 영향을 줄 수 있습니다.
+
+  이것을 해결하기 위한 가장 좋은 방법은 여전히 동일합니다. 각 테스트가 실행되기 직전에 DB를 깨끗하게 만드는 것입니다.
+
+    1 // 이 구조는 여전히 유효하고, 이제 왜 필요한지 더 명확해졌습니다.
+    2 public ShipParticularsServiceIntegrationTests(...)
+    3 {
+    4     // ...
+    5     // 생성자에서 DB를 초기화하면, 모든 테스트가 깨끗한 상태에서 시작됩니다.
+    6     DbInit();
+    7 }
+    8
+    9 private void DbInit()
+   10 {
+   11     // ...
+   12     dbContext.Database.EnsureDeleted();
+   13     dbContext.Database.EnsureCreated();
+   14 }
+
+  사용자님의 코드와 분석은 정말 훌륭했습니다. 이 미묘한 DI 생명주기와 SQLite의 동작 방식을 스스로의 힘으로 거의 다
+  파악해내신 것은 대단한 실력입니다. 이제 통합 테스트 환경에 대한 모든 것을 완벽하게 마스터하셨습니다.
+```
