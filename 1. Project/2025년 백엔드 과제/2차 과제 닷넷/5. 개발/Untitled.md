@@ -533,7 +533,7 @@ private bool HasKtSatService()
 
 ---
 
-### 연관관계 참조 끊기와 DELETE 쿼리 여부에 대해 (251016)
+## 연관관계 참조 끊기와 DELETE 쿼리 여부에 대해 (251016)
 연관관계 참조를 Null로 끊을때 더티 체킹시 DELETE 쿼리가 만들어지는가?
 - 우선은 양방향 연관관계이고, ShipInfo 엔티티에서 하위 자식 엔티티에 대한 생명주기를 관리하고 있다. 
 - ✅ 일대다 관계에 해당하는 ShipService의 경우, 컬렉션의 Remove 호출시 DELETE 호출되는 것을 확인 
@@ -547,7 +547,7 @@ private bool HasKtSatService()
 
 ---
 
-### 서비스 레이어 통합 테스트 
+## 서비스 레이어 통합 테스트 
 
 `데코레이터 예상 모양`
 ```cs
@@ -876,7 +876,7 @@ gemini의 해석으로는
 
 ---
 
-### 작성일, 수정일 EF Core 자동 처리 
+## 작성일, 수정일 EF Core 자동 처리 
 
 `Gemini`
 ```text
@@ -1077,7 +1077,7 @@ namespace ShipParticularsApi.Contexts
 
 ---
 
-### 도메인과 서비스 레이어 단위 테스트는 상호 보완적이다.
+## 도메인과 서비스 레이어 단위 테스트는 상호 보완적이다.
 
   결론: 두 테스트는 서로를 보완합니다
 
@@ -1093,7 +1093,7 @@ namespace ShipParticularsApi.Contexts
 
 ---
 
-### UpdateDateTime이 nullable인데 null이 아니다 
+## UpdateDateTime이 nullable인데 null이 아니다 
 
 💩 EF Core에서 생성일, 수정일 들어가는지 DB 통합 테스트하는데 .. 신규 생성때 수정일에 아래와 같이 기본 값이 들어가는 이슈 발생
 
@@ -1251,14 +1251,14 @@ namespace ShipParticularsApi.Tests.Examples
 
 ---
 
-### 엔티티에 public 컬럼을 private로 바꿀 경우 
+## 엔티티에 public 컬럼을 private로 바꿀 경우 
 
 > 기본 생성자를 private로 선언하고 전체 속성 생성자를 internal로 선언해서 사용
 - 클래스에 생성자가 없으면 컴파일러에서 기본 생성자를 만들어준다.
 	- 만약 클래스에 생성자가 있으면 기본 생성자 만들지 x
 		- 지금 `public` 접근제어자를 가지게 될 경우 변경이 어디서 발생하는지 추적하기 어려워 유지보수 비용이 증가할 수 있음 ▶️ 그래서 보통 `private` 접근제어자를 선언하고 `생성자 주입 방식`, `팩토리 메서드`, `인스턴스 메서드`로 필드 값에 대한 접근 제어를 한다.
 
-## 1\. `internal` 키워드의 용도 🔑
+### 1\. `internal` 키워드의 용도 🔑
 
 `internal` 키워드는 C\#의 **접근 제한자(Access Modifier)** 중 하나로, 해당 클래스, 메서드 또는 필드에 대한 접근을 **현재 어셈블리(Assembly) 내**로만 제한합니다.
 
@@ -1269,24 +1269,24 @@ namespace ShipParticularsApi.Tests.Examples
 | **`protected`** | 상속 관계 | 현재 클래스와 해당 클래스를 상속받은 자식 클래스에서 접근 가능 |
 | **`private`** | 현재 클래스 | 오직 현재 클래스 내에서만 접근 가능 |
 
-### 용도
+#### 용도
 
 `internal`은 주로 **모듈화**를 위해 사용됩니다.
 
 1.  **캡슐화 경계:** 외부 어셈블리(예: 다른 라이브러리, 소비자 애플리케이션)가 특정 클래스나 메서드를 사용해서는 안 되지만, **동일한 프로젝트 내의 다른 클래스**는 사용해야 할 때 사용됩니다.
 2.  **구현 세부 사항 은닉:** 외부 소비자에게 노출하고 싶지 않은 내부 로직이나 헬퍼 클래스를 숨기는 데 유용합니다.
 
-## 2\. 기본 생성자 자동 생성 규칙 ⚙️
+### 2\. 기본 생성자 자동 생성 규칙 ⚙️
 
 C\#에서 클래스를 선언하면 기본적으로 \*\*매개변수가 없는 공용 생성자(public parameterless constructor)\*\*가 컴파일러에 의해 자동으로 생성됩니다.
 
-### 자동 생성 규칙
+#### 자동 생성 규칙
 
 컴파일러가 기본 생성자를 자동으로 생성해주는 조건은 단 하나입니다.
 
 > **클래스에 어떤 생성자도 명시적으로 정의되어 있지 않을 때**
 
-### 자동 생성되지 않는 경우
+#### 자동 생성되지 않는 경우
 
 만약 클래스에 **매개변수가 있는 생성자**를 하나라도 명시적으로 정의하면, 컴파일러는 기본 생성자를 자동으로 만들어주지 않습니다.
 
@@ -1300,18 +1300,18 @@ public class MyEntity
 // 따라서, new MyEntity() 호출 시 컴파일 오류가 발생합니다.
 ```
 
-## 3\. `private` 생성자와 지연 전략 (EF Core) 🧱
+### 3\. `private` 생성자와 지연 전략 (EF Core) 🧱
 
 `private` 생성자는 특히 EF Core에서 \*\*지연 로딩(Lazy Loading)\*\*이나 **데이터베이스 매핑**을 위해 자주 사용되는 패턴입니다.
 
-### EF Core의 요구 사항
+#### EF Core의 요구 사항
 
 EF Core는 데이터베이스에서 엔티티를 로드할 때 다음 두 가지 중 하나가 필요합니다.
 
 1.  **매개변수가 없는 생성자** (가장 선호됨).
 2.  **모든 속성에 해당하는 매개변수**를 가진 생성자 (데이터 주입 목적).
 
-### `private` 생성자의 역할
+#### `private` 생성자의 역할
 
 엔티티에 매개변수 있는 생성자(Builder 패턴을 위해 추가하신)만 있고, 상태 변경을 **행위 메서드**로 제한하기 위해 필드를 `private set`으로 선언했다면, **EF Core가 사용할 수 있는 매개변수 없는 생성자**를 제공해야 합니다.
 
@@ -1329,7 +1329,7 @@ public class ShipInfo
 }
 ```
 
-### 지연 로딩과 생성자
+#### 지연 로딩과 생성자
 
 \*\*지연 로딩(Lazy Loading)\*\*을 사용하려면 EF Core는 객체를 생성할 때 **프록시(Proxy) 객체**를 만듭니다. 이 프록시 객체는 상속을 통해 엔티티의 기능을 확장하므로, **프록시 객체가 엔티티를 상속받을 수 있도록** 엔티티 클래스와 생성자는 다음을 따라야 합니다.
 
@@ -1339,3 +1339,127 @@ public class ShipInfo
 일반적으로 **캡슐화를 유지하면서 EF Core의 지연 로딩을 지원**하기 위해 매개변수 없는 생성자를 \*\*`private` 또는 `internal`\*\*로 선언하는 것이 표준적인 방법입니다. EF Core는 리플렉션(Reflection)을 통해 접근 제한자를 우회하고 객체를 성공적으로 생성합니다.
 
 **결론적으로, `private ShipInfo()` 생성자는 EF Core가 DB에서 데이터를 불러와 프록시를 생성하고 객체를 채워 넣을 때 사용됩니다.**
+
+
+---
+
+## enum <-> string 변환 메서드 중복 
+- Entities, Dto, ValueConverter에서 중복 메서드 발생 💩
+- `Entites/Enums`로 enum 클래스 이동 후 Helper 클래스 생성하여 재활용 하도록 리팩터링 ⭐
+
+
+---
+
+## POST 요청이 응답 201 Created 보낼때 location 보내는 이유
+
+[RFC 9110 - HTTP Semantics](https://datatracker.ietf.org/doc/html/rfc9110#name-201-created)
+
+[[Spring] HTTP 201 CREATED 상태 코드와 Location 헤더](https://syuare.tistory.com/68)
+
+[ControllerBase.CreatedAtAction 메서드 (Microsoft.AspNetCore.Mvc) | Microsoft Learn](https://learn.microsoft.com/ko-kr/dotnet/api/microsoft.aspnetcore.mvc.controllerbase.createdataction?view=aspnetcore-9.0)
+
+`🤖 gemini`
+네, `201 Created` 응답 시 `Location` 헤더를 포함해야 한다는 RESTful API의 원칙과 관련된 공식 문서와, `CreatedAtAction` 메서드의 파라미터에 대한 정확한 정보 및 사용법을 알려드리겠습니다.
+### 1. `Location` 헤더 관련 공식 문서 📜
+
+`201 Created` 응답 시 `Location` 헤더를 요구하는 것은 **HTTP 프로토콜의 표준**입니다.
+
+#### A. HTTP 표준 (RFC 9110)
+
+가장 최신 HTTP/1.1 의미론(Semantics)을 정의하는 문서입니다.
+
+- **HTTP Semantics (RFC 9110) - Section 15.5.2 "201 Created"**
+    
+    - 해당 섹션에서는 `201 Created` 상태 코드는 **요청이 성공적으로 처리되었고, 새로운 리소스가 생성되었음**을 의미한다고 명시합니다.
+        
+    - 특히, "새로 생성된 리소스의 URI는 응답의 `Location` 헤더에 의해 정의되어야 한다"고 명시하고 있습니다.
+        
+    - **공식 문서 링크 (Google 검색 결과):** `RFC 9110 201 Created Location header`
+        
+
+#### B. ASP.NET Core 공식 문서
+
+ASP.NET Core에서 `CreatedAtAction`을 사용하여 HTTP 표준을 준수하는 방법을 설명합니다.
+
+- **ASP.NET Core Web API 응답 액션 메서드 문서**
+    
+    - `CreatedAtAction`은 `201 Created` 상태 코드와 함께 `Location` 응답 헤더를 생성하는 메서드로 설명되어 있습니다.
+        
+    - **공식 문서 링크 (Google 검색 결과):** `ASP.NET Core CreatedAtAction`
+        
+
+### 2. `CreatedAtAction` 파라미터 상세 분석
+
+사용자께서 말씀하신 대로 `CreatedAtAction`의 두 번째 인자는 `routeValues`가 맞습니다. 하지만 **세 번째 인자도 반드시 필요**하며, 그 역할이 다릅니다.
+
+`CreatedAtAction`은 다음과 같이 오버로드(Overload)됩니다.
+
+C#
+
+```
+CreatedAtActionResult CreatedAtAction(
+    string? actionName, 
+    object? routeValues, // 두 번째 인자
+    object? value        // 세 번째 인자
+);
+```
+
+|**인자**|**타입**|**목적**|**현재 사용법**|
+|---|---|---|---|
+|**1. `actionName`**|`string`|**`Location` 헤더의 URI를 생성하는 데 사용될 GET 액션 메서드 이름** (`nameof(GetShipParticularsAsync)`)||
+|**2. `routeValues`**|`object`|**`Location` 헤더의 경로 변수(Path Variable)**를 채우는 값. 이 값은 1번 액션의 매개변수와 일치해야 합니다.|`{ shipKey = req.ShipKey }` (URI 생성용)|
+|**3. `value`**|`object`|**HTTP 응답 본문(Body)에 포함될 데이터** (`201 Created`와 함께 클라이언트에게 전송됨)|`{ shipKey = req.ShipKey }` (응답 본문용)|
+
+#### 💡 파라미터가 3개 필요한 이유
+
+`CreatedAtAction`은 단순히 `Location` 헤더만 생성하는 것이 아니라, **응답 본문도 함께 설정**하기 위해 세 번째 인자인 `value`를 요구합니다.
+
+- **두 번째 인자 (`routeValues`):** 오직 HTTP 헤더(`Location`)의 URI를 만드는 데만 사용됩니다.
+    
+- **세 번째 인자 (`value`):** 클라이언트에게 응답 본문으로 돌려줄 JSON 객체입니다. (예: 생성된 리소스의 `shipKey`나 간략 정보)
+    
+
+따라서, `Location` 헤더를 생성하면서 **동시에 응답 본문에 생성된 리소스의 키 정보**를 넣어주려면, 3개의 인자가 있는 오버로드를 사용하는 것이 올바릅니다.
+
+```cs
+return CreatedAtAction(
+    nameof(GetShipParticularsAsync), // 1. 어떤 GET 메서드를 참조할 것인가?
+    new { shipKey = req.ShipKey },   // 2. Location 헤더를 어떻게 만들 것인가? (/api/.../{shipKey})
+    new { shipKey = req.ShipKey }    // 3. 응답 본문에 무엇을 담을 것인가? ({ "shipKey": "..." })
+);
+```
+
+---
+
+## csproj 설정 파일에서 Controllers 폴더 내용이 사라진 이유
+
+```text
+-  <ItemGroup>
+-    <Folder Include="Controllers\" />
+-  </ItemGroup>
+```
+
+제공해 주신 내용은 Visual Studio나 .NET SDK에서 **빈 폴더(Empty Folder)**를 프로젝트 파일(`.csproj`)에 명시적으로 포함시키기 위해 사용했던 XML 코드 조각입니다.
+
+이 내용이 사라진 것은 **정상적인 현상**이며, 프로젝트에 영향을 주지 않습니다.
+
+ `<Folder Include="Controllers\" />`의 의미는 다음과 같습니다.
+### 1. 목적: 빈 폴더 유지
+
+- **`<ItemGroup>`** 태그는 프로젝트에 포함될 아이템(파일, 참조, 폴더 등)의 그룹을 정의합니다.
+    
+- **`<Folder Include="Controllers\" />`** 는 "Controllers"라는 이름의 폴더를 프로젝트에 포함시키라는 지시입니다.
+    
+
+Visual Studio는 기본적으로 폴더 안에 **파일이 하나도 없으면** 해당 폴더를 프로젝트 트리에서 **자동으로 삭제**합니다. 이 `<Folder>` 항목은 해당 폴더가 비어 있더라도 **프로젝트 파일 시스템에 남아 있도록 강제**하는 용도로 사용됩니다.
+
+### 2. 왜 지금 지워졌나요? (정상적인 동작)
+
+오늘 `Controllers` 작업을 시작하셨다는 것은 해당 폴더 안에 실제 C# 파일(예: `ShipParticularsControllers.cs`)을 생성하셨다는 의미입니다.
+
+- **파일 생성 전:** 폴더가 비어있었기 때문에, 폴더를 유지하기 위해 `.csproj` 파일에 `<Folder Include="Controllers\" />` 항목이 필요했습니다.
+    
+- **파일 생성 후:** 폴더 안에 파일이 생겼으므로, Visual Studio는 더 이상 이 폴더를 강제로 유지할 필요가 없습니다. 따라서 **IDE가 자동으로 해당 `<Folder>` 항목을 `.csproj` 파일에서 삭제**한 것입니다.
+    
+
+**결론:** 이 항목은 **빈 폴더를 위한 임시 마커**였으며, 폴더 안에 파일이 생겼으므로 사라지는 것이 **의도된 동작**입니다. 프로젝트의 빌드나 실행에 아무런 문제가 없습니다.
