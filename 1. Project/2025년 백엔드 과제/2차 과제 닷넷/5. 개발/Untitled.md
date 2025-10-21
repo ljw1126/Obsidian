@@ -1463,3 +1463,94 @@ Visual Studio는 기본적으로 폴더 안에 **파일이 하나도 없으면**
     
 
 **결론:** 이 항목은 **빈 폴더를 위한 임시 마커**였으며, 폴더 안에 파일이 생겼으므로 사라지는 것이 **의도된 동작**입니다. 프로젝트의 빌드나 실행에 아무런 문제가 없습니다.
+
+---
+
+## http 파일 생성시 출력 콘솔창에 한글깨짐 
+
+```text
+[오후 5:59:53 정보] dotnet 도구 매니페스트를 만드는 중입니다.
+[오후 5:59:53 정보] ‘dotnet new tool-manifest‘ 명령을 실행하는 중입니다.
+[오후 5:59:54 정보] 'dotnet new tool-manifest' 명령이 성공했으며 종료 코드는 '0'입니다.
+"dotnet 濡쒖뺄 ?꾧뎄 留ㅻ땲?섏뒪???뚯씪" ?쒗뵆由우씠 ?깃났?곸쑝濡??앹꽦?섏뿀?듬땲??
+[오후 5:59:54 정보] dotnet 대화형 도구의 '1.0.616301' 버전을 설치하는 중입니다.
+[오후 5:59:54 정보] ‘dotnet tool install Microsoft.dotnet-interactive --version 1.0.616301 --configfile NuGet.config‘ 명령을 실행하는 중입니다.
+[오후 5:59:54 정보] 'dotnet tool install Microsoft.dotnet-interactive --version 1.0.616301 --configfile NuGet.config' 명령이 성공했으며 종료 코드는 '0'입니다.
+'dotnet tool run dotnet-interactive' ?먮뒗 'dotnet dotnet-interactive' 紐낅졊???ъ슜?섏뿬 ???붾젆?곕━?먯꽌 ?꾧뎄瑜??몄텧?????덉뒿?덈떎.
+'microsoft.dotnet-interactive' ?꾧뎄(踰꾩쟾 '1.0.616301')媛 ?ㅼ튂?섏뿀?듬땲?? 留ㅻ땲?섏뒪???뚯씪 C:\Users\?댁쭊??AppData\Local\Temp\vs-dotnet-interactive\17.0_e2d9edb3\.config\dotnet-tools.json????ぉ??異붽??⑸땲??
+
+```
+
+---
+
+### http 테스트 
+
+#### 1. 400 Bad Request
+POST 요청에서 마지막에 트레일링 콤마가 있어서 실패 
+
+```text
+
+application/problem+json; charset=utf-8, 414 bytes
+
+{
+
+"type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+
+"title": "One or more validation errors occurred.",
+
+"status": 400,
+
+"errors": {
+
+"$": [
+
+"The JSON object contains a trailing comma at the end which is not supported in this mode. Change the reader options. Path: $ | LineNumber: 8 | BytePositionInLine: 0."
+
+],
+
+"req": [
+
+"The req field is required."
+
+]
+
+},
+
+"traceId": "00-fed4e0d20f0fef307ec7a368fb898609-49493ab4897b2677-00"}
+```
+
+#### 2. 500 에러 (1)
+- 컬럼이 `nvarchar(10)` 사이즈라서 요청 문자열 길이가 길어 에러가 발생함 
+	- Microsoft.EntityFrameworkCore.DbUpdateException
+
+
+#### 3. DB 저장 성공 후 500에러 
+
+```text
+System.InvalidOperationException: No route matches the supplied values.
+   at Microsoft.AspNetCore.Mvc.CreatedAtActionResult.OnFormatting(ActionContext context)
+```
+- Created 만들때 에러가 발생 .. 
+
+```text
+Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware: Error: An unhandled exception has occurred while executing the request.
+
+System.InvalidOperationException: No route matches the supplied values.
+   at Microsoft.AspNetCore.Mvc.CreatedAtActionResult.OnFormatting(ActionContext context)
+   ...
+```
+
+참고. 
+- 스택오버플로우
+	- [c# - ASP.NET CORE, Web API: No route matches the supplied values - Stack Overflow](https://stackoverflow.com/questions/39459348/asp-net-core-web-api-no-route-matches-the-supplied-values#:~:text=It%20uses%20the%20actionName%20to%20do%20this%2C%20so,Better%20practice%20probably%20to%20use%3A%20dev%20guide%20apidocs)
+- 공식문서 
+	- [MvcOptions.SuppressAsyncSuffixInActionNames Property (Microsoft.AspNetCore.Mvc) | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.mvcoptions.suppressasyncsuffixinactionnames?view=aspnetcore-9.0)
+
+```
+// Programs.cs에서 설정 비활성화
+builder.Services.AddControllers(options =>
+{
+    // Async 접미사 제거 비활성화
+    options.SuppressAsyncSuffixInActionNames = false;
+});
+```
