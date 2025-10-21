@@ -1554,3 +1554,194 @@ builder.Services.AddControllers(options =>
     options.SuppressAsyncSuffixInActionNames = false;
 });
 ```
+
+---
+
+## AsNoTracking (readOnly = true 효과)
+
+[Tracking vs. No-Tracking Queries - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/querying/tracking)
+
+```cs
+using Microsoft.EntityFrameworkCore;
+using ShipParticularsApi.Contexts;
+using ShipParticularsApi.Entities;
+
+namespace ShipParticularsApi.Repositories
+{
+    public class ShipInfoRepository(ShipParticularsContext context) : IShipInfoRepository
+    {
+        public async Task<ShipInfo?> GetByShipKeyAsync(string shipKey)
+        {
+            return await context.ShipInfos
+                 .Include(s => s.ShipServices)
+                 .Include(s => s.ShipSatellite)
+                 .Include(s => s.SkTelinkCompanyShip)
+                 .Include(s => s.ReplaceShipName)
+                 .Include(s => s.ShipModelTest)
+                 .AsSplitQuery()
+                 .SingleOrDefaultAsync(s => s.ShipKey == shipKey && s.IsService == true);
+        }
+
+        public Task UpsertAsync(ShipInfo shipInfo)
+        {
+            if (shipInfo.Id == 0)
+            {
+                context.ShipInfos.Add(shipInfo);
+            }
+            else
+            {
+                context.ShipInfos.Update(shipInfo);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<ShipInfo?> GetReadOnlyByShipKeyAsync(string shipKey)
+        {
+            return await context.ShipInfos
+                 .AsNoTracking()  // ⭐ readOnly = true 효과
+                 .Include(s => s.ShipServices)
+                 .Include(s => s.ShipSatellite)
+                 .Include(s => s.SkTelinkCompanyShip)
+                 .Include(s => s.ReplaceShipName)
+                 .Include(s => s.ShipModelTest)
+                 .AsSplitQuery()
+                 .SingleOrDefaultAsync(s => s.ShipKey == shipKey && s.IsService == true);
+        }
+
+    }
+}
+
+```
+
+테스트 코드 작성 
+- `Act` 구절에서 엔티티의 상태를 조회하기 위해 어쩔 수 없이 두 줄이 됨 
+	- 안티패턴에 해당하지만 필연적으로 발생하는 오버헤드 (pass)
+	- `var entry = dbContext.Entry(savedShipInfo!);`를 Act가 아닌 Assert로 내려서 개선 가능
+```cs
+using FluentAssertions;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using ShipParticularsApi.Contexts;
+using ShipParticularsApi.Entities.Enums;
+using ShipParticularsApi.Repositories;
+using Xunit;
+using Xunit.Abstractions;
+
+using static ShipParticularsApi.Tests.Builders.ShipInfoTestBuilder;
+using static ShipParticularsApi.Tests.Builders.ShipSatelliteTestBuilder;
+using static ShipParticularsApi.Tests.Builders.ShipServiceTestBuilder;
+
+
+namespace ShipParticularsApi.Tests.Repositories
+{
+    public class ShipInfoRepositoryTests : IDisposable
+    {
+        private readonly SqliteConnection _connection;
+        private readonly DbContextOptions<ShipParticularsContext> _options;
+        private readonly ITestOutputHelper _output;
+
+        // NOTE: beforeEach
+        public ShipInfoRepositoryTests(ITestOutputHelper output)
+        {
+            _output = output;
+
+            _connection = new SqliteConnection("DataSource=:memory:");
+            _connection.Open();
+
+            _options = new DbContextOptionsBuilder<ShipParticularsContext>()
+                .UseSqlite(_connection)
+                .UseLazyLoadingProxies()
+                .LogTo(message => _output.WriteLine(message), LogLevel.Information)
+                .EnableSensitiveDataLogging()
+                .Options;
+
+            var context = new ShipParticularsContext(_options);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+        }
+
+        // NOTE: AfterEach
+        public void Dispose() => _connection.Dispose();
+
+        ShipParticularsContext CreateContext() => new(_options);
+
+        [Fact(DisplayName = "DB에서 조회한 엔티티의 상태는 EntityState.Unchanged 이다.")]
+        public async Task AsTracking()
+        {
+            // Arrange
+            const string shipKey = "SHIP_KEY";
+            var newShipInfo = ShipInfo()
+                   .WithShipKey(shipKey)
+                   .WithCallsign("TEST_CALLSIGN")
+                   .WithShipName("TEST_SHIP_NAMME")
+                   .WithShipType(ShipTypes.Fishing)
+                   .WithShipCode("TEST_SHIP_CODE")
+                   .WithShipServices(KtSatService(shipKey))
+                   .WithShipSatellite(KtSatellite(shipKey, "SATELLITE_ID"))
+                   .WithExternalShipId("SATELLITE_ID")
+                   .WithIsUseKtsat(true)
+                   .Build();
+
+            await using (var arrangeContext = CreateContext())
+            {
+                arrangeContext.ShipInfos.Add(newShipInfo);
+                await arrangeContext.SaveChangesAsync();
+            }
+
+            var dbContext = CreateContext();
+            var repository = new ShipInfoRepository(dbContext);
+
+            // Act
+            var savedShipInfo = await repository.GetByShipKeyAsync(shipKey);
+            var entry = dbContext.Entry(savedShipInfo!);
+
+            // Assert
+            savedShipInfo.Should().NotBeNull();
+            entry.State.Should().Be(EntityState.Unchanged);
+        }
+
+        [Fact(DisplayName = "AsNoTracking()으로 조회한 엔티티의 상태는 EntityState.Detached 이다.")]
+        public async Task AsNoTracking()
+        {
+            // Arrange
+            const string shipKey = "SHIP_KEY";
+            var newShipInfo = ShipInfo()
+                   .WithShipKey(shipKey)
+                   .WithCallsign("TEST_CALLSIGN")
+                   .WithShipName("TEST_SHIP_NAMME")
+                   .WithShipType(ShipTypes.Fishing)
+                   .WithShipCode("TEST_SHIP_CODE")
+                   .WithShipServices(KtSatService(shipKey))
+                   .WithShipSatellite(KtSatellite(shipKey, "SATELLITE_ID"))
+                   .WithExternalShipId("SATELLITE_ID")
+                   .WithIsUseKtsat(true)
+                   .Build();
+
+            await using (var arrangeContext = CreateContext())
+            {
+                arrangeContext.ShipInfos.Add(newShipInfo);
+                await arrangeContext.SaveChangesAsync();
+            }
+
+            var dbContext = CreateContext();
+            var repository = new ShipInfoRepository(dbContext);
+
+            // Act
+            var savedShipInfo = await repository.GetReadOnlyByShipKeyAsync(shipKey);
+            var entry = dbContext.Entry(savedShipInfo!);
+
+            // Assert
+            savedShipInfo.Should().NotBeNull();
+            entry.State.Should().Be(EntityState.Detached);
+        }
+    }
+}
+
+```
+
+
+참고.
+- DbContext 설정에서 쿼리 Tracking 기본 설정도 가능
+	- 공식예제는 NoTracking을 기본으로 한다
+	- [Tracking vs. No-Tracking Queries - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/querying/tracking#configuring-the-default-tracking-behavior)
