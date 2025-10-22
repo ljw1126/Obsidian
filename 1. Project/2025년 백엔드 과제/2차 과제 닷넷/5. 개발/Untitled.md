@@ -1745,3 +1745,117 @@ namespace ShipParticularsApi.Tests.Repositories
 - DbContext 설정에서 쿼리 Tracking 기본 설정도 가능
 	- 공식예제는 NoTracking을 기본으로 한다
 	- [Tracking vs. No-Tracking Queries - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/querying/tracking#configuring-the-default-tracking-behavior)
+
+
+---
+
+## 통합 테스트 context 중복 제거 
+서비스 통합테스트에서 Arrange 단계에 아래 로직이 중복으로 나타남
+```cs
+// 신규 ShipInfo인 경우
+ using var scope = _factory.Services.CreateScope();
+ var serviceProvider = scope.ServiceProvider;
+ var sut = serviceProvider.GetRequiredService<IShipParticularsService>();
+
+
+
+// 기존 ShipInfo가 있는 경우 DB 초기화 필요
+using var scope = _factory.Services.CreateScope();
+var serviceProvider = scope.ServiceProvider;
+var sut = serviceProvider.GetRequiredService<IShipParticularsService>();
+
+await serviceProvider.SeedDataAsync(NoService(shipKey, 1L).Build());
+```
+
+`리팩터링 후`
+```cs
+// NOTE. C# 7.0 이상 지원
+protected (IServiceProvider Provider, IShipParticularsService Sut) GetTestDependencies(IServiceScope scope)
+{
+    var serviceProvider = scope.ServiceProvider;
+    var sut = serviceProvider.GetRequiredService<IShipParticularsService>();
+
+    return (serviceProvider, sut); // 튜플 리터럴
+}
+
+[Fact(DisplayName = "신규 ShipInfo (AIS/GPS Toggle off) 생성")]
+public async Task Case1()
+{
+    // Arrange
+    using var scope = _factory.Services.CreateScope();
+    var (serviceProvider, sut) = GetTestDependencies(scope);
+
+    const string shipKey = "UNIQUE_SHIP_KEY";
+    var param = ShipParticularsParam().WithShipKey(shipKey).Build();
+
+    // Act
+    await sut.Process(param);
+
+    // Assert
+    var repository = serviceProvider.GetRequiredService<IShipInfoRepository>();
+    var actual = await repository.GetByShipKeyAsync(shipKey);
+
+    actual.Should().NotBeNull();
+    actual.ShipType.Should().Be(ShipTypes.Default);
+}
+```
+
+
+[C# 7.0 튜플 - C# 프로그래밍 배우기 (Learn C# Programming)](https://www.csharpstudy.com/Latest/CS7-tuple.aspx#google_vignette)
+
+
+---
+
+## 테스트 클래스 상단 변수 선언 (readonly, const)
+
+```cs
+private readonly ShipParticularsService _sut;
+private readonly Mock<IShipInfoRepository> _mockShipInfoRepository;
+private readonly Mock<IUserService> _mockUserService;
+private const string FixedUserId = "TEST_USER_01";
+```
+
+네, 선언하신 공통 상수는 **파스칼 케이스(PascalCase)로 표기하는 것이 C\# 코딩 표준에 맞습니다.** `const`와 `readonly`는 둘 다 변경 불가능한 값을 나타내지만, **초기화 시점**과 **값의 타입**에서 중요한 차이가 있습니다.
+
+### 1\. 변수명 표기법: 파스칼 케이스 (PascalCase) ✅
+
+C\# 코딩 표준(특히 Microsoft의 .NET Framework 디자인 지침)에 따르면, `const` 필드나 `static readonly` 필드를 포함하여 **모든 `public`, `protected`, `internal` 상수는 파스칼 케이스**를 사용해야 합니다.
+
+| 코드 유형 | 권장 표기법 | 예시 |
+| :--- | :--- | :--- |
+| **`const` 필드** | PascalCase | `private const string FixedUserId = "TEST_USER_01";` (현재 코드) |
+| **`static readonly` 필드** | PascalCase | `private static readonly string DefaultShipKey = "SHIP_KEY";` |
+| **속성(Property)** | PascalCase | `public string ShipName { get; }` |
+| **메서드(Method)** | PascalCase | `public void Process(Param param)` |
+
+**참고:** 로컬 변수나 메서드 매개변수에는 카멜 케이스(camelCase)를 사용합니다.
+
+### 2\. `const`와 `readonly`의 차이점 💡
+
+`const`와 `readonly`는 둘 다 필드가 변경되는 것을 막지만, **언제 값이 할당되는지**와 **어떤 타입의 값을 가질 수 있는지**에서 근본적인 차이가 있습니다.
+
+| 특징         | `const` (Compile-Time Constant)                  | `readonly` (Runtime Constant)                                 |
+| :--------- | :----------------------------------------------- | :------------------------------------------------------------ |
+| **초기화 시점** | **컴파일 시** (Compile Time)                         | **런타임 시** (Runtime). 선언 시 또는 생성자(Constructor)에서 초기화 가능.       |
+| **값의 타입**  | **값 타입** (Value Type)이나 `string` (내장 기본 타입)만 가능. | **모든 타입** (참조 타입 포함) 가능.                                      |
+| **메모리 저장** | 메서드를 호출하는 지점에 값이 직접 **인라인으로 복사**됨.               | 인스턴스/정적 필드에 저장되며, **참조**를 통해 접근됨.                             |
+| **정적 여부**  | 항상 `static`이며, 명시적으로 선언할 수 없음.                   | `static`을 명시하여 \*\*`static readonly`\*\*로 사용 가능 (모든 인스턴스가 공유) |
+
+#### Test Data Builder에서의 활용
+
+1.  **`const` 사용:** 값이 **문자열**이거나 **숫자**이며, **테스트 간에 절대 변하지 않는 하드코딩된 값**일 때 사용합니다.
+      * **예시:** `FixedUserId`, `MAX_RETRIES`, `DEFAULT_SHIP_KEY` (문자열인 경우)
+2.  **`readonly` 사용:** Mock 객체(`_mockUserService`)나 생성자에서 초기화해야 하는 필드, 또는 **참조 타입**의 고정된 인스턴스를 저장할 때 사용합니다.
+      * **예시:** `_mockShipInfoRepository`, `_sut` (생성자 주입), `private static readonly List<int> EmptyList = new();`
+
+### 3\. 현재 코드 분석
+
+제공해주신 코드는 적절하게 사용하고 있습니다.
+
+```csharp
+private readonly ShipParticularsService _sut; // 생성자에서 초기화되는 인스턴스
+private readonly Mock<IShipInfoRepository> _mockShipInfoRepository; // 생성자에서 초기화되는 Mock
+private const string FixedUserId = "TEST_USER_01"; // 컴파일 시 고정되는 문자열 상수 (PascalCase 권장)
+```
+
+**표기법 권장:** `FixedUserId`는 `const`이므로 현재와 같이 \*\*`FixedUserId` (PascalCase)\*\*로 표기하는 것이 C\# 표준에 가장 잘 맞습니다.
