@@ -1,6 +1,6 @@
 
 🏠 [Installing Entity Framework Core - EF Core | Microsoft Learn](https://learn.microsoft.com/en-us/ef/core/get-started/overview/install)
-
+[Working with an Existing Database [2 of 5] | Entity Framework Core for Beginners](https://www.youtube.com/watch?v=DCYVfLT5_QI&list=PLdo4fOcmZ0oXCPdC3fTFA3Z79-eVH3K-s)
 ### 💣 마이그레이션 생성 및 DB 업데이트 
 - 개발/테스트 환경에서는 괜찮지만, 운영 환경에서는 재앙을 일으킬 수 있다. ☠️☠️
 	- 마친 JPA의 ddl-auto와 같은 역할인 듯 하다
