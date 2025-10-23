@@ -7,6 +7,11 @@
 - 자동 구현 속성(Auto-Implemented Properties) 
 - var 예약어
 
+**📗 C#의 역사**
+- [10-1 C#의 역사 - C# 프로그래밍 입문](https://wikidocs.net/227194)
+
+**📜 MS 공식 문서 - C# 설명서**
+- [프로그램의 일반 구조 - C# | Microsoft Learn](https://learn.microsoft.com/ko-kr/dotnet/csharp/fundamentals/program-structure/)
 ### ':' 
 - 상속을 의미
 - C#에서도 단일 상속만을 지원

@@ -7,6 +7,15 @@
 - MS 공식문서에 보면 저장소 링크가 있었다. 통합테스트 예제가 Controller 기준으로 한다. DB는 SQLite 사용
 	- [Integration tests in ASP.NET Core | Microsoft Learn](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-9.0&pivots=xunit)
 	- [AspNetCore.Docs.Samples/test/integration-tests/8.x at main · dotnet/AspNetCore.Docs.Samples](https://github.com/dotnet/AspNetCore.Docs.Samples/tree/main/test/integration-tests/8.x)
+- Test Data Builder 관련 
+	- [How to Create a Test Data Builder | Code With Arho](https://www.arhohuttunen.com/test-data-builders/#-emphasize-domain-with-factory-methods)
+		- next step
+	- [eliasnogueira/example-test-data-builder: How to implement and use Test Data Builder](https://github.com/eliasnogueira/example-test-data-builder?tab=readme-ov-file)
+	- [Test Data Builders and Object Mother: another look](https://blog.codeleak.pl/2014/06/test-data-builders-and-object-mother.html)
+		- `object mother + test data builder combine` 
+	- [Test Data Factory: Why and How to Use](https://eliasnogueira.com/test-data-factory-why-and-how-to-use/)
+- EF Core Docs sample 중 DB 데이터 초기화를 Cleanup() 메서드로 분리
+	- [EntityFramework.Docs/samples/core/Testing/TestingWithTheDatabase/TransactionalTestDatabaseFixture.cs at live · dotnet/EntityFramework.Docs](https://github.com/dotnet/EntityFramework.Docs/blob/live/samples/core/Testing/TestingWithTheDatabase/TransactionalTestDatabaseFixture.cs)
 
 ## 서비스 레이어
 - DbContext를 주입받아 사용하다보니 단위테스트 작성하기 어려운 구조라 판단
@@ -1875,3 +1884,132 @@ dotnet tool install --global dotnet-coverage
 
 [코드 테스트 커버리지 결정 - Visual Studio (Windows) | Microsoft Learn](https://learn.microsoft.com/ko-kr/visualstudio/test/using-code-coverage-to-determine-how-much-code-is-being-tested?view=vs-2022&tabs=csharp)
 
+
+---
+
+
+## 종속성 주입 (DI)
+
+[종속성 주입 - .NET | Microsoft Learn](https://learn.microsoft.com/ko-kr/dotnet/core/extensions/dependency-injection)
+
+```text
+종속성 주입은 다음을 통해 이러한 문제를 해결합니다.
+
+- 인퍼테이스 또는 기본 클래스를 사용하여 종속성 구현을 추상화합니다.
+- 서비스 컨테이너에 종속성 등록. .NET는 서비스 컨테이너인 `IServiceProvider`를 기본 제공합니다. 서비스는 일반적으로 앱 시작 시 등록되고 `IServiceCollection`에 추가됩니다. 모든 서비스가 추가되면 BuildServiceProvider를 사용하여 서비스 컨테이너를 만듭니다.
+- 서비스가 사용되는 클래스의 생성자에 주입됨. 프레임워크가 종속성의 인스턴스를 만들고 더 이상 필요하지 않으면 삭제하는 작업을 담당합니다.
+```
+- IServiceCollection가 빈 컨테이너고, 여기서 원하는 빈을 찾으려면 IServiceProvider를 사용해야 한다. 그리고 provider를 사용하려면 scope 생성해서 호출해야 하고
+
+```text
+DI 패턴을 사용하여 작업자 서비스는
+
+- 구체적인 형식 MessageWriter을 사용하지 않고 구현하는 IMessageWriter 인터페이스만 사용합니다. 따라서 작업자 서비스를 수정하지 않고도 작업자 서비스가 사용하는 구현을 쉽게 변경할 수 있습니다.
+- MessageWriter의 인스턴스를 만들지 않습니다. 인스턴스는 DI 컨테이너에 의해 만들어집니다.
+```
+
+
+---
+
+## 서비스 수명 
+[종속성 주입 - .NET | Microsoft Learn](https://learn.microsoft.com/ko-kr/dotnet/core/extensions/dependency-injection#service-lifetimes)
+
+- 일시적인 (`Transient`)
+	- 서비스 컨테이너에서 요청할때마다 만들어지고, 요청이 끝날때 삭제됨
+	- 서비스를 임시로 등록 
+- 범위 (`Scope`)
+	- 클라이언트 요청(연결)마다 한번씩  서비스가 생성되고, 요청이 끝날 때 삭제됨
+- 싱글톤 (`Singleton`)
+
+
+> 닷넷에서 `서비스`라 부르는게 스프링에서는 `빈`인가 보다
+
+> 각 서비스 수명이 어떠한 목적을 가지고 사용되는지 잘 생각이 되질 않는다
+
+---
+
+## 미들웨어
+[ASP.NET Core 미들웨어 | Microsoft Learn](https://learn.microsoft.com/ko-kr/aspnet/core/fundamentals/middleware/?view=aspnetcore-8.0#middleware-order)
+- 미들웨어 순서
+
+> 팀장님이 말한 http 요청 들어오는 순서.. 미들웨어 파이프라인이라는게 있네 
+> app.useRouting() 호출 여부에 따라 순서가 바뀌는게 있는 듯
+
+
+[ASP.NET Core 미들웨어 | Microsoft Learn](https://learn.microsoft.com/ko-kr/aspnet/core/fundamentals/middleware/?view=aspnetcore-8.0#built-in-middleware)
+- 기본 제공 미들웨어
+
+
+커스텀 예외 응답 처리하는 방법이 두 가지가 있는거 같다. 
+- 1. UseExceptionHandler 통해 컨트롤러 맵핑 
+	- 예외 페이지로 redirect하거나, api controller url로 redirect
+		- 이때 api controller에서는 에러 분기 처리가 필요 
+	- 스프링의 @RestControllerAdvice 방식과는 다르게 보인다.. 
+		- 컨트롤러에 분기 로직 들어가는게 낯설다..
+- 2. 커스텀 미들웨어 생성 및 등록 처리
+
+
+```cs
+namespace ShipParticularsApi.Middlewares
+{
+    public class GlobalExceptionMiddleware(RequestDelegate next)
+    {
+        public async Task InvokeAsync(HttpContext context)
+        {
+            try
+            {
+                await next(context);
+            }
+            catch (Exception ex)
+            {
+                await HandleExceptionAsync(context, ex);
+            }
+        }
+
+        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = 500;
+            var response = new
+            {
+                Message = "*An unexpected error occurred.",
+                Details = exception.Message
+            };
+            var jsonResponse = System.Text.Json.JsonSerializer.Serialize(response);
+            return context.Response.WriteAsync(jsonResponse);
+        }
+    }
+}
+
+```
+
+
+```cs
+using ShipParticularsApi.Middlewares;
+
+namespace ShipParticularsApi.Extensions
+{
+    public static class GlobalExceptionMiddlewareExtensions
+    {
+        public static IApplicationBuilder UseGlobalExceptioHandler(this IApplicationBuilder builder)
+        {
+            return builder.UseMiddleware<GlobalExceptionMiddleware>();
+        }
+    }
+}
+
+```
+
+
+```cs
+// Program.cs
+
+var app = builder.Build();
+
+// 미들웨어 파이프라인 등록 Use* prefix
+app.UseGlobalExceptioHandler();
+
+```
+
+> GET으로 존재하지 않는 데이터 조회시 위의 에러 메시지 표출되는거 확인
+> http 스크립트 사용
