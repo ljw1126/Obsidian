@@ -2013,3 +2013,286 @@ app.UseGlobalExceptioHandler();
 
 > GET으로 존재하지 않는 데이터 조회시 위의 에러 메시지 표출되는거 확인
 > http 스크립트 사용
+
+---
+
+## 서비스 레이어 Process 분리 
+
+💩POST 요청시 리소스가 2번 생성되는 이슈를 확인 
+
+MDN에서 확인한 결과 POST는 멱등성이 보장되면 안되기 때문에 생성하기 전에 조회가 필요한 것으로 확인이 되었다. 
+
+그리고 PUT 요청시에는 UPSERT가 되는데 신규 생성한 경우 201 created를 업데이트한 경우에는 200 or 204 (no content)를 반환하는게 규격이었다. 
+
+- [POST - HTTP | MDN](https://developer.mozilla.org/ko/docs/Web/HTTP/Reference/Methods/POST)
+	- 멱득성을 보장하지 않는다
+- [PUT - HTTP | MDN](https://developer.mozilla.org/ko/docs/Web/HTTP/Reference/Methods/PUT)
+	- 멱등성을 보장한다.
+	- 없으면 Insert 있으면 Update
+
+
+
+---
+
+## enum <-> string 변환 예외 처리 .. 
+- string ▶️ enum 변환 메서드를 `ToEnum(..)` 으로 renaming 처리
+- ArgumentException은 시스템 에러라서 적합하지 않음 
+	- 그래서 커스텀 예외로 변환해서 처리하려 함..
+- `ToEnum`의 경우 2가지 경우에 사용됨
+	- 사용자 요청 ▶️ 엔티티 속성 변환
+	- DB 값 ▶️ 엔티티 맵핑
+- `ToString`의 경우 한가지 경우 뿐.. 
+	- 시스템 에러 (개발자 실수)
+
+```cs
+namespace ShipParticularsApi.Entities.Enums
+{
+    public static class SatelliteTypesConverter
+    {
+        public static SatelliteTypes ToSatelliteTypes(string value)
+        {
+            return value switch
+            {
+                "NONE" => SatelliteTypes.None,
+                "KT_SAT" => SatelliteTypes.KtSat,
+                "SK_TELINK" => SatelliteTypes.SkTelink,
+                "SYNER_SAT" => SatelliteTypes.SynerSat,
+                _ => throw new ArgumentException($"Invalid string value '{value}' for SatelliteTypes enum")
+            };
+        }
+
+        public static string ToString(SatelliteTypes types)
+        {
+            return types switch
+            {
+                SatelliteTypes.None => "NONE",
+                SatelliteTypes.KtSat => "KT_SAT",
+                SatelliteTypes.SkTelink => "SK_TELINK",
+                SatelliteTypes.SynerSat => "SYNER_SAT",
+                _ => throw new ArgumentException($"Invalid SatelliteTypes '{types}'")
+            };
+        }
+    }
+}
+```
+
+
+
+✅ 그래서 아래와 같이 리팩터링함 
+- 기본적으로 ToEnum은 InvalidOperationException (500) 처리가 됨 
+- 사용자 추가/수정 요청시 문자열 -> enum으로 변환하는 것은 엔티티에서 호출한다. 
+	- 그렇기 때문에 엔티티의 팩터리 메서드에서 `ParseFromRequest(..)` 호출하도록 하여 사용자 Bad Request(400) 인 것을 구분
+```cs
+using ShipParticularsApi.Exceptions;
+
+namespace ShipParticularsApi.Entities.Enums
+{
+    public static class SatelliteTypesConverter
+    {
+        public static SatelliteTypes ToEnum(string value)
+        {
+            return value.ToUpperInvariant() switch
+            {
+                "NONE" => SatelliteTypes.None,
+                "KT_SAT" => SatelliteTypes.KtSat,
+                "SK_TELINK" => SatelliteTypes.SkTelink,
+                "SYNER_SAT" => SatelliteTypes.SynerSat,
+                _ => throw new InvalidOperationException($"내부 변환 실패: 허용되지 않은 문자열 값 '{value}'")
+            };
+        }
+
+        public static string ToString(SatelliteTypes types)
+        {
+            return types switch
+            {
+                SatelliteTypes.None => "NONE",
+                SatelliteTypes.KtSat => "KT_SAT",
+                SatelliteTypes.SkTelink => "SK_TELINK",
+                SatelliteTypes.SynerSat => "SYNER_SAT",
+                _ => throw new InvalidOperationException($"유효하지 않은 위성 타입 값 입니다. '{types}'")
+            };
+        }
+
+        public static SatelliteTypes ParseFromRequest(string value)
+        {
+            try
+            {
+                return ToEnum(value);
+            }
+            catch (InvalidOperationException)
+            {
+                throw new BadRequestException($"유효하지 않은 위성 타입입니다. 입력 값: '{value}'");
+            }
+        }
+    }
+}
+
+```
+
+---
+
+## Moq에서 stub 처리하지 않은 메서드는 null을 반환한다 
+
+상황. 신규 생성시 사용하는 조회 메서드가 다른데 테스트 에러가 발생하지 않음 !
+
+```cs
+[Fact(DisplayName = "신규 ShipInfo 생성 시, AIS와 GPS가 Off면 서비스가 추가되지 않는다.")]
+public async Task Case1()
+{
+    // Arrange
+    const string shipKey = "UNIQUE_SHIP_KEY";
+    var param = ShipParticularsParam()
+        .WithShipKey(shipKey)
+        .WithIsAisToggleOn(false)
+        .WithIsGPSToggleOn(false)
+        .Build();
+
+    _mockShipInfoRepository
+        .Setup(e => e.GetByShipKeyAsync(param.ShipKey)) // 📌
+        .ReturnsAsync((ShipInfo?)null);
+
+    ShipInfo? capturedEntity = null;
+    _mockShipInfoRepository.Setup(e => e.UpsertAsync(It.IsAny<ShipInfo>()))
+        .Callback<ShipInfo>(arg => capturedEntity = arg)
+        .Returns(Task.CompletedTask);
+
+    // Act
+    await _sut.Create(param);
+
+    // Assert
+    _mockShipInfoRepository.Verify(e => e.UpsertAsync(It.IsAny<ShipInfo>()), Times.Once);
+
+    capturedEntity.Should().NotBeNull();
+    capturedEntity.Id.Should().Be(0L);
+    capturedEntity.IsUseAis.Should().BeFalse();
+    capturedEntity.ShipServices.Should().BeEmpty();
+}
+```
+
+```cs
+public async Task Create(ShipParticularsParam param)
+{
+    ShipInfo? existingShipInfo = await shipInfoRepository.GetReadOnlyByShipKeyAsync(param.ShipKey); // 📌
+
+    if (existingShipInfo != null)
+    {
+        throw new ResourceAlreadyExistsException("이미 등록된 ShipKey 입니다.");
+    }
+
+    var shipInfoDetails = ShipInfoDetails.From(param);
+    var entity = ShipInfo.From(shipInfoDetails);
+
+    ExecuteDomainLogic(entity, param);
+
+    await shipInfoRepository.UpsertAsync(entity);
+}
+```
+
+```text
+
+네, 맞습니다. 대부분의 C# mocking 프레임워크(가장 흔한 Moq 기준)에서, 명시적으로 설정(Setup)되지 않은 메서드 호출은 기본적으로 아무 동작도 하지 않거나(Nothing) 타입의 기본값을 반환합니다.
+
+이것을 "Loose" Mocking의 기본 동작이라고 합니다.
+
+
+**결론:** Mocking 프레임워크가 `null`을 반환하여 에러가 나지 않은 것입니다. 테스트의 의도를 명확히 하기 위해 `Setup`을 추가하는 것이 견고한 단위 테스트를 위한 필수 단계입니다.
+
+```
+
+> 단위테스트를 명확하게 하기 위해 수정함
+
+
+---
+
+## ShipInfo(도메인 엔티티)에 플래그 인자를 전달하는 경우에 대해
+
+> 두가지의 책임을 가지고 있는게 아닌가 싶음
+
+
+```cs
+private void ExecuteDomainLogic(ShipInfo entityToProcess, ShipParticularsParam param)
+{
+	// AIS Toggle On/Off
+    entityToProcess.ManageAisService(param.IsAisToggleOn);
+
+	// GPS Toggle On/Off
+    var satelliteDetails = new SatelliteDetails(
+        param.ShipSatelliteParam?.SatelliteId,
+        param.ShipSatelliteParam?.SatelliteType,
+        param.SkTelinkCompanyShipParam?.CompanyName);
+    entityToProcess.ManageGpsService(param.IsGPSToggleOn, satelliteDetails, userService.GetCurrentUserId());
+
+   // .. 생략
+}
+```
+
+도메인 엔티티 내부에서 플래그 비트를 받아 처리를 하고 있다. 
+```cs
+// ShipInfo (도메인 엔티티)
+public void ManageAisService(bool isAisToggleOn)
+{
+    if (ShouldActivateAis(isAisToggleOn))
+    {
+        this.ShipServices.Add(ShipService.Of(this.ShipKey, ServiceNameTypes.SatAis));
+        this.ActiveAis();
+        return;
+    }
+
+    if (ShouldDeactivateAis(isAisToggleOn))
+    {
+        var existingService = this.ShipServices.First(s => s.ServiceName == ServiceNameTypes.SatAis);
+        this.ShipServices.Remove(existingService);
+        this.DeactiveAis();
+    }
+}
+```
+
+
+**💩 플래그 인자 (Flag Argument) 사용의 문제점**
+- 1. SRP 위반 : `ManageAisService`는 AIS 서비스를 **활성화할지** 또는 **비활성화할지**를 결정하고 실행하는 두 가지 책임을 동시에 가짐
+- 2. 호출 의도 불명확 : 
+	- 호출하는 쪽 코드(`entity.ManageAisService(true);` 또는 `entity.ManageAisService(false);`)만 봐서는 어떤 행동을 유발하는지 즉시 알기 어려움 
+	- 그래서 내부 코드를 봐야 안다
+- 3. **응집도 저하:** 메서드 내부에서 `if` 문으로 분기하는 것은 응집도(Cohesion)를 떨어뜨리는 주범
+
+✅ 명령형 메서드로 분리
+- if 조건 분기에 대한 책임을 서비스 레이어로 이전
+	- 조건 분기에서 엔티티의 인스턴스 메서드를 호출하여 실행
+
+
+```cs
+// ShipInfo.cs
+public void ActiveAisService()
+{
+    if (this.HasSatAisService()) return;
+
+    this.ShipServices.Add(ShipService.Of(this.ShipKey, ServiceNameTypes.SatAis));
+    this.ActiveAis();
+}
+
+public void DeactiveAisService()
+{
+    if (!this.HasSatAisService()) return;
+
+    var existingService = this.ShipServices.First(s => s.ServiceName == ServiceNameTypes.SatAis);
+    this.ShipServices.Remove(existingService);
+    this.DeactiveAis();
+}
+```
+
+
+```cs
+private void ExecuteDomainLogic(ShipInfo entityToProcess, ShipParticularsParam param)
+{
+    if (param.IsAisToggleOn)
+    {
+        entityToProcess.ActiveAisService();
+    }
+    else
+    {
+        entityToProcess.DeactiveAisService();
+    }
+    
+    // ..
+}
+```
