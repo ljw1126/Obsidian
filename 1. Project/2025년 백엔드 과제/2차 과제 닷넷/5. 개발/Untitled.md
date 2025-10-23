@@ -1861,3 +1861,17 @@ private const string FixedUserId = "TEST_USER_01"; // 컴파일 시 고정되는
 ```
 
 **표기법 권장:** `FixedUserId`는 `const`이므로 현재와 같이 \*\*`FixedUserId` (PascalCase)\*\*로 표기하는 것이 C\# 표준에 가장 잘 맞습니다.
+
+
+---
+
+## 테스트 커버리지 관련 (Visual Studio에 메뉴 활성화x)
+[dotnet-coverage 코드 검사 도구 - .NET CLI - .NET | Microsoft Learn](https://learn.microsoft.com/ko-kr/dotnet/core/additional-tools/dotnet-coverage)
+```shell
+dotnet tool install --global dotnet-coverage
+```
+- 이건 CLI 도구 .. 
+	- 설치했는데 분석 하는 메뉴 기능이 안보임💩
+
+[코드 테스트 커버리지 결정 - Visual Studio (Windows) | Microsoft Learn](https://learn.microsoft.com/ko-kr/visualstudio/test/using-code-coverage-to-determine-how-much-code-is-being-tested?view=vs-2022&tabs=csharp)
+

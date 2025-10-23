@@ -1,4 +1,20 @@
 
+## 2. 진행절차 
+- flowchart 작성 
+
+```text
+---
+config:
+  theme: mc
+---
+flowchart LR
+    A[요구사항 & 테이블 명세 <br/> 분석] --> B[**단위 테스트** 기반 <br/> 도메인, 레이어 로직 구현]
+    B --> C[**통합 테스트** 기반 <br/> Service / Repository 검증]
+    C --> D[전체 연결 설정 후<br/> API 호출]
+    D --> E[리팩터링]
+```
+
+<img src="02-flowchart.png">
 
 ## 7. Reference.
 - 종류별로 구분해서 나열
