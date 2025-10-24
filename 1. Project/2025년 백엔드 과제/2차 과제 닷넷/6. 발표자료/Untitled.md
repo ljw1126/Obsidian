@@ -16,6 +16,143 @@ flowchart LR
 
 <img src="02-flowchart.png">
 
+
+## 3. 요구사항 분석
+`플로우 차트(251023)`
+```text
+---
+config:
+  theme: mc
+  layout: dagre
+  look: neo
+---
+flowchart TD
+    A(["API 요청"]) --> B{"AIS Toggle On ?"}
+    B -- Yes --> C{"Exist Service?"}
+    C -- Yes --> G{"GPS Toggle On ?"}
+    C -- No --> E["Add SHIP_SERVICE"]
+    B -- No --> D{"Exist Service?"}
+    D -- Yes --> F["Delete SHIP_SERVICE"]
+    D -- No --> G
+    E --> G
+    F --> G
+    G -- Yes --> H{"Exist Service ?"}
+    H -- Yes --> W["Update SHIP_INFO, SHIP_SATELLITE"]
+    W --> K{"Use SK Tellink?"}
+    H -- No --> J["Add SHIP_SERVICE, SHIP_SATELLITE"]
+    J --> K
+    K -- Yes --> L["Add SK_TELINK_COMPANY_SHIP"]
+    K -- No --> T["Delete SK_TELINK_COMPANY_SHIP"]
+    L --> O["Upsert SHIP_INFO"]
+    T --> O
+    G -- No --> I{"Exist Service ?"}
+    I -- Yes --> M["Delete SHIP_SERVICE, SHIP_SATELLITE, SK_TELINK_COMPANY_SHIP"]
+    I -- No --> O
+    M --> O
+    O --> P["Upsert REPLACE_SHIP_NAME"]
+    P --> Q["Upsert SHIP_MODEL_TEST"]
+    Q --> R["Upsert SHIP_SATELLITE"]
+    R --> S["Update SHIP_SERVICE"]
+    S --> Z(["종료"])
+
+```
+
+<img src="04-flow chart.png"><
+
+`클래스 다이어그램(251023`
+```text
+---
+config:
+  theme: neo
+---
+classDiagram
+direction TB
+	class ShipInfo {
+		+long Id
+		+string ShipKey 
+    +string Callsign
+    +string ShipName
+    +ShipTypes ShipType
+    +string ShipCode
+    +string ExternalShipId
+    +bool IsUseKtsat
+    +bool IsService
+    +bool IsUseAis
+    +ICollection~ShipService~ ShipServices
+    +ShipSatellite ShipSatellite
+    +SkTelinkCompanyShip SkTelinkCompanyShip
+    +ReplaceShipName ReplaceShipName
+    +ShipModelTest ShipModelTest
+    
+    +From(ShipInfoDetails)$ ShipInfo
+    +UpdateDetails(ShipInfoDetails) ShipInfo
+    +ActiveAisService() void 
+    +DeactiveAisService() void
+    +HasSatAisService() bool
+    +ActiveGpsService(SatelliteDetails, userId) void
+    +DeactiveGpsService() void
+	}
+  
+	class ShipService {
+		+long Id
+		+string ShipKey
+    +ServiceNameTypes ServiceName
+    +bool IsCompleted
+    +Of(shipKey, ServiceNameTypes)$ ShipService
+	}
+	class ShipSatellite {
+		+long Id
+		+string ShipKey
+    +SatelliteTypes SatelliteType
+    +string SatelliteId
+    +bool IsUseSatellite
+    +string CreateUserId
+    +string UpdateUserId
+    +Of(shipKey, satelliteId, satelliteType, userId)$ ShipSatellite
+    +Update(satelliteId, satelliteType, userId) void
+    +IsSkTelink() bool
+	}
+	class SkTelinkCompanyShip {
+		+long Id
+		+string ShipKey
+    +string CompanyName
+    +Of(shipKey, companyName)$ SkTelinkCompanyShip
+    +Update(companyName) void
+	}
+	class ReplaceShipName {
+		+long Id
+		+string ShipKey
+    +string ReplacedShipName
+    +From(shipKey, ReplaeShipNameDetails)$ ReplaceShipName
+    +Update(ReplaceShipNameDetails) void
+	}
+	class ShipModelTest {
+		+long Id
+		+string ShipKey
+    +생략..
+    +From(shipKey, ShipModelTestDetails)$ ShipModelTest
+    +Update(ShipModelTestDetails) void
+	}
+	
+	
+	class BaseEntity {
+	 <<abstract>>
+		+DateTime CreateDateTime
+    +DateTime UpdateDateTime
+	}
+	
+	ShipInfo --* ShipService
+	ShipInfo --* ShipSatellite
+	ShipInfo --* SkTelinkCompanyShip
+	ShipInfo --* ReplaceShipName
+	ShipInfo --* ShipModelTest
+	
+	ShipSatellite --|> BaseEntity
+```
+
+<img src="04-class diagram.png">
+
+
 ## 7. Reference.
 - 종류별로 구분해서 나열
 - 한장더 추가해서 도서 추천
