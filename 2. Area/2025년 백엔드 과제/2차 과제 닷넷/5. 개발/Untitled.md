@@ -2296,3 +2296,21 @@ private void ExecuteDomainLogic(ShipInfo entityToProcess, ShipParticularsParam p
     // ..
 }
 ```
+
+---
+
+## 단방향 관계 설정
+- 부모 엔티티(`ShipInfo`)에서 자식 엔티티에 대한 생명주기를 관리함 
+- 자식 엔티티에 navigation property (`ShipInfo`)를 가지고 있는데 조회할 일이 없다보니, 프록시 생성 낭비가 아닌가 싶은 생각이 듦
+- 그래서 부모 엔티티(`ShipInfo`)의 연관관계만 남기고, 자식 엔티티에 navigation property를 지우려고 한다.
+
+**before**
+```cs
+
+```
+
+
+**after**
+```cs
+
+```
