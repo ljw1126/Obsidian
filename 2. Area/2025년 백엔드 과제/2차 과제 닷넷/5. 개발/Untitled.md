@@ -17,6 +17,9 @@
 - EF Core Docs sample 중 DB 데이터 초기화를 Cleanup() 메서드로 분리
 	- [EntityFramework.Docs/samples/core/Testing/TestingWithTheDatabase/TransactionalTestDatabaseFixture.cs at live · dotnet/EntityFramework.Docs](https://github.com/dotnet/EntityFramework.Docs/blob/live/samples/core/Testing/TestingWithTheDatabase/TransactionalTestDatabaseFixture.cs)
 
+🤔 `카나리 테스트 (이해 안됨)`
+> 이 테스트는 테스트 스위트(Test Suite)에 포함시켜 두면, 나중에 리팩토링 등의 이유로 테스트 환경 설정 코드를 잘못 건드렸을 때 가장 먼저 실패하면서 문제를 알려주는 좋은 '카나리(canary) 테스트'가 될 수 있습니다.
+
 ## 서비스 레이어
 - DbContext를 주입받아 사용하다보니 단위테스트 작성하기 어려운 구조라 판단
 - 관심사 분리하기 위해 데코레이터 패턴 활용하여 상위 객체에서 트랜잭션 시작/커밋/종료 관리하고 target 서비스를 호출하는 형태로 개발하려고 함 (251010)
@@ -1109,6 +1112,38 @@ namespace ShipParticularsApi.Contexts
 💩 EF Core에서 생성일, 수정일 들어가는지 DB 통합 테스트하는데 .. 신규 생성때 수정일에 아래와 같이 기본 값이 들어가는 이슈 발생
 
 > Did not expect actual.ShipSatellite.UpdateDateTime to have a value, but found <0001-01-01 00:00:00.000>.
+
+```text
+> 설정한 기억이 없는데 UpdateDateTime에서 문제가 발생해요. Expected property newShipInfo.ShipSatellite.UpdateDateTime to be <0001-01-01 00:00:00.000>,
+  but found <null>.
+
+✦ 네, 이 에러 메시지는 Fluent Assertions를 사용한 테스트에서 발생하는 매우 전형적이고 유용한 실패 사례입니다. 사용자님께서 무언가 잘못
+  설정하셨다기보다는, 테스트 코드의 '기대'와 실제 엔티티의 '현실' 사이에 미세한 타입 차이가 있을 가능성이 99%입니다.
+
+  "설정한 기억이 없는데" 라는 부분이 바로 이 문제의 핵심 단서입니다.
+
+  근본 원인: DateTime vs DateTime? (Nullable<DateTime>)
+
+  이 에러의 가장 유력한 원인은 다음과 같습니다.
+
+   1. 테스트 코드의 기대 (`Expected`): 테스트 코드 안에서 BeEquivalentTo와 비교하기 위해 만든 expected 객체의 UpdateDateTime 속성 타입이 DateTime일
+      것입니다.
+       * DateTime은 C#의 구조체(struct)입니다. 구조체는 null 값을 가질 수 없습니다.
+       * 따라서 new ShipSatellite() 처럼 객체를 생성하면, DateTime 타입의 속성은 자동으로 그 타입의 기본값인 `0001-01-01 00:00:00.000` 으로
+         초기화됩니다.
+       * 이것이 바로 에러 메시지의 Expected ... to be <0001-01-01 ...> 부분입니다.
+
+   2. 실제 엔티티의 현실 (`Found`): 실제 프로덕션 코드의 ShipSatellite 엔티티에 선언된 UpdateDateTime 속성 타입은 `DateTime?` (Nullable DateTime)일
+      것입니다.
+       * DateTime?는 null 값을 가질 수 있는 Nullable 타입입니다.
+       * ShipSatellite.of(...) 팩토리 메서드에서 이 속성에 아무 값도 할당하지 않았다면, 이 속성은 C#의 참조 및 Nullable 타입 기본값인 `null` 값을
+         가지게 됩니다.
+       * 이것이 바로 에러 메시지의 but found <null> 부분입니다.
+
+  결론: Fluent Assertions는 두 객체를 비교하다가, 한쪽(expected)은 DateTime의 기본값(0001-01-01...)을 가지고 있고 다른 한쪽(actual)은 null을 가지고
+  있으니, "두 값은 다르다"고 정확하게 알려주고 있는 것입니다.
+```
+
 
 ✅ `default(DateTime)`으로 검증해서 넘어감 
 
@@ -2304,6 +2339,8 @@ private void ExecuteDomainLogic(ShipInfo entityToProcess, ShipParticularsParam p
 - 자식 엔티티에 navigation property (`ShipInfo`)를 가지고 있는데 조회할 일이 없다보니, 프록시 생성 낭비가 아닌가 싶은 생각이 듦
 - 그래서 부모 엔티티(`ShipInfo`)의 연관관계만 남기고, 자식 엔티티에 navigation property를 지우려고 한다.
 
+> before의 경우 양방향 관계
+
 **before**
 ```cs
 // ShipParticularsContext.cs
@@ -2407,6 +2444,36 @@ public class ReplaceShipName
 - ✅ DbContext 설정 후 자식 엔티티에 navigation property를 지우면 부모 엔티티의 단방향 연관관계만 남게 된다.
 
 
+`Gemini`
+```text
+
+  단방향 관계 vs 양방향 관계
+
+  그렇다면 "단방향 관계"는 어떻게 만드는 것일까요? 그것은 한쪽의 탐색 속성만 남겨두는 것을 의미합니다.
+
+  양방향 관계 (현재 상태)
+
+   * `ShipService.cs`: public virtual ShipInfo ShipInfo { get; set; } (존재)
+   * `ShipInfo.cs`: public virtual ICollection<ShipService> ShipServices { get; set; } (존재)
+   * 장점: 양쪽에서 서로를 찾아갈 수 있어 편리함.
+   * 단점: 직렬화 시 순환 참조 문제 발생.
+
+  단방향 관계 (자식 -> 부모)
+
+   * `ShipService.cs`: public virtual ShipInfo ShipInfo { get; set; } (존재)
+   * `ShipInfo.cs`: public virtual ICollection<ShipService> ShipServices { get; set; } (삭제)
+   * 장점: ShipInfo를 직렬화할 때 ShipServices가 없으므로 순환 참조가 발생하지 않음.
+   * 단점: ShipInfo 객체만으로는 자식인 ShipService 목록을 가져올 수 없음. (직접 context.ShipServices.Where(...)로 쿼리해야 함)
+
+  단방향 관계 (부모 -> 자식)
+
+   * `ShipService.cs`: public virtual ShipInfo ShipInfo { get; set; } (삭제)
+   * `ShipInfo.cs`: public virtual ICollection<ShipService> ShipServices { get; set; } (존재)
+   * 이 방식은 EF Core에서 구성하기가 매우 까다롭고 직관적이지 않아 거의 사용되지 않습니다. EF Core는 외래 키가 있는 쪽(자식)에 항상 부모를 가리키는
+     탐색 속성이 있는 것을 선호합니다.
+
+```
+
 ---
 
 ## Unit-Of-Work 패턴 
@@ -2425,3 +2492,339 @@ public class ReplaceShipName
 
 
 [Enterprise Design Pattern - Unit of Work - I ❤️ DotNet](https://ilovedotnet.org/blogs/enterprise-design-pattern-unit-of-work/)
+
+
+---
+
+## 엔티티 생성자 접근제어자 관련
+
+자바에서 엔티티에 setter는 비공개하고, 생성자를 여러 개 제공하는 게 좋아서 C#에서도 마찬가지로 그렇게 하려고 함
+- 다른 생성자를 만들게 될 경우 빌드시 기본 생성자를 안 만들어주나 싶어 추가함
+- 근데 공개될 필요 없어 private로 접근제어가 변경하니 테스트 에러 발생 
+
+```text
+ System.ArgumentException : Can not instantiate proxy of class: ShipParticularsApi.Entities.ReplaceShipName.
+Could not find a parameterless constructor. (Parameter 'constructorArguments')
+---- System.MissingMethodException : Constructor on type 'Castle.Proxies.ReplaceShipNameProxy' not found.
+```
+- 그래서 기본 생성자의 접근제어자를 public, protected 순으로 변경하고 제거함 
+	- 생성해주나 싶었는데 내부적으로 알아서 기본 생성자 추가 해주는걸로 보인다.
+- 그리고 생성자를 여러 개 제공하고 all args 생성자에서 유효성 검사하는 것도 리팩터링 통해서 가능한 것으로 파악
+
+
+`리팩터링 후`
+```cs
+[Table("SHIP_SERVICE")]
+public class ShipService
+{
+    [Key]
+    [Column("ID")]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public long Id { get; private set; }
+
+    [Column("SHIP_KEY")]
+    [MaxLength(10)]
+    public string ShipKey { get; private set; }
+
+    [Column("SERVICE_NAME")]
+    [MaxLength(100)]
+    public ServiceNameTypes? ServiceName { get; private set; }
+
+    [Column("IS_COMPLETED")]
+    public bool IsCompleted { get; private set; }
+
+    public ShipService(string shipKey, ServiceNameTypes? serviceName, bool isCompleted)
+        : this(0L, shipKey, serviceName, isCompleted)
+    {
+    }
+
+    public ShipService(long id, string shipKey, ServiceNameTypes? serviceName, bool isCompleted)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(shipKey);
+
+        Id = id;
+        ShipKey = shipKey;
+        ServiceName = serviceName;
+        IsCompleted = isCompleted;
+    }
+
+    public static ShipService Of(string shipKey, ServiceNameTypes serviceName)
+    {
+        return new(shipKey, serviceName, true);
+    }
+}
+```
+
+---
+
+## 조회시 N + 1 문제에 대한 
+
+> SplitQuery()
+
+```text
+
+ShipInfo는 단 1개지만, DB는 10 (Services) x 10 (Histories) = 100개의 행(Row)을 생성하여 네트워크를 통해 애플리케이션으로 전송합니다. ShipInfo의
+  데이터(Id=1)는 100번 중복되어 전송됩니다. 이것이 바로 데이터 "뻥튀기"입니다.
+
+  문제점:
+  말씀하신 대로, 이 방식은 다음과 같은 심각한 문제를 야기합니다.
+   * 메모리 이슈: 애플리케이션은 불필요하게 거대한 데이터셋을 받아 처리해야 하므로 메모리 사용량이 급증합니다.
+   * 네트워크 대역폭 낭비: 중복된 데이터가 네트워크를 통해 전송되어 성능이 저하됩니다.
+   * 페이징 이슈: Skip()과 Take()를 사용한 페이징이 서버 사이드가 아닌 클라이언트 사이드에서 수행되거나, 예상치 못한 결과를 낳을 수 있습니다.
+
+  ---
+
+  해결 전략: 언제 어떤 로딩을 사용할 것인가?
+
+  사용자님의 결론, "일대다는... 지연 전략을 취해야 하지 않나 싶어요"는 이 문제를 해결하기 위한 매우 합리적인 접근 방식 중 하나입니다.
+
+  EF Core 5부터는 이 문제를 해결하기 위한 더 나은 방법도 도입되었습니다. 상황에 따른 최적의 전략은 다음과 같습니다.
+
+  1. 분할 쿼리 (Split Queries) - 가장 권장되는 해결책
+
+  EF Core 5부터 도입된 기능입니다. Include를 사용하되, EF Core에게 "JOIN으로 뻥튀기 만들지 말고, 여러 개의 `SELECT` 쿼리로 나눠서 보내줘!" 라고
+  지시하는 방식입니다.
+
+   1 var ship = await context.ShipInfos
+   2     .Include(s => s.ShipServices)
+   3     .Include(s => s.ShipHistories)
+   4     .AsSplitQuery() // <-- 바로 이 부분입니다!
+   5     .FirstAsync(s => s.ShipKey == "...");
+
+  실행되는 쿼리:
+   2. SELECT * FROM ShipInfos WHERE ShipKey = ... (부모 조회)
+   3. SELECT * FROM ShipServices WHERE ShipKey = ... (첫 번째 자식 조회)
+   4. SELECT * FROM ShipHistories WHERE ShipKey = ... (두 번째 자식 조회)
+
+  장점:
+   * 카티전 곱 폭발이 완벽하게 해결됩니다. 중복 데이터가 전혀 없습니다.
+   * N+1 문제도 발생하지 않습니다. 필요한 쿼리가 한 번의 DB 왕복으로 모두 실행됩니다.
+   * 코드는 AsSplitQuery() 한 줄만 추가하면 되므로 매우 간단합니다.
+
+  단점:
+   * 여러 쿼리로 나뉘므로, 아주 엄격한 트랜잭션 격리 수준(Serializable)에서는 데이터 정합성 문제가 발생할 수 있습니다. (대부분의 애플리케이션에서는
+     문제되지 않습니다.)
+
+  2. 명시적 로딩 (Explicit Loading)
+
+  여러 Include를 사용하는 대신, 부모를 먼저 로드하고 필요한 자식들을 수동으로 로드하는 방식입니다.
+
+   1 var ship = await context.ShipInfos.FirstAsync(s => s.ShipKey == "...");
+   2 await context.Entry(ship).Collection(s => s.ShipServices).LoadAsync();
+   3 await context.Entry(ship).Collection(s => s.ShipHistories).LoadAsync();
+   * 장점: 코드가 명시적이며, 분할 쿼리와 유사한 효과를 냅니다.
+   * 단점: DB 왕복이 여러 번 발생할 수 있고, 코드가 길어집니다.
+
+  3. 지연 로딩 (Lazy Loading)
+
+  말씀하신 대로, 지연 로딩도 하나의 해결책이 될 수 있습니다.
+
+   1 var ship = await context.ShipInfos.FirstAsync(s => s.ShipKey == "...");
+   2 var services = ship.ShipServices; // 이 시점에 ShipServices 쿼리 실행
+   3 var histories = ship.ShipHistories; // 이 시점에 ShipHistories 쿼리 실행
+   * 장점: 코드가 매우 단순해집니다.
+   * 단점: N+1 문제의 위험성이 매우 큽니다. 만약 ShipInfo 목록을 조회하고 반복문 안에서 각 ship의 ShipServices에 접근한다면, 1 (목록) + N (각
+     ship)개의 쿼리가 발생하여 성능 재앙을 초래할 수 있습니다.
+
+
+```
+
+
+---
+
+## 테스트명 
+- 비개잘자에게 시나리오를 설명하는 것 처럼 테스트 이름을 짓는다
+- 단어를 밑줄 표시로 구분한다 
+- Should be 문구보다 is로 바꿔본다 
+- 기초 영문법을 지킨다 (ex. 관사)
+
+> 📌 잘된 예시. public void Sum_of_two_numbers() { .. }
+> 📌 잘못된 예시. publci void Sum_TwoNumbers_RetrunsSum() { }
+
+
+---
+
+## 엔티티 양방향 순환 참조 이슈로 직렬화에서 무한 호출 
+`Gemini`
+```text
+양방향 관계 설정시 치명적인 약점 .. 
+=> 로그 출력시 순환 참조 이슈 발생 (직렬화 JSON)
+방법 1: DTO (Data Transfer Object) 사용 (가장 권장되는 Best Practice)
+     * 장점:
+       * 완벽한 해결책: 순환 참조 문제가 근본적으로 해결됩니다.
+       * 관심사 분리: API의 데이터 구조와 DB의 데이터 구조를 분리하여, 한쪽의 변경이 다른 쪽에 영향을 주지 않도록 합니다. (예: DB 컬럼명이 바뀌어도
+         API 응답은 그대로 유지 가능)
+       * 보안: 불필요한 데이터(예: 사용자 비밀번호 해시)가 실수로 노출되는 것을 방지합니다.
+
+방법 2: 직렬화 옵션 설정
+
+   * 방법: JSON 직렬화 라이브러리에 순환 참조를 무시하도록 옵션을 설정합니다.
+   * `System.Text.Json` 예시 (`Program.cs`):
+
+   1     builder.Services.AddControllers().AddJsonOptions(options =>
+   2     {
+   3         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+   4     });
+   * 장점: 설정이 매우 간단합니다.
+   * 단점: 근본적인 해결책이 아니며, DTO를 사용했을 때의 다른 장점(관심사 분리, 보안)을 얻을 수 없습니다. 임시방편에 가깝습니다.
+
+  방법 3: 단방향 관계 유지 (사용자님 제안)
+
+   * 방법: ShipService에서 public virtual ShipInfo ShipInfo { get; set; } 속성을 제거하여 순환 참조의 고리를 끊습니다.
+   * 장점: 순환 참조 문제가 해결됩니다.
+   * 단점: ShipService 객체만 가지고 있을 때, 그 서비스의 부모가 누구인지 역으로 찾아갈 수 없게 되어 객체 모델의 유용성이 떨어질 수 있습니다.
+     + Fluent API 사용하여 code-first  방식으로 테이블 migrations/update 하고 있는데, 이 경우 깨지게 된다.. 
+     + DB-First 방식이었다면 Fluent API 설정이 굳이 필요하지 않을테니 .. 단방향 관계를 만들기 수월했을 듯하다.
+
+===
+
+ 결론: 탐색 속성은 EF Core에게 "두 엔터티 사이에 관계가 존재한다"고 알려주는 신호등과 같습니다. 이 신호등이 없으면 EF Core는 관계를 어떻게 설정해야
+  할지 전혀 알 수 없습니다.
+
+```
+
+---
+
+## 부모-자식 연관관계에서 FK 설정에 따른 고아 객체 내용
+
+> 구글 노트북 LM 활용해서 공식 문서 설명을 들음
+- [EF Core의 상태](https://learn.microsoft.com/en-us/ef/core/change-tracking/)
+- [EF Core 디버깅 view](https://learn.microsoft.com/en-us/ef/core/change-tracking/debug-views?source=recommendations)
+
+`들으면서 정리`
+```text
+*고아삭제(부모는 그대로 자식 관계가 끊어져서 자식 삭제), 연결 삭제 (부모가 삭제되면 자식도 삭제)
+- EF Core : DbContext가 추적하고 엔티티들에 대해 직접 수행
+- DB 레벨에 설정하게 되는 경우 
+  > on delete cascade 부모 삭제시 자식도 삭제하는것 >> 단, 고아 삭제는 못함 
+- 고아 삭제를 원한다면 부모-자식을 로드해서 관계를 조작해야 한다. 
+  - on delete cascade는 사용하지 않는 것을 권장 < 이건 물리적인 삭제에 해당하는데 soft delete(논리적) 같은걸 사용한다면 원치않은 결과 확인가능 
+  - soft delete를 사용할 경우 관련 엔티티의 플래그를 연쇄적으로 처리할 로직이 필요함
+
+*제한사항 
+- MSSQL 서버 같은 경우 여러 외래키에 대해 순환, 멀티플 생성은 허용하지 않는다.  // on delete cascade 설정이 연쇄 삭제하면 무한 루프, 삭제 순서에 따라 예측 불가능한 상황이 발생할 수 있으니 막아버림 .. 
+  > 순환참조를 막으려면 ? (두가지 해결책) // DB나 아니면 코드에서 처리하는 방식
+      1) 순환을 유발하는 경우 디비에서 on delete cascade 처리 .. >> nullable 처리, on delete no action, destrict 처리 
+      2) on delete no action , EF Core에서 부모-자식 로그해서 직접 연결 삭제 동작을 수행하도록 한다 (DB는 나두고 코드로 처리)
+- client cacade의 위험 부담 : 자식 엔티티를 로드하지 않으면 부모 삭제시 자식 엔티티는 남게됨 (bad, FK 제약조건 걸림)**
+  - 관련된 엔티티를 모두 로드하도록 코드레벨에서 
+  - 유연성을 주지만 개발자의 책임이 크다
+
+nullable한 관계 
+- 자식의 FK 값이 null로 업데이트 된다 // 블로그 삭제시 POST에 대한 FK Update가 먼저 되고, Blog Delete 된다
+
+관계를 끊는 경우 // 자식은 살리고 싶고 연결만 끊고 싶을때 사용 가능 (흠..)
+- Blog와 Post는 일대다 관계
+// 외래키를 자꾸 null로 update 한다네 ..
+
+Fluent API 통해서 on delete cascade 설정 가능 
+
+정리
+- 관계가 필수냐 선택적이냐
+- 자식을 로드했냐 안했냐
+- 내가 선택한 delete behavior가 EF Core(client cascade) DB 레벨이냐
+- 단순히 삭제된다가 아니라 그 어디서 어떻게가 중요..
+
+```
+
+
+---
+
+## 로깅 관련 
+> 251017(금요일)
+
+DB 테스트에서는 IOutputHelper 를 생성자 주입받아서 options에 설정하면 되었다.
+
+```cs
+public class ShipInfoRepositoryTests : IDisposable
+{
+    private readonly SqliteConnection _connection;
+    private readonly DbContextOptions<ShipParticularsContext> _options;
+    private readonly ITestOutputHelper _output;
+
+    // NOTE: beforeEach
+    public ShipInfoRepositoryTests(ITestOutputHelper output)
+    {
+        _output = output;
+
+        _connection = new SqliteConnection("DataSource=:memory:");
+        _connection.Open();
+
+        _options = new DbContextOptionsBuilder<ShipParticularsContext>()
+            .UseSqlite(_connection)
+            .UseLazyLoadingProxies()
+            .LogTo(message => _output.WriteLine(message), LogLevel.Information)
+            .EnableSensitiveDataLogging()
+            .Options;
+
+        var context = new ShipParticularsContext(_options);
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+    }
+
+    // NOTE: AfterEach
+    public void Dispose() => _connection.Dispose();
+
+    ShipParticularsContext CreateContext() => new(_options);
+	
+	// ..
+}
+```
+
+
+
+
+서버 런타임에 확인하고 싶은 경우  `appsettings.Development.json`에서  
+```json
+{
+    "Logging": {
+        "LogLevel": {
+            "Default": "Information",
+            "Microsoft.AspNetCore": "Warning",
+	        // EF Core 메시지를 "테스트" 출력창을 통해 표출
+            "Microsoft.EntityFrameworkCore.Database.Command": "Information"
+        }
+    },
+    "ConnectionStrings": {
+        "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=TestDb;Trusted_Connection=True;"
+    }
+}
+```
+
+<img src="테스트 출력창.png">
+
+
+---
+
+## 자식 엔티티 생성시 직접 FK(shipKey)를 주입하는 방식에 대해
+
+```text
+핵심을 짚으셨습니다! 사용자님께서 관찰하신 현상이야말로 $\text{EF Core}$와 같은 \*\*$\text{ORM}$ (Object-Relational Mapper)**을 사용하는 가장 큰 이점이며, 가장 모범적인 방식입니다.
+
+$\text{EF Core}$의 자동 Foreign Key (FK) 처리 (Relationship Fix-up)
+ShipService 같은 자식 엔티티에 ShipKey (외래키)를 따로 넣어주지 않아도 $\text{EF Core}$가 자동으로 연결해주는 것이 정상적인 동작 방식입니다.
+
+이 현상은 $\text{EF Core}$의 **변경 추적기 ($\text{Change Tracker}$)와 관계 Fix-up** 기능 덕분에 가능합니다.
+
+1. 객체 그래프 추적 (.Add(ShipInfo()))
+테스트 코드에서 ShipInfo().WithShipServices(...)를 통해 부모 엔티티를 arrangeContext.ShipInfos.Add() 할 때, $\text{EF Core}$의 변경 추적기는 다음을 수행합니다.
+
+부모-자식 관계 감지: 부모 객체(ShipInfo)의 탐색 속성(_ShipService)을 통해 자식 객체(cctv, euMrv 등)들이 연결되어 있음을 감지하고, 이 모든 객체들을 Added 상태로 추적합니다.
+
+FK 값 확인: 이 시점에서 자식 객체들의 FK 값 (ShipKey)은 null 또는 $\text{0}$입니다.
+
+2. 저장 시 FK 값 채우기 (SaveChangesAsync())
+await arrangeContext.SaveChangesAsync()가 호출되면 다음과 같은 순서로 작업이 진행됩니다.
+
+부모 INSERT 실행: $\text{EF Core}$는 먼저 부모 엔티티(ShipInfo)에 대한 INSERT 쿼리를 실행합니다.
+
+PK 값 수신: DB (SQLite)는 새로운 $\text{ShipInfo}$를 저장한 후, 자동 생성된 ShipKey 값을 $\text{EF Core}$로 반환합니다.
+
+관계 Fix-up (자동 FK 주입): $\text{EF Core}$의 변경 추적기는 부모에게서 받은 이 새로운 ShipKey 값을, 부모와 연결되어 추적 중이던 모든 자식 엔티티의 Foreign Key 속성에 자동으로 할당합니다.
+
+자식 INSERT 실행: $\text{EF Core}$는 이제 $\text{FK}$가 올바르게 채워진 자식 엔티티들(ShipService, ReplaceShipName)에 대한 INSERT 쿼리를 실행합니다.
+
+따라서, 탐색 속성만 잘 연결해 두면 $\text{ShipKey}$를 수동으로 할당할 필요가 전혀 없습니다
+
+// 로그 에서 @p2를 보면 "SHIP01"이 들어가 있다.
+```
