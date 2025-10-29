@@ -2306,11 +2306,122 @@ private void ExecuteDomainLogic(ShipInfo entityToProcess, ShipParticularsParam p
 
 **before**
 ```cs
+// ShipParticularsContext.cs
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+	base.OnModelCreating(modelBuilder);
 
+	modelBuilder.Entity<ReplaceShipName>(entity =>
+	{
+		entity.HasOne(child => child.ShipInfo)
+		.WithOne(parent => parent.ReplaceShipName)
+		.HasForeignKey<ReplaceShipName>(child => child.ShipKey)
+		.HasPrincipalKey<ShipInfo>(parent => parent.ShipKey);
+	});
+
+	modelBuilder.Entity<ShipInfo>(entity =>
+	{
+		entity.Property(p => p.ShipType)
+			.HasDefaultValue(ShipTypes.Default)
+			.HasConversion<ShipTypesToStringConverter>();
+			
+		// ..
+	}
+			
+}
+
+// ReplaceShipName, 자식 엔티티 (하위)
+[Table("REPLACE_SHIP_NAME")]
+public class ReplaceShipName
+{
+	[Key]
+	[Column("ID")]
+	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+	public long Id { get; set; }
+
+	[Required]
+	[Column("SHIP_KEY")]
+	[MaxLength(10)]
+	public string ShipKey { get; set; }
+
+	// navigation property, 양방향 참조인데 조회시 프록시 객체 주입된다
+	public virtual ShipInfo ShipInfo { get; set; }
+
+	[Column("REPLACED_SHIP_NAME")]
+	public string ReplacedShipName { get; set; }
+	
+	// ..    
+}
 ```
 
 
 **after**
 ```cs
+// ShipParticularsContext.cs
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+	base.OnModelCreating(modelBuilder);
 
+	modelBuilder.Entity<ReplaceShipName>(entity =>
+	{
+		entity.HasOne<ShipInfo>()
+                .WithOne(parent => parent.ReplaceShipName)
+                .HasForeignKey<ReplaceShipName>(child => child.ShipKey)
+                .HasPrincipalKey<ShipInfo>(parent => parent.ShipKey);
+	});
+
+	modelBuilder.Entity<ShipInfo>(entity =>
+	{
+		entity.Property(p => p.ShipType)
+				.HasDefaultValue(ShipTypes.Default)
+				.HasConversion<ShipTypesToStringConverter>();
+			
+		// ..
+	}
+			
+}
+
+
+// ReplaceShipName, 자식 엔티티 (하위)
+[Table("REPLACE_SHIP_NAME")]
+public class ReplaceShipName
+{
+	[Key]
+	[Column("ID")]
+	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+	public long Id { get; set; }
+
+	[Required]
+	[Column("SHIP_KEY")]
+	[MaxLength(10)]
+	public string ShipKey { get; set; }
+
+	[Column("REPLACED_SHIP_NAME")]
+	public string ReplacedShipName { get; set; }
+        
+	 //..       
+}
 ```
+- navigation property를 지우지 않고 DbContext 설정만 변경하는 경우 테스트 실패가 뜬다
+	- 그리고 쿼리를 보면 shipInfoId라는 의미 불명의 컬럼에 대해 insert/update를 실행했던 것으로 기억한다.
+- ✅ DbContext 설정 후 자식 엔티티에 navigation property를 지우면 부모 엔티티의 단방향 연관관계만 남게 된다.
+
+
+---
+
+## Unit-Of-Work 패턴 
+[Unit of Work Pattern in ASP.NET Core MVC using EF Core - Dot Net Tutorials](https://dotnettutorials.net/lesson/unit-of-work-pattern-in-asp-net-core-mvc-using-ef-core/)
+
+[Implementing Repository and Unit of Work Patterns with .NetCore | by Ece | Medium](https://medium.com/@developerstory/implementing-repository-and-unit-of-work-patterns-with-netcore-6e97ab8be4fb)
+
+[How to Use the Unit of Work Pattern with Entity Framework Core – andrewhalil.com](https://andrewhalil.com/2023/02/06/how-to-use-the-unit-of-work-pattern-with-entity-framework-core/)
+- try, catch를 사용해서 직접 트랜잭션을 열고 닫는 방법이 있고, 
+- 어떤 글에서는 IUnitOfWork와 Repository 구현체를 여러개 만들어서 상속받은 다음에 .. 
+	- 묵시적으로 트랜잭션을 지원한다는거 같다.. SaveChangeAsync() 호출시에 물리적 트랜잭션 커밋을 한다는데 ??
+	- `await this._bookRepository.UnitOfWork.SaveChaangesAsync();`
+
+`공식 문서`
+[Implementing the Repository and Unit of Work Patterns in an ASP.NET MVC Application (9 of 10) | Microsoft Learn](https://learn.microsoft.com/en-us/aspnet/mvc/overview/older-versions/getting-started-with-ef-5-using-mvc-4/implementing-the-repository-and-unit-of-work-patterns-in-an-asp-net-mvc-application#implement-a-generic-repository-and-a-unit-of-work-class)
+
+
+[Enterprise Design Pattern - Unit of Work - I ❤️ DotNet](https://ilovedotnet.org/blogs/enterprise-design-pattern-unit-of-work/)
