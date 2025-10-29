@@ -86,3 +86,12 @@ git commit --amend --no-edit --date "Thu 30 Mar 2023 10:10:00 KST"
 // 특정 커밋의 날짜 변경 (생략)
 
 ```
+
+
+### push
+기본적으로 remote origin 바라보게 해서 생략 
+- [Git - git-config Documentation](https://git-scm.com/docs/git-config#Documentation/git-config.txt-pushautoSetupRemote)
+
+```shell
+git config --global --add push.autoSetupRemote true
+```
