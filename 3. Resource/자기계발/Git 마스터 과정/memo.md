@@ -95,3 +95,25 @@ git commit --amend --no-edit --date "Thu 30 Mar 2023 10:10:00 KST"
 ```shell
 git config --global --add push.autoSetupRemote true
 ```
+
+
+### 커밋 작성자 정보 전체 변경
+- 쉘 스크립트 if문으로 조건문을 걸 수 있지만 의미없어서 그냥 전체 변경
+- https://git-scm.com/docs/git-filter-branch
+
+```shell
+git filter-branch --env-filter '
+
+CORRECT_NAME="이진우"
+CORRECT_EMAIL="leejinwoo1126@gmail.com"
+
+# Git 커미터 정보 (기록자)
+export GIT_COMMITTER_NAME="$CORRECT_NAME"
+export GIT_COMMITTER_EMAIL="$CORRECT_EMAIL"
+
+# Git 작성자 정보 (원본 작성자)
+export GIT_AUTHOR_NAME="$CORRECT_NAME"
+export GIT_AUTHOR_EMAIL="$CORRECT_EMAIL"
+
+' --tag-name-filter cat -- --branches --tags
+```
