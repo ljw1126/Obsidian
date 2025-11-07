@@ -15,10 +15,30 @@
 
 이때 "StorageQueue" 는 `local.settings.json` 파일에 등록된 속성으로 보이는데, csproj 파일에 `<CopyToPublishDirectory>Never</CopyToPublishDirectory>`있어서 그런가 .. 저장소에도 올라가 있지 않다.
 
+> [!note]
+> 스케쥴러 👉 큐 발송 (10분, 60분, 하루) 
+> 큐 이벤트 발생 👉 각 시간대별 Function 실행됨
 
-스케쥴러 👉 큐 발송 (10분, 60분, 하루) 
-큐 이벤트 발생 👉 각 시간대별 Function 실행됨
 
+```cs
+# 조회
+GetShipKeyForDbInsert() // *ManagerDbContext (MSSQL)
+
+# QueueLoggerDataClient
+AddQueue10MinAsync(message) // "logger10min" 큐에 메시지 보냄
+
+AddQueue1HourAsync(message) // "logger1hour" 큐에 메시지 보냄
+
+AddQueue1DayAsync(message) // "logger1day" 큐에 메시지 보냄
+```
+
+💩 클래스에 static 멤버 변수가 있는데 테스트를 어렵게 한다.. 
+- 멀티 스레드로 인한 동시성 이슈 
+	- `_functionIsRunningOrNot` 플래그 변수
+- 날짜 관련 
+	- `DateTime hourStartTime`
+	- `DateTime dayStartTime`
+	- 로컬 캐시 사용?? 아니면 .. 값 객체 ??
 
 ### LoggerDataInsert10Min
 
@@ -37,7 +57,65 @@ ManagerDbContext
 	- 54번 줄에서 처리한 객체를 전달한다.
 	- `*Client` 는 3개다`Cosmos DB(NoSql)` 조회해서 처리하는 로직
 	- 최종적으로 V.S Cosmos DB에 저장한다
+- `70번`
+	- errorList와 frozenList가 둘다 `string[]`인데 `object[]`로 선언되어 있따.
+- `89번`
+	- 타입 문자열이 공용으로 사용하고 있네 (굳이?)
+- `96번`
+	- "id" 컨벤션이.... 어쩔수 없나.. 이거 사용하는 곳 다 고쳐야 할듯하다..
+- deprecated된 변수가 보인다..
+- 문자열로 쿼리를 작성했는데 .. cosmos db 조회하려면 그렇게 할 수 밖에 없는건가 싶음.
+	- ✅ 기분 안나쁘게 순수하게 묻기 처음보니..
+- `LoggerData10MinAnaysis`
+	- `1493번`
+		- 문자열로된 날짜를 해당 메서드에서 밖에 사용하지 않는데 위에서 생성해서 전달하고 있다.
+		- 고정된 날짜인데 .. 굳이 ? 
+			- static한 멤버 변수는 오버인거 같고.. 메서드 내부로 옮긴 다음에 사용하는게 현실적인거 같다. ✅
+		- 📌 날짜 유틸 없나 찾아보기
+	- 절차
+		- 
 
+
+
+`로직 분석`
+- 큐 이벤트 트리거 실행 : "logger10min"
+- DB 조회 (2회)
+	- `ManagerDbContext()`
+	- 필터 목록이랑 선박 정보   // ✅ 데이터 2가지가 필요..
+- 비즈니스 로직 2개 실행 
+	- 1. 서비스 인스턴스 메서드 실행 
+		- cosmos db 조회 
+		- blob 조회 (1)
+			- 디렉터리 > 년 > 월 > 일 > 파일 순으로 탐색 
+			- 최종 `파일` 리스트를 반환
+		- `파일` 리스트가 0인 경우 
+			- 로깅 후 false 반환 
+		- 파싱 로직 수행 (파일 리스트 순차 조회하면서 실행)
+			- `ManagerDbContext` 조회
+			- `DownloadBlobToCsvMemoryAsync()` : blob 파일을 csv 형태로 다운로드 함 (`Blob`)
+			- `Upsert10MinControlLogAsync()` : 조건에 맞으면 cosmos 저장 : `10분 history 로그 저장`
+			- `MakeAverage()` : 평균 계산 + 에러 정보 
+			- `CalculateShipData(..)` : slip, 연료 마력 등 2차 검사 
+			- `ParseWeather(..)` : 날짜 파싱
+				- averageData 순회하면서 조건별로 내용을 갱신하네 📌 이게 과연 맞는건가?? 최종적으로 참조를 리턴하긴한다..
+			- `ParseDraftAsync(..)`
+				- 검증과 함께 Cosmos DB에 Noon 보고서 조회도 한다. 
+				- 💩 `SpeedLossComputer` 클래스에 플래그 비트 사용
+			- `CheckPrimaryData(..)`
+			- `Insert10MinDataToDocumentDbAsync(..)` : cosmos 저장 
+			- `ConvertDynamicByDistionary(..)`
+			- `SetLastPositionControllerAsync(..)`
+	- 2. 정적 메서드 (`Cosmos db` 3개 사용)
+		- 조회 3번, 추가 1번
+
+> HELPERS.RedisTemplate.LastPositionClient 
+> - 깨진 유리창의 법칙 .. switch문 .. waterfall로 작성되어 있다..💩
+
+> blob, cosmos(조회, 히스토리 로그 저장), redis, mssql 다 호출하네 .. 
+- mssql은 매니저 디비로 설정 읽기 
+- blob 리소스 읽음 
+- cosmos는 읽거나, 쓰거나 
+- redis 쓰거나 
 ### LoggerDataInsert1Hour
 
 `첫번째`
@@ -51,11 +129,49 @@ ManagerDbContext
 	- `MakeAveraging1Day(..)`
 - `InsertDocumentDbAsync1DayAsync(..)` :  Cosmos DB 저장 (NoSQL)
 
+`절차`
+- ManagerDbContext 조회 (2건)
+- `GetLastFirstInsertDate1HourAsync(skey)` 
+	- 마지막 1시간 데이터 입력 시간 가져오기
+	- cosmos 디비 조회하거나 초기화하거나 
+- `Query10MinDataAsync()`
+	- 10분 db에서 데이터 부르기
+	- cosmos 디비 조회만
+- `MakeAveraging1Hour(..)`
+	- 절차적인 로직
+	- 리스트 안에 dictionary 자료구조를 담아서 리턴
+- `InsertDocumentDbAsync1HourAsync(..)`
+	- cosmos 디비에 저장 
+		- 에러 터지면 로그를 `Sentry`라는 곳에 보낸듯함
+
+`개선할만한 부분`
+- `MakeAveraging1Hour(..)`
+	- 절차적 
+	- LoggerDataSettings가 static helper method로 보이는데 굳이 따로 뽑을 필요가 있었을가?
+		- 필터 리스트를 일급 컬렉션으로 감싸는건 어떠할까?
+
 
 ### LoggerDataInsert1Day
 
+`절차`
+- 마찬가지로 ManagerDb(mssql) 두번 조회 
+- `GetLastFirstInsertDate1DayAsync(skey)`
+	- cosmos 디비 조회해서 없으면 초기화하고 날짜 반환 
+- `Query1HourDataAsync(..)`
+	- cosmos 디비 조회 
+- `MakeAveraging1Day(..)`
+	- 하루치 평균 만드는거.. 절차적 
+- `InsertDocumentDbAsync1DayAsync(..)`
+	- cosmos 디비 저장
+		- 예외 발생시  `Sentry`에 로그 발송
 
 
+`개선할만한 부분`
+- `67번 줄` : 세미콜론 두 개 찍힘
+- 1Hour, 1Day의 로직이 거의 동일
+	- 조건식 안에 다른 부분이 부분적으로 존재한다. 
+	- 둘다 `List<Dictionary<string, dynamic>>` 타입을 리턴한다
+		- 반복문 돌면서 Dictionary를 생성해 리스트 추가
 
 ### suffix Http.cs에 대해
 
@@ -294,6 +410,17 @@ $ dotnet run
 <img src="./images/QueueExample 메시지 소비.png">
 
 
+### 프로세스 시작 
+```cs
+// function app 의 root 디렉터리에서
+dotnet run
+
+또는
+
+func start
+```
+[Develop Azure Functions locally using Core Tools | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=windows%2Cisolated-process%2Cnode-v4%2Cpython-v2%2Chttp-trigger%2Ccontainer-apps&pivots=programming-language-csharp#run-a-local-function)
+
 ### 프로세스 종료 
 
 ```shell
@@ -301,3 +428,58 @@ $ Get-Process | Where-Object { $_.ProcessName -eq 'func' -or $_.ProcessName -eq 
 
 $ Stop-Process -Id {Id} -Force
 ```
+
+
+---
+
+### 신기한거
+
+C#에서는 DateTime을 빼기 연산하면 시간 차가 구해지나 보다..
+
+
+
+
+---
+
+### 찾아보기 
+
+
+```cs
+public static class LoggerQueueTrigger
+{
+	private static bool _functionIsRunningOrNot = false;
+	private static DateTime hourStartTime = DateTime.Now;
+	private static DateTime dayStartTime = DateTime.Now;
+
+	[FunctionName("LoggerQueueTrigger")]
+#if DEBUG
+	public static async Task RunAsync([TimerTrigger("0  0/10 * * * *", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
+#else
+	public static async Task RunAsync([TimerTrigger("0  0/10 * * * *")] TimerInfo myTimer, ILogger log)
+#endif
+	{
+		log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+		if (_functionIsRunningOrNot == true)
+		{
+			log.LogInformation($"Other Instance is Running at: {DateTime.Now}");
+			return;
+		}
+		_functionIsRunningOrNot = true;
+		
+		// .. do something
+	}
+}	
+```
+
+김영한님 스레드 강의에서 .. 이러한 static 변수는 언제 반영될지 알 수 없기 때문에 .. 안티패턴이라고 했던게 기억이남.. 
+
+아래 내용이 하나의 프로세스에 멀티 스레드로 동작하다보니 요청 올때마다 실행한다는 건가 싶은데 .. (강의 내용 재확인.. C# 진영도 비슷한지 확인)
+
+
+---
+
+### Reference 
+[Introduction - Training | Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/develop-test-deploy-azure-functions-with-visual-studio/1-introduction)
+
+[🚀 Getting Started with Azure Functions in .NET 8: A Modern Approach to Serverless | by santosh santosh | Medium](https://medium.com/@santoshg.santosh/getting-started-with-azure-functions-in-net-8-a-modern-approach-to-serverless-f230f1987193)
+
