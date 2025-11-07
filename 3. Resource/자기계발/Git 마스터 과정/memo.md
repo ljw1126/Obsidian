@@ -104,8 +104,8 @@ git config --global --add push.autoSetupRemote true
 ```shell
 git filter-branch --env-filter '
 
-CORRECT_NAME="이진우"
-CORRECT_EMAIL="leejinwoo1126@gmail.com"
+CORRECT_NAME="한글이름"
+CORRECT_EMAIL="test@gmail.com"
 
 # Git 커미터 정보 (기록자)
 export GIT_COMMITTER_NAME="$CORRECT_NAME"
