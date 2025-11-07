@@ -436,6 +436,23 @@ $ Stop-Process -Id {Id} -Force
 
 C#에서는 DateTime을 빼기 연산하면 시간 차가 구해지나 보다..
 
+🤔솔루션 탐색기에는 폴더 안에 프로젝트가 나열되어 있는데, 터미널에서 `ls -al`로 확인시 루트 디렉터리 하위에 프로젝트 배치되어 있음 !! 
+
+✅ `*.sln`에 보면 GUID 형태로 폴더가 선언되어있고, 그 폴더의 GUID를 하위 프로젝트들이 참여하고 있는 형태라 Visual Studio에서 계층형으로 표현되는 거였음!! 👉 설정 파일에서 reference가 `../HELPER/etc..`되어있어서 이상했는데 이런 설정이!
+
+
+🤔 DbContext 초기화의 비밀 .. 
+
+```cs
+protected override OnConfiguring(..) {
+	// ✅ optionBuilder 통해서 connectionString 하드코딩된 것을 넣어서 Db 연결되는 거였구나.
+}
+```
+[DbContext.OnConfiguring(DbContextOptionsBuilder) Method (Microsoft.EntityFrameworkCore) | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/microsoft.entityframeworkcore.dbcontext.onconfiguring?view=efcore-9.0)
+
+`new XXXDbContext()`호출하면 `OnConfiguring()` 메서드가 같이 실행된다. 이때 문서에 보면 base에는 nothing이라고 되어 있음. 
+
+
 
 
 
@@ -474,6 +491,24 @@ public static class LoggerQueueTrigger
 김영한님 스레드 강의에서 .. 이러한 static 변수는 언제 반영될지 알 수 없기 때문에 .. 안티패턴이라고 했던게 기억이남.. 
 
 아래 내용이 하나의 프로세스에 멀티 스레드로 동작하다보니 요청 올때마다 실행한다는 건가 싶은데 .. (강의 내용 재확인.. C# 진영도 비슷한지 확인)
+
+---
+
+### 도커로 환경 구성을 한다면 
+azurite
+- blob의 특정 경로에 파일 필요
+- queue에 3개 필요
+
+mssql
+- manager db 조회
+	- 필요한 테이블만 추가하면 되지 않을까 싶다. 
+	- 데이터랑 
+
+cosmos db 
+- logger collection
+- .. 그외 여러개 
+
+redis 
 
 
 ---
