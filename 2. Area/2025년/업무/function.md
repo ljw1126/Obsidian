@@ -452,6 +452,20 @@ protected override OnConfiguring(..) {
 
 `new XXXDbContext()`호출하면 `OnConfiguring()` 메서드가 같이 실행된다. 이때 문서에 보면 base에는 nothing이라고 되어 있음. 
 
+
+🤔 닷넷에서는 `deprecated` 표기를 아래와 같이 한다 
+```cs
+[Obsolete("message")]
+public static class SomethingClass 
+{
+	// .. 
+}
+```
+
+
+🤔 IReadOnlyList와 IReadOnlyCollection이라는 인터페이스가 있구나
+
+
 ---
 
 ### 외부 인프라 연결 
@@ -459,13 +473,40 @@ protected override OnConfiguring(..) {
 `MSSQL` , `Redis`
 - DataGrip 설치해 연결 구성 
 	- 30일 후 dbeaver로 대체
+- Dbeaver의 경우 PRO 한해서 Redis 지원 💩
+- Redis의 경우 무료 GUI 툴을 지원했던거 같다 (추후 필요시 찾아보기✅)
 
 `spmsstorage`
 - Queue, Blob 사용
 - MS Azure Storage Explorer로 Azure 로그인 후 바로 확인 가능
+- 코드 레벨 
+	- QueueLoggerDataClient
+	- BlobLoggerDataClient
 
 `Cosmos DB`
-- 
+- 읽고 쓰는 작업을 수행
+- 코드 레벨
+	- LoggerDataClient
+	- IotHunClient
+	- VessellinkDataClient
+- DataGrip에 연결하려면, 유료JDBC 드라이버를 설치해야 한다 
+	- 참고. [Connecting DataGrip to Azure Cosmos DB? – IDEs Support (IntelliJ Platform) | JetBrains](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360000404120-Connecting-DataGrip-to-Azure-Cosmos-DB)
+	- 번거롭고 껄끄러워서 .. 아래 기본 제공되는 웹 페이지 사용
+	- Azure Cosmos Db Explorere 웹사이트 이용 : `https://cosmos.azure.com`
+- 로컬 테스트용 Cosmos DB Emulator 사용하는 경우 
+	- `https://localhost:8081/_explorer/index.html` 통해 로컬 데이터 탐색기 제공
+
+
+`sentry`
+- 기본적으로 redis, postgres 가 필요함 (도커 컨테이너의 경우)
+- dns로 직접 연결하니 404 not found만 출력됨
+
+
+> 현재 각 인프라 접속 도구가 여러개로 나눠지고 있는 상태이다.
+
+---
+### 읽기 데이터와 저장할 데이터 
+
 
 
 
@@ -524,6 +565,19 @@ cosmos db
 - .. 그외 여러개 
 
 redis 
+- 버전 정보만 확인 후 기본 이미지 사용해도 될듯하다 
+
+sentry
+- 모니터링 툴인데 .. docker로 지원한다. 
+- sentry를 올릴려면 redis와 postgres가 필요한데 가이드를 따르자..
+
+---
+
+### 도커 구성하기 전에 외부 인프라 강결합 해결
+
+
+
+
 
 
 ---
