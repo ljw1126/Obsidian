@@ -452,6 +452,21 @@ protected override OnConfiguring(..) {
 
 `new XXXDbContext()`호출하면 `OnConfiguring()` 메서드가 같이 실행된다. 이때 문서에 보면 base에는 nothing이라고 되어 있음. 
 
+---
+
+### 외부 인프라 연결 
+
+`MSSQL` , `Redis`
+- DataGrip 설치해 연결 구성 
+	- 30일 후 dbeaver로 대체
+
+`spmsstorage`
+- Queue, Blob 사용
+- MS Azure Storage Explorer로 Azure 로그인 후 바로 확인 가능
+
+`Cosmos DB`
+- 
+
 
 
 
