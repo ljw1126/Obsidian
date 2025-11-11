@@ -496,6 +496,30 @@ Azure Functions는 여러 인스턴스(컴퓨터)에서 동시에 실행될 수 
 **요약하자면, 이 메시지는 코드가 성공적으로 로드되었고, 함수가 중복 실행되지 않도록 Functions 호스트가 제어권을 확보했다는 뜻이므로, 코드가 예상대로 작동하고 있음을 나타내는 긍정적인 신호입니다.**
 
 
+🤔 데이터 변환시 JObject를 많이 활용했다(간편하다보니). quick fix로 추천해주는 구조가 희한하다 
+
+```cs
+ // 기존 코드
+ var result = new JObject();
+ result.Add("id", Guid.NewGuid());
+ //..
+ return result;
+
+
+// 퀵 픽스 추천
+var result = new JObject
+{
+    { "id", Guid.NewGuid() },
+	 // ..
+};
+return result;
+```
+
+🤔 local.settings.json 에서 Values에서는 계층 구조를 가질 수 없고, key - value만 가진다 
+[Develop and run Azure Functions locally | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-local?pivots=programming-language-csharp)
+
+
+
 ---
 
 ### 외부 인프라 연결 
@@ -638,6 +662,7 @@ sentry
 ---
 ### Cosmos Db
 [Get started with Azure Cosmos DB for NoSQL using .NET | Azure Docs](https://docs.azure.cn/en-us/cosmos-db/nosql/how-to-dotnet-get-started)
+[Use the emulator for development and CI - Azure Cosmos DB | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-develop-emulator?tabs=docker-linux%2Ccsharp&pivots=api-nosql)
 - DB 안에 Container가 있다. 
 - 접속시 
 	- endpoint, tokenCredential이 필요 (options는 optional)
@@ -735,7 +760,7 @@ volumes:
   cosmos-data:
 ```
 
-
+> 우선은 수작업으로 웹 콘솔로 접속해서 db와 container를 생성함
 
 ---
 
