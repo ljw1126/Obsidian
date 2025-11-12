@@ -519,6 +519,74 @@ return result;
 [Develop and run Azure Functions locally | Microsoft Learn](https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-local?pivots=programming-language-csharp)
 
 
+🤔 기본적으로 function app
+
+제시하신 상황은 Azure Functions의 **기본 동시성(Concurrency) 동작** 때문에 발생하는 것이 맞습니다. 📝 Queue Trigger 함수는 기본적으로 **한 번에 여러 메시지를 병렬로 처리**하도록 설계되어 있습니다.
+
+1. ⚙️ 동시 실행 원리
+
+Azure Functions의 Queue Trigger는 다음과 같은 방식으로 작동합니다.
+
+1. **배치(Batch) 처리:** Functions Host는 큐에서 메시지를 하나씩 가져오는 것이 아니라, **한 번에 여러 개의 메시지(배치)**를 가져와 처리하려고 합니다.
+    
+2. **병렬 처리:** 가져온 메시지들은 **동시에 여러 스레드**에서 실행됩니다. 이는 처리량(Throughput)을 극대화하기 위한 기본 전략입니다.
+    
+3. **결과:** 따라서 로그에 `확인용: {message}`가 연달아 여러 번 나오는 것은 **여러 인스턴스/스레드가 동시에 메시지를 처리**하고 있음을 의미합니다.
+
+
+ 2.🛑 DB 호출 증가 문제와 해결
+
+DB 호출을 주석 처리했음에도 함수가 빠르게 소비되는 것은 **동시성 설정이 너무 높기 때문**입니다. DB 호출과 같은 리소스 제약 작업이 있을 경우, 동시 실행 수를 **제한**해야 합니다.
+
+ **✅ 해결 방안: 동시성 제한 (Concurrency Limit)**
+
+Functions Host가 큐 메시지를 한 번에 너무 많이 가져오거나 동시에 실행하는 스레드 수를 제한해야 합니다.
+
+**A. Host.json 설정 (권장)**
+
+프로젝트 루트에 있는 `host.json` 파일을 수정하여 Queue Trigger의 동시성 설정을 낮출 수 있습니다.
+
+JSON
+
+```
+{
+  "version": "2.0",
+  "extensions": {
+    "queues": {
+      // 💡 큐에서 한 번에 가져올 메시지 수 (기본값: 16)
+      "maxBatchSize": 1, 
+      // 💡 큐를 확인하는 빈도 (밀리초)
+      "pollingInterval": "00:00:05", 
+      // 💡 동시에 실행될 수 있는 최대 함수 호출 수 (기본값은 일반적으로 maxBatchSize와 관련됨)
+      "maxPollingInterval": "00:00:15",
+      "visibilityTimeout" : "00:01:00"
+    }
+  }
+}
+```
+
+**가장 확실하게 단일 실행을 보장하려면:**
+
+- `maxBatchSize`를 **1**로 설정합니다.
+    
+
+이 설정을 변경하면 함수가 메시지를 **하나씩만** 가져와 처리하게 되어, DB나 외부 리소스에 대한 부하를 크게 줄일 수 있습니다.
+
+> **참고:** `.NET 8 Isolated Worker Process`의 경우 `host.json` 파일의 `queues` 섹션 외에 다른 전역 설정이 동시성을 제어할 수 있지만, `maxBatchSize`가 가장 직접적인 제어 수단입니다.
+
+
+```json
+// host.json
+{
+	//..
+	"extensions": {
+	    "queues": {
+	        "batchSize": 1,
+	        "maxDequeueCount": 1
+	    }
+	}
+}
+```
 
 ---
 
