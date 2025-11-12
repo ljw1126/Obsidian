@@ -210,3 +210,15 @@ docker-compose run --rm sentry-base upgrade
 
 docker-compose up -d
 ```
+
+
+#### 403 forbidden
+timer trigger에서 일부에 예외 발생시켜 sentry 메시지가 가는지 확인하려고 함
+
+[Azure Functions | Sentry for Azure Functions](https://docs.sentry.io/platforms/dotnet/guides/azure-functions-worker/)
+[Access to localhost was denied | You don't have authorization to view this page. HTTP ERROR 403 | Sentry](https://sentry.io/answers/access-to-localhost-was-denied-you-don-t-have-authorization-to-view-this-page-http-error-403/)
+[getsentry/sentry-javascript: Official Sentry SDKs for JavaScript](https://github.com/getsentry/sentry-javascript)
+[🚨 [Sentry] CSRF 인증에 실패했습니다.](https://velog.io/@yakc0202/Sentry-CSRF-%EC%9D%B8%EC%A6%9D%EC%97%90-%EC%8B%A4%ED%8C%A8%ED%96%88%EC%8A%B5%EB%8B%88%EB%8B%A4)
+
+---
+
