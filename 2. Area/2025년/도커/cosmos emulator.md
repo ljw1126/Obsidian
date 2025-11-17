@@ -36,6 +36,9 @@ $ docker logs cosmos-emulator
 // 인증서 가져오기
 $ curl --insecure https://localhost:8081/_explorer/emulator.pem > ~/emulatorcert.crt
 
+// 기존 인증서 삭제 (컨테이너 재설치시 필요)
+sudo rm /usr/local/share/ca-certificates/emulatorcert.crt
+
 // 인증서 파일을 시스템의 신뢰 저장소 디렉터리로 복사
 // 루트 비번은 계정이랑 동일
 $ sudo cp ~/emulatorcert.crt /usr/local/share/ca-certificates/
