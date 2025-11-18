@@ -127,3 +127,82 @@ volumes:
 
 참고. [Azure Cosmos DB Gallery](https://azurecosmosdb.github.io/gallery/?tags=example)
 
+
+---
+
+**QueryRequestOptions**
+- `MaxItemCount` 속성
+	- Gets or sets the maximum number of items to be returned in the enumeration operation in the Azure Cosmos DB service.
+
+[QueryRequestOptions Class (Microsoft.Azure.Cosmos) - Azure for .NET Developers | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/api/microsoft.azure.cosmos.queryrequestoptions?view=azure-dotnet)
+
+
+```cs
+/// <summary>
+/// Gets or sets the maximum number of items to be returned in the enumeration operation in the Azure Cosmos DB service.
+/// </summary>
+/// <value>
+/// The maximum number of items to be returned in the enumeration operation.
+/// </value> 
+/// <remarks>
+/// Used for query pagination.
+/// '-1' Used for dynamic page size.
+/// This is a maximum. Query can return 0 items in the page.
+/// </remarks>
+public int? MaxItemCount { get; set; }
+```
+
+
+--- 
+
+### 트러블 슈팅
+
+#### 400 Bad Request
+
+LogRepository - UpsertAsync 요청시 Bad Request 발생
+
+```text
+ System.Private.CoreLib: Exception while executing function: Functions.LoggerDataInsert10Min. System.Private.CoreLib: Result: Failure
+Type: Microsoft.Azure.Cosmos.CosmosException
+Exception: Response status code does not indicate success: BadRequest (400); Substatus: 1001; ActivityId: 6e510707-dc92-4dfc-8cc0-fbe3372b345b; Reason: ();
+```
+
+ManagerDb / Log Container에 파티션 키가 `/_partitionKey`로 지정되어있다 그러다보니 전송하는 직렬화 데이터에 해당 키 값이 존재해야 하는데 .. 기존에 없어서 문제가 발생함.
+```cs
+public class SystemLog {
+	 public SystemLog()
+	 {
+	     ID = Guid.NewGuid().ToString();
+	     DataType = CosmosDbCode.SYSTEM_LOG;
+	     TTL = 60 * 60 * 24 * 180;   // 존속 기간을 6개월 지정
+	 }
+	
+	 [JsonProperty("id")]
+	 public string ID { get; set; }
+	
+	 [JsonProperty("DATA_TYPE")]
+	 public string DataType { get; set; }
+
+	 // ..	
+	
+	 [JsonProperty("_partitionKey")]
+	 public string PartitionKeyAccessor => DataType;
+}
+```
+
+[Troubleshoot Azure Cosmos DB Bad Request Exceptions | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/troubleshoot-bad-request#wrong-partition-key-value)
+#### 404
+
+웹 콘솔 접속이 되지 않는 경우
+- 윈도우에 내 방화벽 설정 꺼버리기
+
+
+
+```text
+Exception: Response status code does not indicate success: NotFound (404); Substatus: 1003; ActivityId: 1bba5340-5d8b-4eb4-bb2f-f658c946134e; Reason: (Message: {"Errors":["Owner resource does not exist"]}
+```
+- Cosmos 팩터리 클래스에서 GetClient 호출시 if 조건 분기로 DB명을 바꿔주는게 있었음 
+	- 프로덕션 플래그 변수가 `false` 인 경우 변경이 되는데 테스트를 하다보니 저렇게 선언을 해둔 것으로 판단된다 
+		- 이 부분에 대해 언급을 해보자..
+- 10분 큐 트리거 마지막 호출하는 cosmos에서 `*Data`를 호출하는게 있었고, 여기서 DB/컨테이너를 찾지 못해서 404 출력된거 였다 
+
