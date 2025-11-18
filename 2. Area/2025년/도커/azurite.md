@@ -23,4 +23,13 @@ docker run -d -p 10000:10000 -p 10001:10001 -p 10002:10002 --name azurite-local 
 계정키 : `Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==`
 Blob 포트 : 10000
 큐 포트 : 10001
-테이블 포트 : 10002
+테이블 포트 : 10002\
+
+
+
+[Azurite/README.md at main · Azure/Azurite](https://github.com/Azure/Azurite/blob/main/README.md)
+
+[Azure SDK 및 도구를 사용하여 Azurite 에뮬레이터에 연결 | Microsoft Learn](https://learn.microsoft.com/ko-kr/azure/storage/common/storage-connect-azurite?tabs=blob-storage)
+
+[Configure a connection string - Azure Storage | Microsoft Learn](https://learn.microsoft.com/en-us/azure/storage/common/storage-configure-connection-string)
+

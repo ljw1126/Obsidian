@@ -1,3 +1,24 @@
+
+> [!warning] wsl2 에서 docker container 로 cosmos emulator 설치 하지 말기 .. 
+> (7시간 동안 삽질)
+- [Use the emulator for development and CI - Azure Cosmos DB | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-develop-emulator?tabs=windows%2Ccsharp&pivots=api-nosql)
+	- `window(local)`로 설치하기
+	- https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-develop-emulator?tabs=docker-linux%2Ccsharp&pivots=api-nosql
+- 처음 https connection 연결을 하지 못해 에러 발생
+	- 윈도우 방화벽, 인증서 자체 등록 처리
+- wsl2로 docker container 처음 올렸는데 ReadNextAsync()가 무한 대기 상태에 빠진다.
+- 호환성 문제 의심되어 docker container 내리고 window (local) 설치 exe로 cosmos db emultator 설치
+- 정상 동작 확인 (7시간 허비)
+	- function app이 윈도우 C 드라이브에서 동작하다보니 .. 테스트 환경 지원하는 경우 exe로 로컬에 설치해서 하기 !! ✅
+
+**📝 문제의 근본 원인: 네트워크 복잡성 (251117, gemini)**
+WLS2와 Docker 컨테이너 환경에서 7시간 동안 문제를 겪으신 근본적인 이유는 다음과 같습니다.
+
+네트워크 가상화 충돌: Windows 호스트 OS의 Function App 프로세스가 WSL2 내부의 Docker VM을 통해 Cosmos Emulator 컨테이너로 연결하려고 할 때, 네트워크 브릿지 계층에서 패킷이 막히거나 지연되어 무한 대기(await ReadNextAsync()) 상태에 빠집니다. 방화벽을 꺼도 해결되지 않는 경우가 여기에 해당합니다.
+
+SSL/TLS 인증서 문제: Docker 환경에서는 Linux 컨테이너 내부의 인증서와 Windows 호스트의 신뢰 저장소 간의 연동이 복잡하여, 수동으로 등록했더라도 SDK가 이를 제대로 활용하지 못하는 경우가 잦습니다.
+
+ 
 ### Cosmos Db
 [Get started with Azure Cosmos DB for NoSQL using .NET | Azure Docs](https://docs.azure.cn/en-us/cosmos-db/nosql/how-to-dotnet-get-started)
 [Use the emulator for development and CI - Azure Cosmos DB | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-develop-emulator?tabs=docker-linux%2Ccsharp&pivots=api-nosql)
