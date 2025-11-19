@@ -190,7 +190,10 @@ public class SystemLog {
 }
 ```
 
+참고.
 [Troubleshoot Azure Cosmos DB Bad Request Exceptions | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/troubleshoot-bad-request#wrong-partition-key-value)
+[Partitioning and horizontal scaling - Azure Cosmos DB | Microsoft Learn](https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview)
+
 #### 404
 
 웹 콘솔 접속이 되지 않는 경우
