@@ -475,6 +475,14 @@ js로 간트 차트 개발?
 
 
 > TDD -> SDD (Spec Driven Development)
+- https://news.hada.io/search?q=tdd
+
+✅ `slido`라는 익명 질문 서비스가 있구나 
+
+장기적으로 대외활동 준비도.. cs, 라이브코테 .. 
+
+dnd 참여
+- 서류상으로 열정을 표현 
 
 
 
