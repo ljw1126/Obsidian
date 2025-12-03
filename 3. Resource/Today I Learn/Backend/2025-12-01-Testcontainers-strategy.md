@@ -53,6 +53,9 @@ dotnet add package Testcontainers.MsSql
 	- `Shouldy` 패키지 사용 권장✅ (`gemini`)
 	- [shouldly/LICENSE.txt at master · shouldly/shouldly](https://github.com/shouldly/shouldly/blob/master/LICENSE.txt)
 
+```shell
+$ dotnet add package Shouldly
+```
 
 #### ContainerPerTest (테스트 메서드당 하나의 컨테이너)
 - 테스트 메서드당 컨테이너를 매번 재시작한다. 
