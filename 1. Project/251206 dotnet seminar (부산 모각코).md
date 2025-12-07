@@ -17,6 +17,9 @@
 - 이클립스 계통 코드 에디터 ?
 	- C# 익스텐션 지원 
 	- 디컴파일, 문서 지원 
+	- `251207`. Eclipse Theia로 확인 
+		- https://theia-ide.org/
+		- https://www.youtube.com/watch?v=7vgWZkYtq64
 
 > 테스트 실행 속도? 패키지 관리?
 
@@ -172,7 +175,6 @@ C#으로 페미콤 게임도 컴파일?
 - Signal/Websocket 짤 필요 x
 - MCP와 뭐가 다른가?
 	- 
-	- 
 - ms agent framework의 일부로서 제공되는 ag-ui 구현체는 asp.net core kestrel에 자연스럽게 통합됨
 	- 
 - 로우레벨 프로토콜 
@@ -220,6 +222,20 @@ vs안쓰고, mac에서도 사용가능하다
 - 네빅스(네이버에서 만든 리눅스) > 닷넷이 있음  
 
 
+닷넷 데브 코리아 
+https://forum.dotnetdev.kr/
+
+인메모리 캐시 
+https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory?view=aspnetcore-8.0
+
+주간 닷넷#5
+https://forum.dotnetdev.kr/t/topic/14113
+
+클린 아키텍처
+https://dev.to/mashrulhaque/how-to-design-a-maintainable-net-solution-structure-for-growing-teams-284n
+- 클린 아키텍처 - 소프트웨어 구조와 설계 원칙 1부
+- 만들면서 배우는 클린 아키텍쳐 (p180 미만)
+- 도메인 주도 개발 시작하기 - 최범균 (한빛 미디어, 도서 포인트로 구매 용이)
 
 
 
