@@ -1,8 +1,12 @@
-# Git이 텍스트 파일을 자동으로 처리하도록 설정
-* text=auto
+# .gitattributes 파일 내용
 
-# 마크다운 파일을 명시적으로 텍스트 파일로 지정하고,
-# 체크아웃 시 개행 문자를 LF로 강제합니다.
-# (대부분의 윈도우/맥/리눅스 에디터가 LF를 잘 처리합니다.)
-*.md text eol=lf
-*.markdown text eol=lf
+# 텍스트 파일(Markdown 포함)에 대해 Git이 개행 문자를 자동으로 변환하지 않도록 설정
+# 이는 Obsidian이 저장한 LF 개행 문자를 그대로 유지하도록 강제합니다.
+*.md    text eol=lf
+*.txt   text eol=lf
+*.csv   text eol=lf
+
+# 다른 파일 (예: 이미지, PDF)는 바이너리로 처리
+*.png   binary
+*.jpg   binary
+*.pdf   binary
