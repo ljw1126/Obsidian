@@ -10,7 +10,7 @@ docker run -p 1433:1433 --name sqlserver -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWOR
 ```shell
 $ docker exec -it sqlserver /bin/bash
 
-$ mssql@d95d75f18f8f:/$ /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'qwer123@' -C
+mssql@d95d75f18f8f:/$ /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'qwer123@' -C
 1> SELECT DB_NAME();
 2> GO
 
