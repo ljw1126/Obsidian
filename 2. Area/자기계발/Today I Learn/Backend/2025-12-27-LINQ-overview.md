@@ -13,6 +13,7 @@
 
 **📌 공식 문서**
 - https://learn.microsoft.com/en-us/dotnet/csharp/linq/
+- https://learn.microsoft.com/ko-kr/dotnet/csharp/linq/get-started/introduction-to-linq-queries
 
 ---
 
