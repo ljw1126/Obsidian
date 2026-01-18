@@ -26,6 +26,29 @@ git cherry-pick A^..B
 ```
 
 
+**상황**(`260117`)
+- 데스크탑에서 step2 브랜치 작업한 후 맥북에서 remote에 있는 브랜치 정보가 내려 받아지지 않음 
+- 찾아보니 `git clone --single-branch` 옵션을 지정하게 되면 대상 브랜치 외에는 다른 브랜치는 내려받지 못하는 거였다
+
+**방법**
+```shell
+git config --get remote.origin.fetch
++refs/heads/ljw1126:refs/remotes/origin/ljw1126   // ljw1126브랜치 고정
+
+// 변경
+git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" 
+git fetch origin
+
+git remote show origin # 원격 저장소의 실제 브랜치 상태 확인 
+git remote update --prune # 이미 삭제된 브랜치 정보는 지우고 새로 업데이트
+
+git branch -a # 확인 
+git checkout -t origin/step2
+
+# 다시 원복
+git config remote.origin.fetch "+refs/heads/ljw1126:refs/remotes/origin/ljw1126"
+```
+
 ### merge
 >[!info] merge시 생성되는 orig 확장자 파일이 생성되지 않도록 비활성화
 
