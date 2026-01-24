@@ -2,6 +2,7 @@
 **나의 PR** 
 - [1단계 - 분석과 인수조건 도출](https://github.com/next-step/atdd-camping-reservation/pull/62)
 - [2단계 - 인수 테스트 구현](https://github.com/next-step/atdd-camping-reservation/pull/71)
+- [3단계 - 버그 수정과 테스트 보강]([https://github.com/next-step/atdd-camping-reservation/pull/80](https://github.com/next-step/atdd-camping-reservation/pull/80))
 
 
 ---
@@ -23,12 +24,19 @@
 - [https://github.com/next-step/atdd-camping-reservation/pull/68](https://github.com/next-step/atdd-camping-reservation/pull/68)
 - [https://github.com/next-step/atdd-camping-reservation/pull/69](https://github.com/next-step/atdd-camping-reservation/pull/69)
 - [https://github.com/next-step/atdd-camping-reservation/pull/73](https://github.com/next-step/atdd-camping-reservation/pull/73)
+-  [https://github.com/next-step/atdd-camping-reservation/pull/82](https://github.com/next-step/atdd-camping-reservation/pull/82)
+- [https://github.com/next-step/atdd-camping-reservation/pull/81](https://github.com/next-step/atdd-camping-reservation/pull/81)
+-  [https://github.com/next-step/atdd-camping-reservation/pull/79](https://github.com/next-step/atdd-camping-reservation/pull/79)
 
 ### 3단계  - 버그 수정과 테스트 보강
 - [https://github.com/next-step/atdd-camping-reservation/pull/66](https://github.com/next-step/atdd-camping-reservation/pull/66)
 - [https://github.com/next-step/atdd-camping-reservation/pull/67](https://github.com/next-step/atdd-camping-reservation/pull/67)
 - [https://github.com/next-step/atdd-camping-reservation/pull/72](https://github.com/next-step/atdd-camping-reservation/pull/72)
 - [https://github.com/next-step/atdd-camping-reservation/pull/74](https://github.com/next-step/atdd-camping-reservation/pull/74)
+- [https://github.com/next-step/atdd-camping-reservation/pull/83](https://github.com/next-step/atdd-camping-reservation/pull/83)
+- [https://github.com/next-step/atdd-camping-reservation/pull/84](https://github.com/next-step/atdd-camping-reservation/pull/84)
+- [https://github.com/next-step/atdd-camping-reservation/pull/76](https://github.com/next-step/atdd-camping-reservation/pull/76)
+- [https://github.com/next-step/atdd-camping-reservation/pull/75](https://github.com/next-step/atdd-camping-reservation/pull/75)
 
 ---
 
