@@ -14,3 +14,5 @@ $ git remote -v // origin, upstream 확인된다
 >[!info] 해피 패스(Happy Path)
 >==소프트웨어 개발 및 기획에서 **사용자가 제품이나 서비스를 이용할 때 아무런 문제나 예외 없이 가장 이상적이고 순탄하게 목표를 달성하는 '성공 시나리오' 또는 '최적의 경로'**==를 의미
 
+
+[Cucumber 공식 문서](https://cucumber.io/)
