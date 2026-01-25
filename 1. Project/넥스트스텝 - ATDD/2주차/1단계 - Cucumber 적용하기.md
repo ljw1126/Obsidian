@@ -365,3 +365,9 @@ public class TestContext {
 }
 
 ```
+
+cucumber를 사용할때 시나리오에 `#language : ko` 설정하게 되면 한글로 property를 작성해야 한다 
+
+`*Steps` 클래스에서 상속을 configuraion 클래스를 상속하지 않아야 한다. 
+- cucumber 자체적으로 해당 클래스를 찾아 `Steps` 클래스에 적용 시켜준다함 
+- 컴파일 오류는 뜨지만 빈 주입은 런타임에 제대로 이뤄진다.
