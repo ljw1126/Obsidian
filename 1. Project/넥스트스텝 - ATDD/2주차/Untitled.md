@@ -16,3 +16,10 @@ $ git remote -v // origin, upstream 확인된다
 
 
 [Cucumber 공식 문서](https://cucumber.io/)
+
+
+```shell
+$ git remote add upstream https://github.com/next-step/atdd-camping-admin.git
+
+$ git fetch upstream ljw1126
+```
