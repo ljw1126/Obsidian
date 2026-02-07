@@ -22,3 +22,6 @@
 
 ### 3단계 - 외부 시스템 격리
 
+
+### 선택 - 인수 테스트 추가 구축 with AI 
+- https://github.com/next-step/atdd-camping-tests/pull/50
